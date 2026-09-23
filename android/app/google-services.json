@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "455899201651",
+    "project_id": "kingdom-heirs-discipleshipapp",
+    "storage_bucket": "kingdom-heirs-discipleshipapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:455899201651:android:d89b7259f388a4b62daa06",
+        "android_client_info": {
+          "package_name": "com.kingdomheirs.discipleship"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAiK3-clsaDHveE3aSaI1EPxFcC0vv6Rzg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:455899201651:android:1a963425cefb54bc2daa06",
+        "android_client_info": {
+          "package_name": "com.mycompany.kingdomheirsdiscipleshipapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAiK3-clsaDHveE3aSaI1EPxFcC0vv6Rzg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
