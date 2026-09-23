@@ -239,6 +239,39 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                   hoverColor: Colors.transparent,
                                   highlightColor: Colors.transparent,
                                   onTap: () async {
+                                    final liveVerseText =
+                                        await actions.fetchBibleVerseApi(
+                                      lessonsListItemItem.scriptureRef,
+                                      _model.memberLanguage,
+                                    );
+                                    if (liveVerseText.isNotEmpty) {
+                                      await showDialog(
+                                        context: context,
+                                        builder: (dialogContext) =>
+                                            AlertDialog(
+                                          title: Text(
+                                              lessonsListItemItem.scriptureRef),
+                                          content: SingleChildScrollView(
+                                            child: Text(liveVerseText),
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(dialogContext),
+                                              child: Text('Close'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                      await actions.cacheLessonForOffline(
+                                        lessonsListItemItem.stableId,
+                                        lessonsListItemItem.title.en,
+                                        lessonsListItemItem.scriptureRef,
+                                        lessonsListItemItem.scriptureText.en,
+                                        lessonsListItemItem.reflectionPrompt.en,
+                                      );
+                                      return;
+                                    }
                                     _model.bibleOpenResult = await actions
                                         .openScriptureReferenceSafe(
                                       lessonsListItemItem.scriptureRef,
