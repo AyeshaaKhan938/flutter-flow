@@ -78,17 +78,21 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
         safeSetState(() {});
         await actions.persistPathwayProgressLocal(
           PathwayProgressResponseStruct.maybeFromMap(
-                  (_model.progressResult?.jsonBody ?? ''))
-              ?.completedLessonsCsv,
+                      (_model.progressResult?.jsonBody ?? ''))
+                  ?.completedLessonsCsv ??
+              '',
           PathwayProgressResponseStruct.maybeFromMap(
-                  (_model.progressResult?.jsonBody ?? ''))
-              ?.completedCount,
+                      (_model.progressResult?.jsonBody ?? ''))
+                  ?.completedCount ??
+              0,
           PathwayProgressResponseStruct.maybeFromMap(
-                  (_model.progressResult?.jsonBody ?? ''))
-              ?.totalLessons,
+                      (_model.progressResult?.jsonBody ?? ''))
+                  ?.totalLessons ??
+              0,
           PathwayProgressResponseStruct.maybeFromMap(
-                  (_model.progressResult?.jsonBody ?? ''))
-              ?.pathwayTitle,
+                      (_model.progressResult?.jsonBody ?? ''))
+                  ?.pathwayTitle ??
+              '',
         );
       } else {
         _model.completedCount = FFAppState().localCompletedCount;

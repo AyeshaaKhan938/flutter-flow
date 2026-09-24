@@ -242,7 +242,7 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                     final liveVerseText =
                                         await actions.fetchBibleVerseApi(
                                       lessonsListItemItem.scriptureRef,
-                                      _model.memberLanguage,
+                                      _model.memberLanguage ?? 'en',
                                     );
                                     if (liveVerseText.isNotEmpty) {
                                       await showDialog(
@@ -275,7 +275,7 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                     _model.bibleOpenResult = await actions
                                         .openScriptureReferenceSafe(
                                       lessonsListItemItem.scriptureRef,
-                                      _model.memberLanguage,
+                                      _model.memberLanguage ?? 'en',
                                     );
                                     if (_model.bibleOpenResult == 'opened') {
                                       ScaffoldMessenger.of(context)
@@ -913,10 +913,10 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                       _model.saveSmartResult =
                           await actions.saveLessonProgressSmart(
                         currentJwtToken,
-                        widget.pathwayId,
-                        widget.lessonId,
+                        widget.pathwayId ?? '',
+                        widget.lessonId ?? '',
                         '0',
-                        _model.reflectionInput,
+                        _model.reflectionInput ?? '',
                       );
                       if (_model.saveSmartResult == 'queued') {
                         ScaffoldMessenger.of(context).showSnackBar(

@@ -23,7 +23,7 @@ Future<String> setPreferredLanguage(
   if (code.isEmpty) code = 'en';
   final appLocale = code == 'lg' ? 'en' : code;
   try {
-    await FFLocalizations.storeLocale(Locale(appLocale));
+    await FFLocalizations.storeLocale(appLocale);
     MyApp.of(context).setLocale(appLocale);
   } catch (_) {}
 

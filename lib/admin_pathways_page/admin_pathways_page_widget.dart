@@ -2014,8 +2014,8 @@ class _AdminPathwaysPageWidgetState extends State<AdminPathwaysPageWidget> {
                                 onPressed: () async {
                                   _model.boCreatePathwayResult =
                                       await actions.adminCreatePathway(
-                                    _model.newPathwayTitle,
-                                    _model.newPathwayStableId,
+                                    _model.newPathwayTitle ?? '',
+                                    _model.newPathwayStableId ?? '',
                                   );
                                   if (_model.boCreatePathwayResult ==
                                       'created') {
@@ -2393,10 +2393,10 @@ class _AdminPathwaysPageWidgetState extends State<AdminPathwaysPageWidget> {
                                 onPressed: () async {
                                   _model.boCreateLessonResult =
                                       await actions.adminCreateLesson(
-                                    _model.newLessonTitle,
-                                    _model.newLessonStableId,
-                                    _model.newLessonPathwayId,
-                                    _model.newLessonScriptureRef,
+                                    _model.newLessonTitle ?? '',
+                                    _model.newLessonStableId ?? '',
+                                    _model.newLessonPathwayId ?? '',
+                                    _model.newLessonScriptureRef ?? '',
                                   );
                                   if (_model.boCreateLessonResult ==
                                       'created') {
@@ -2740,9 +2740,9 @@ class _AdminPathwaysPageWidgetState extends State<AdminPathwaysPageWidget> {
                                 onPressed: () async {
                                   _model.boUpdatePathwayResult =
                                       await actions.adminUpdatePathway(
-                                    _model.editPathwayStableId,
-                                    _model.editPathwayTitle,
-                                    _model.editPathwayStatus,
+                                    _model.editPathwayStableId ?? '',
+                                    _model.editPathwayTitle ?? '',
+                                    _model.editPathwayStatus ?? '',
                                   );
                                   if (_model.boUpdatePathwayResult ==
                                       'updated') {
@@ -3268,12 +3268,12 @@ class _AdminPathwaysPageWidgetState extends State<AdminPathwaysPageWidget> {
                                 onPressed: () async {
                                   _model.boUpdateLessonResult =
                                       await actions.adminUpdateLesson(
-                                    _model.editLessonPathwayId,
-                                    _model.editLessonStableId,
-                                    _model.editLessonTitle,
-                                    _model.editLessonScriptureRef,
-                                    _model.editLessonReflection,
-                                    _model.editLessonStatus,
+                                    _model.editLessonPathwayId ?? '',
+                                    _model.editLessonStableId ?? '',
+                                    _model.editLessonTitle ?? '',
+                                    _model.editLessonScriptureRef ?? '',
+                                    _model.editLessonReflection ?? '',
+                                    _model.editLessonStatus ?? '',
                                   );
                                   if (_model.boUpdateLessonResult ==
                                       'updated') {

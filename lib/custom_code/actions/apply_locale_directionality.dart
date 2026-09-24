@@ -19,7 +19,7 @@ Future<String> applyLocaleDirectionality(
   final code = languageCode.trim().toLowerCase();
   final appLocale = code == 'lg' ? 'en' : (code.isEmpty ? 'en' : code);
   try {
-    await FFLocalizations.storeLocale(Locale(appLocale));
+    await FFLocalizations.storeLocale(appLocale);
     MyApp.of(context).setLocale(appLocale);
   } catch (_) {}
   return appLocale == 'ur' ? 'rtl' : 'ltr';
