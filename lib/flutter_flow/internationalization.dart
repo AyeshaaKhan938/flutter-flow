@@ -168,14 +168,14 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
     },
     '0zu33ilr': {
       'en': 'Loading…',
-      'es': '',
-      'lg': '',
-      'ur': '',
+      'es': 'Cargando…',
+      'lg': 'Kuleeta…',
+      'ur': 'لوڈ ہو رہا ہے…',
     },
     '6248jqp7': {
       'en': 'Pathways',
       'es': '',
-      'lg': '',
+      'lg': 'Amakubo',
       'ur': '',
     },
   },
@@ -973,7 +973,7 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
     'zv6tqbs6': {
       'en': 'Profile',
       'es': '',
-      'lg': '',
+      'lg': 'Pulofayiro',
       'ur': '',
     },
   },
@@ -1139,11 +1139,11 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
           'Choose the answer that most honestly describes where you are today. There are no perfect answers, and your responses are private.',
       'ur': '',
     },
-    'btry4vm7': {
+    'uxvknhqk': {
       'en': 'Loading…',
-      'es': '',
-      'lg': '',
-      'ur': '',
+      'es': 'Cargando…',
+      'lg': 'Kuleeta…',
+      'ur': 'لوڈ ہو رہا ہے…',
     },
     'ect7k9ew': {
       'en': 'Question',
@@ -1335,9 +1335,9 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
   {
     'ptjcyd50': {
       'en': 'Loading…',
-      'es': '',
-      'lg': '',
-      'ur': '',
+      'es': 'Cargando…',
+      'lg': 'Kuleeta…',
+      'ur': 'لوڈ ہو رہا ہے…',
     },
     '628s6g31': {
       'en': 'Complete each lesson at your own pace.',
@@ -1453,6 +1453,12 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
       'es': 'Puntaje para aprobar: 80%',
       'lg': 'Akabonero akayitibwako: 80%',
       'ur': 'پاس ہونے کا اسکور: 80٪',
+    },
+    'uxvknhqk': {
+      'en': 'Loading…',
+      'es': 'Cargando…',
+      'lg': 'Kuleeta…',
+      'ur': 'لوڈ ہو رہا ہے…',
     },
     'c92tx0i4': {
       'en': 'Question 1',

@@ -293,8 +293,8 @@ class _SignInPageWidgetState extends State<SignInPageWidget> {
 
                       final user = await authManager.signInWithEmail(
                         context,
-                        _model.email!,
-                        _model.password!,
+                        _model.emailFieldTextController.text,
+                        _model.passwordFieldTextController.text,
                       );
                       if (user == null) {
                         return;

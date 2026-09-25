@@ -18,6 +18,8 @@ class SignUpPageModel extends FlutterFlowModel<SignUpPageWidget> {
 
   String? regionCity = '';
 
+  bool? isSubmitting = false;
+
   ///  State fields for stateful widgets in this page.
 
   // State field(s) for FullNameField widget.

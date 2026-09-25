@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 // Begin custom action code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
@@ -25,22 +26,25 @@ Future<String> saveSignupProfile(String? displayName, String? phone,
     final token = await user.getIdToken();
     final p = phone.trim();
     final validPhone = RegExp(r'^[+()\-\s\d]{6,20}$').hasMatch(p) ? p : '';
-    final response = await http.post(
-      Uri.parse(
-        'https://us-central1-kingdom-heirs-discipleshipapp.cloudfunctions.net/updateUserProfile',
-      ),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'authToken': token,
-        'displayName': displayName.trim(),
-        'phone': validPhone,
-        'country': country.trim(),
-        'regionCity': regionCity.trim(),
-      }),
-    );
-    return response.statusCode >= 200 && response.statusCode < 300
-        ? 'ok'
-        : 'error_${response.statusCode}';
+    // Fire-and-forget so sign-up navigates immediately; failures are harmless
+    // (the profile can be completed later).
+    unawaited(http
+        .post(
+          Uri.parse(
+            'https://us-central1-kingdom-heirs-discipleshipapp.cloudfunctions.net/updateUserProfile',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'authToken': token,
+            'displayName': displayName.trim(),
+            'phone': validPhone,
+            'country': country.trim(),
+            'regionCity': regionCity.trim(),
+          }),
+        )
+        .timeout(const Duration(seconds: 20))
+        .then((_) {}, onError: (_) {}));
+    return 'started';
   } catch (_) {
     return 'error';
   }

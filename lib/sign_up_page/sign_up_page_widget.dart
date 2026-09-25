@@ -550,8 +550,8 @@ class _SignUpPageWidgetState extends State<SignUpPageWidget> {
 
                       final user = await authManager.createAccountWithEmail(
                         context,
-                        _model.email!,
-                        _model.password!,
+                        _model.signUpEmailFieldTextController.text,
+                        _model.signUpPasswordFieldTextController.text,
                       );
                       if (user == null) {
                         return;
@@ -565,10 +565,10 @@ class _SignUpPageWidgetState extends State<SignUpPageWidget> {
                           ));
 
                       _model.signupSaveResult = await actions.saveSignupProfile(
-                        _model.fullName,
-                        _model.phone,
-                        _model.country,
-                        _model.regionCity,
+                        _model.fullNameFieldTextController.text,
+                        _model.phoneFieldTextController.text,
+                        _model.countryFieldTextController.text,
+                        _model.cityFieldTextController.text,
                       );
 
                       context.goNamedAuth(

@@ -185,43 +185,48 @@ class _NavBarPageState extends State<NavBarPage> {
     return Scaffold(
       resizeToAvoidBottomInset: !widget.disableResizeToAvoidBottomInset,
       body: _currentPage ?? tabs[_currentPageName],
-      bottomNavigationBar: GNav(
-        selectedIndex: currentIndex,
-        onTabChange: (i) => safeSetState(() {
-          _currentPage = null;
-          _currentPageName = tabs.keys.toList()[i];
-        }),
-        backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
-        color: FlutterFlowTheme.of(context).secondaryText,
-        activeColor: FlutterFlowTheme.of(context).secondary,
-        tabBackgroundColor: Color(0x00000000),
-        tabBorderRadius: 100.0,
-        tabMargin: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 0.0),
-        padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 0.0),
-        gap: 0.0,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        duration: Duration(milliseconds: 500),
-        haptic: false,
-        tabs: [
-          GButton(
-            icon: Icons.home_outlined,
-            text: FFLocalizations.of(context).getText(
-              'amxdvirb' /* Home */,
-            ),
+      bottomNavigationBar: Container(
+        color: FlutterFlowTheme.of(context).secondaryBackground,
+        child: SafeArea(
+          child: GNav(
+            selectedIndex: currentIndex,
+            onTabChange: (i) => safeSetState(() {
+              _currentPage = null;
+              _currentPageName = tabs.keys.toList()[i];
+            }),
+            backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+            color: FlutterFlowTheme.of(context).secondaryText,
+            activeColor: FlutterFlowTheme.of(context).secondary,
+            tabBackgroundColor: Color(0x22C4A35A),
+            tabBorderRadius: 24.0,
+            tabMargin: EdgeInsetsDirectional.fromSTEB(6.0, 8.0, 6.0, 22.0),
+            padding: EdgeInsetsDirectional.fromSTEB(18.0, 10.0, 18.0, 10.0),
+            gap: 8.0,
+            mainAxisAlignment: MainAxisAlignment.center,
+            duration: Duration(milliseconds: 500),
+            haptic: false,
+            tabs: [
+              GButton(
+                icon: Icons.home_outlined,
+                text: FFLocalizations.of(context).getText(
+                  'amxdvirb' /* Home */,
+                ),
+              ),
+              GButton(
+                icon: Icons.menu_book,
+                text: FFLocalizations.of(context).getText(
+                  '6248jqp7' /* Pathways */,
+                ),
+              ),
+              GButton(
+                icon: Icons.person,
+                text: FFLocalizations.of(context).getText(
+                  'zv6tqbs6' /* Profile */,
+                ),
+              )
+            ],
           ),
-          GButton(
-            icon: Icons.menu_book,
-            text: FFLocalizations.of(context).getText(
-              '6248jqp7' /* Pathways */,
-            ),
-          ),
-          GButton(
-            icon: Icons.person,
-            text: FFLocalizations.of(context).getText(
-              'zv6tqbs6' /* Profile */,
-            ),
-          )
-        ],
+        ),
       ),
     );
   }
