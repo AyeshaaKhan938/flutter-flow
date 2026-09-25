@@ -6,6 +6,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/custom_code/actions/index.dart' as actions;
 import '/index.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -46,6 +47,10 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       _model.loadedLessons = await queryLessonsRecordOnce(
+        queryBuilder: (lessonsRecord) => lessonsRecord.where(
+          'status',
+          isEqualTo: 'published',
+        ),
         limit: 50,
       );
       _model.lessonsList = _model.loadedLessons!.toList().cast<LessonsRecord>();
@@ -123,6 +128,18 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20.0),
+                    child: CachedNetworkImage(
+                      fadeInDuration: Duration(milliseconds: 0),
+                      fadeOutDuration: Duration(milliseconds: 0),
+                      imageUrl:
+                          'https://firebasestorage.googleapis.com/v0/b/kingdom-heirs-discipleshipapp.firebasestorage.app/o/branding%2Fphoto_02.jpg?alt=media',
+                      width: double.infinity,
+                      height: 180.0,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                   Builder(
                     builder: (context) {
                       final lessonsListItem = _model.lessonsList.toList();
@@ -239,43 +256,10 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                   hoverColor: Colors.transparent,
                                   highlightColor: Colors.transparent,
                                   onTap: () async {
-                                    final liveVerseText =
-                                        await actions.fetchBibleVerseApi(
-                                      lessonsListItemItem.scriptureRef,
-                                      _model.memberLanguage ?? 'en',
-                                    );
-                                    if (liveVerseText.isNotEmpty) {
-                                      await showDialog(
-                                        context: context,
-                                        builder: (dialogContext) =>
-                                            AlertDialog(
-                                          title: Text(
-                                              lessonsListItemItem.scriptureRef),
-                                          content: SingleChildScrollView(
-                                            child: Text(liveVerseText),
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () =>
-                                                  Navigator.pop(dialogContext),
-                                              child: Text('Close'),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                      await actions.cacheLessonForOffline(
-                                        lessonsListItemItem.stableId,
-                                        lessonsListItemItem.title.en,
-                                        lessonsListItemItem.scriptureRef,
-                                        lessonsListItemItem.scriptureText.en,
-                                        lessonsListItemItem.reflectionPrompt.en,
-                                      );
-                                      return;
-                                    }
                                     _model.bibleOpenResult = await actions
                                         .openScriptureReferenceSafe(
                                       lessonsListItemItem.scriptureRef,
-                                      _model.memberLanguage ?? 'en',
+                                      _model.memberLanguage,
                                     );
                                     if (_model.bibleOpenResult == 'opened') {
                                       ScaffoldMessenger.of(context)
@@ -913,10 +897,10 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                       _model.saveSmartResult =
                           await actions.saveLessonProgressSmart(
                         currentJwtToken,
-                        widget.pathwayId ?? '',
-                        widget.lessonId ?? '',
+                        widget.pathwayId,
+                        widget.lessonId,
                         '0',
-                        _model.reflectionInput ?? '',
+                        _model.reflectionInput,
                       );
                       if (_model.saveSmartResult == 'queued') {
                         ScaffoldMessenger.of(context).showSnackBar(

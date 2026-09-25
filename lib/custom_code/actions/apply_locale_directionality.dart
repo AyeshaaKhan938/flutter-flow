@@ -17,7 +17,7 @@ Future<String> applyLocaleDirectionality(
   String languageCode,
 ) async {
   final code = languageCode.trim().toLowerCase();
-  final appLocale = code == 'lg' ? 'en' : (code.isEmpty ? 'en' : code);
+  final appLocale = (code.isEmpty ? 'en' : code);
   try {
     await FFLocalizations.storeLocale(appLocale);
     MyApp.of(context).setLocale(appLocale);

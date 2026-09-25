@@ -33,14 +33,22 @@ class OnboardingSurveyPageModel
 
   ///  State fields for stateful widgets in this page.
 
-  // Stores action output result for [Custom Action - SetPreferredLanguage] action in LangEnButton widget.
-  String? langEnResult;
-  // Stores action output result for [Custom Action - SetPreferredLanguage] action in LangEsButton widget.
-  String? langEsResult;
-  // Stores action output result for [Custom Action - SetPreferredLanguage] action in LangUrButton widget.
-  String? langUrResult;
-  // Stores action output result for [Custom Action - SetPreferredLanguage] action in LangLgButton widget.
-  String? langLgResult;
+  // Stores action output result for [Custom Action - SetPreferredLanguage] action in LangEnSelected widget.
+  String? pickLangEnA;
+  // Stores action output result for [Custom Action - SetPreferredLanguage] action in LangEnUnselected widget.
+  String? pickLangEnB;
+  // Stores action output result for [Custom Action - SetPreferredLanguage] action in LangEsSelected widget.
+  String? pickLangEsA;
+  // Stores action output result for [Custom Action - SetPreferredLanguage] action in LangEsUnselected widget.
+  String? pickLangEsB;
+  // Stores action output result for [Custom Action - SetPreferredLanguage] action in LangUrSelected widget.
+  String? pickLangUrA;
+  // Stores action output result for [Custom Action - SetPreferredLanguage] action in LangUrUnselected widget.
+  String? pickLangUrB;
+  // Stores action output result for [Custom Action - SetPreferredLanguage] action in LangLgSelected widget.
+  String? pickLangLgA;
+  // Stores action output result for [Custom Action - SetPreferredLanguage] action in LangLgUnselected widget.
+  String? pickLangLgB;
   // State field(s) for HearAboutField widget.
   FocusNode? hearAboutFieldFocusNode;
   TextEditingController? hearAboutFieldTextController;
@@ -51,7 +59,7 @@ class OnboardingSurveyPageModel
   TextEditingController? growthGoalFieldTextController;
   String? Function(BuildContext, String?)?
       growthGoalFieldTextControllerValidator;
-  // Stores action output result for [Backend Call - API (UpdateUserProfileV2)] action in OnboardingContinueButton widget.
+  // Stores action output result for [Backend Call - API (SaveOnboardingLanguage)] action in OnboardingContinueButton widget.
   ApiCallResponse? onboardingSaveResult;
 
   @override

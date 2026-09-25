@@ -1,3 +1,5 @@
+import '/auth/firebase_auth/auth_util.dart';
+import '/backend/api_requests/api_calls.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -33,6 +35,9 @@ class _ProfileTimezonePageWidgetState extends State<ProfileTimezonePageWidget> {
 
     _model.displayNameFieldTextController ??= TextEditingController();
     _model.displayNameFieldFocusNode ??= FocusNode();
+
+    _model.phoneFieldTextController ??= TextEditingController();
+    _model.phoneFieldFocusNode ??= FocusNode();
 
     _model.countryFieldTextController ??= TextEditingController();
     _model.countryFieldFocusNode ??= FocusNode();
@@ -179,6 +184,69 @@ class _ProfileTimezonePageWidgetState extends State<ProfileTimezonePageWidget> {
                     style: TextStyle(),
                     maxLines: null,
                     validator: _model.displayNameFieldTextControllerValidator
+                        .asValidator(context),
+                  ),
+                  TextFormField(
+                    controller: _model.phoneFieldTextController,
+                    focusNode: _model.phoneFieldFocusNode,
+                    onChanged: (_) => EasyDebounce.debounce(
+                      '_model.phoneFieldTextController',
+                      Duration(milliseconds: 2000),
+                      () async {
+                        _model.phone = _model.phoneFieldTextController.text;
+                        safeSetState(() {});
+                      },
+                    ),
+                    obscureText: false,
+                    decoration: InputDecoration(
+                      labelText: FFLocalizations.of(context).getText(
+                        'wo1o8h37' /* Phone number (optional) */,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color(0x00000000),
+                          width: 1.0,
+                        ),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(4.0),
+                          topRight: Radius.circular(4.0),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color(0x00000000),
+                          width: 1.0,
+                        ),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(4.0),
+                          topRight: Radius.circular(4.0),
+                        ),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color(0x00000000),
+                          width: 1.0,
+                        ),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(4.0),
+                          topRight: Radius.circular(4.0),
+                        ),
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color(0x00000000),
+                          width: 1.0,
+                        ),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(4.0),
+                          topRight: Radius.circular(4.0),
+                        ),
+                      ),
+                      filled: true,
+                    ),
+                    style: TextStyle(),
+                    maxLines: null,
+                    validator: _model.phoneFieldTextControllerValidator
                         .asValidator(context),
                   ),
                   TextFormField(
@@ -374,11 +442,45 @@ class _ProfileTimezonePageWidgetState extends State<ProfileTimezonePageWidget> {
                   ),
                   FFButtonWidget(
                     onPressed: () async {
-                      if (Navigator.of(context).canPop()) {
-                        context.pop();
+                      if (_model.country == '') {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Please enter your country to continue.',
+                              style: TextStyle(),
+                            ),
+                            duration: Duration(milliseconds: 4000),
+                          ),
+                        );
+                      } else {
+                        _model.saveProfileDetailsResult =
+                            await SaveProfileDetailsV2Call.call(
+                          authToken: currentJwtToken,
+                          displayName: _model.displayName,
+                          phone: _model.phone,
+                          country: _model.country,
+                          regionCity: _model.regionCity,
+                          timezone: _model.timezone,
+                        );
+
+                        if ((_model.saveProfileDetailsResult?.succeeded ??
+                            true)) {
+                          context.pushNamed(
+                              NotificationPermissionPrimerPageWidget.routeName);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Could not save your details. Check the phone number format and try again.',
+                                style: TextStyle(),
+                              ),
+                              duration: Duration(milliseconds: 4000),
+                            ),
+                          );
+                        }
                       }
-                      context.pushNamed(
-                          NotificationPermissionPrimerPageWidget.routeName);
+
+                      safeSetState(() {});
                     },
                     text: FFLocalizations.of(context).getText(
                       'rlcvmmgf' /* Save & Continue */,

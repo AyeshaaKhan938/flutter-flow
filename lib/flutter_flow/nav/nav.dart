@@ -97,15 +97,20 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
               : PathwayListPageWidget(),
         ),
         FFRoute(
-          name: TodayPageWidget.routeName,
-          path: TodayPageWidget.routePath,
-          builder: (context, params) => TodayPageWidget(),
-        ),
+            name: TodayPageWidget.routeName,
+            path: TodayPageWidget.routePath,
+            builder: (context, params) => NavBarPage(
+                  initialPage: '',
+                  page: TodayPageWidget(),
+                )),
         FFRoute(
-          name: OnboardingSurveyPageWidget.routeName,
-          path: OnboardingSurveyPageWidget.routePath,
-          builder: (context, params) => OnboardingSurveyPageWidget(),
-        ),
+            name: OnboardingSurveyPageWidget.routeName,
+            path: OnboardingSurveyPageWidget.routePath,
+            requireAuth: true,
+            builder: (context, params) => NavBarPage(
+                  initialPage: '',
+                  page: OnboardingSurveyPageWidget(),
+                )),
         FFRoute(
           name: SignUpPageWidget.routeName,
           path: SignUpPageWidget.routePath,
@@ -117,10 +122,12 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           builder: (context, params) => SignInPageWidget(),
         ),
         FFRoute(
-          name: AdminPathwaysPageWidget.routeName,
-          path: AdminPathwaysPageWidget.routePath,
-          builder: (context, params) => AdminPathwaysPageWidget(),
-        ),
+            name: AdminPathwaysPageWidget.routeName,
+            path: AdminPathwaysPageWidget.routePath,
+            builder: (context, params) => NavBarPage(
+                  initialPage: '',
+                  page: AdminPathwaysPageWidget(),
+                )),
         FFRoute(
           name: ProfilePageWidget.routeName,
           path: ProfilePageWidget.routePath,
@@ -136,79 +143,101 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
               : HomePageWidget(),
         ),
         FFRoute(
-          name: RecommendationResultPageWidget.routeName,
-          path: RecommendationResultPageWidget.routePath,
-          builder: (context, params) => RecommendationResultPageWidget(),
-        ),
+            name: RecommendationResultPageWidget.routeName,
+            path: RecommendationResultPageWidget.routePath,
+            requireAuth: true,
+            builder: (context, params) => NavBarPage(
+                  initialPage: '',
+                  page: RecommendationResultPageWidget(),
+                )),
         FFRoute(
-          name: AssessmentQuestionsPageWidget.routeName,
-          path: AssessmentQuestionsPageWidget.routePath,
-          builder: (context, params) => AssessmentQuestionsPageWidget(),
-        ),
+            name: AssessmentQuestionsPageWidget.routeName,
+            path: AssessmentQuestionsPageWidget.routePath,
+            requireAuth: true,
+            builder: (context, params) => NavBarPage(
+                  initialPage: '',
+                  page: AssessmentQuestionsPageWidget(),
+                )),
         FFRoute(
-          name: AssessmentIntroPageWidget.routeName,
-          path: AssessmentIntroPageWidget.routePath,
-          builder: (context, params) => AssessmentIntroPageWidget(),
-        ),
+            name: AssessmentIntroPageWidget.routeName,
+            path: AssessmentIntroPageWidget.routePath,
+            requireAuth: true,
+            builder: (context, params) => NavBarPage(
+                  initialPage: '',
+                  page: AssessmentIntroPageWidget(),
+                )),
         FFRoute(
-          name: NotificationPermissionPrimerPageWidget.routeName,
-          path: NotificationPermissionPrimerPageWidget.routePath,
-          builder: (context, params) =>
-              NotificationPermissionPrimerPageWidget(),
-        ),
+            name: NotificationPermissionPrimerPageWidget.routeName,
+            path: NotificationPermissionPrimerPageWidget.routePath,
+            requireAuth: true,
+            builder: (context, params) => NavBarPage(
+                  initialPage: '',
+                  page: NotificationPermissionPrimerPageWidget(),
+                )),
         FFRoute(
-          name: ProfileTimezonePageWidget.routeName,
-          path: ProfileTimezonePageWidget.routePath,
-          builder: (context, params) => ProfileTimezonePageWidget(),
-        ),
+            name: ProfileTimezonePageWidget.routeName,
+            path: ProfileTimezonePageWidget.routePath,
+            requireAuth: true,
+            builder: (context, params) => NavBarPage(
+                  initialPage: '',
+                  page: ProfileTimezonePageWidget(),
+                )),
         FFRoute(
           name: ResetPasswordPageWidget.routeName,
           path: ResetPasswordPageWidget.routePath,
           builder: (context, params) => ResetPasswordPageWidget(),
         ),
         FFRoute(
-          name: PathwayOverviewPageWidget.routeName,
-          path: PathwayOverviewPageWidget.routePath,
-          builder: (context, params) => PathwayOverviewPageWidget(
-            pathwayId: params.getParam(
-              'pathwayId',
-              ParamType.String,
-            ),
-          ),
-        ),
+            name: PathwayOverviewPageWidget.routeName,
+            path: PathwayOverviewPageWidget.routePath,
+            builder: (context, params) => NavBarPage(
+                  initialPage: '',
+                  page: PathwayOverviewPageWidget(
+                    pathwayId: params.getParam(
+                      'pathwayId',
+                      ParamType.String,
+                    ),
+                  ),
+                )),
         FFRoute(
-          name: DailyLessonPageWidget.routeName,
-          path: DailyLessonPageWidget.routePath,
-          builder: (context, params) => DailyLessonPageWidget(
-            pathwayId: params.getParam(
-              'pathwayId',
-              ParamType.String,
-            ),
-            lessonId: params.getParam(
-              'lessonId',
-              ParamType.String,
-            ),
-          ),
-        ),
+            name: DailyLessonPageWidget.routeName,
+            path: DailyLessonPageWidget.routePath,
+            builder: (context, params) => NavBarPage(
+                  initialPage: '',
+                  page: DailyLessonPageWidget(
+                    pathwayId: params.getParam(
+                      'pathwayId',
+                      ParamType.String,
+                    ),
+                    lessonId: params.getParam(
+                      'lessonId',
+                      ParamType.String,
+                    ),
+                  ),
+                )),
         FFRoute(
-          name: QuizPageWidget.routeName,
-          path: QuizPageWidget.routePath,
-          builder: (context, params) => QuizPageWidget(
-            pathwayId: params.getParam(
-              'pathwayId',
-              ParamType.String,
-            ),
-            quizId: params.getParam(
-              'quizId',
-              ParamType.String,
-            ),
-          ),
-        ),
+            name: QuizPageWidget.routeName,
+            path: QuizPageWidget.routePath,
+            builder: (context, params) => NavBarPage(
+                  initialPage: '',
+                  page: QuizPageWidget(
+                    pathwayId: params.getParam(
+                      'pathwayId',
+                      ParamType.String,
+                    ),
+                    quizId: params.getParam(
+                      'quizId',
+                      ParamType.String,
+                    ),
+                  ),
+                )),
         FFRoute(
-          name: RagSearchPageWidget.routeName,
-          path: RagSearchPageWidget.routePath,
-          builder: (context, params) => RagSearchPageWidget(),
-        )
+            name: RagSearchPageWidget.routeName,
+            path: RagSearchPageWidget.routePath,
+            builder: (context, params) => NavBarPage(
+                  initialPage: '',
+                  page: RagSearchPageWidget(),
+                ))
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );
 

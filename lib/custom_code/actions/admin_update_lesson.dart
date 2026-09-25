@@ -12,13 +12,18 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 Future<String> adminUpdateLesson(
-  String pathwayStableId,
-  String stableId,
-  String title,
-  String scriptureRef,
-  String reflectionPrompt,
-  String status,
-) async {
+    String? pathwayStableId,
+    String? stableId,
+    String? title,
+    String? scriptureRef,
+    String? reflectionPrompt,
+    String? status) async {
+  pathwayStableId ??= '';
+  stableId ??= '';
+  title ??= '';
+  scriptureRef ??= '';
+  reflectionPrompt ??= '';
+  status ??= '';
   final pathwayId = pathwayStableId.trim();
   final lessonId = stableId.trim();
   if (pathwayId.isEmpty || lessonId.isEmpty) {

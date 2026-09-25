@@ -11,12 +11,12 @@ import 'package:flutter/material.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-Future<String> adminCreateLesson(
-  String title,
-  String stableId,
-  String pathwayStableId,
-  String scriptureRef,
-) async {
+Future<String> adminCreateLesson(String? title, String? stableId,
+    String? pathwayStableId, String? scriptureRef) async {
+  title ??= '';
+  stableId ??= '';
+  pathwayStableId ??= '';
+  scriptureRef ??= '';
   final trimmedTitle = title.trim();
   final trimmedId = stableId.trim();
   final trimmedPathway = pathwayStableId.trim();

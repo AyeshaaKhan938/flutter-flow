@@ -11,7 +11,9 @@ import 'package:flutter/material.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-Future<String> adminCreatePathway(String title, String stableId) async {
+Future<String> adminCreatePathway(String? title, String? stableId) async {
+  title ??= '';
+  stableId ??= '';
   final trimmedTitle = title.trim();
   final trimmedId = stableId.trim();
   if (trimmedTitle.isEmpty || trimmedId.isEmpty) {

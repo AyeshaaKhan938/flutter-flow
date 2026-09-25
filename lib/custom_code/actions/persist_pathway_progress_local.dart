@@ -10,15 +10,19 @@ import 'package:flutter/material.dart';
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
 Future persistPathwayProgressLocal(
-  String completedLessonsCsv,
-  int completedCount,
-  int totalLessons,
-  String pathwayTitle,
+  String? completedLessonsCsv,
+  int? completedCount,
+  int? totalLessons,
+  String? pathwayTitle,
 ) async {
+  final csv = completedLessonsCsv ?? '';
+  final done = completedCount ?? 0;
+  final total = totalLessons ?? 0;
+  final title = pathwayTitle ?? '';
   FFAppState().update(() {
-    FFAppState().localProgressCsv = completedLessonsCsv;
-    FFAppState().localCompletedCount = completedCount;
-    FFAppState().localTotalLessons = totalLessons;
-    FFAppState().localPathwayTitle = pathwayTitle;
+    FFAppState().localProgressCsv = csv;
+    FFAppState().localCompletedCount = done;
+    FFAppState().localTotalLessons = total;
+    FFAppState().localPathwayTitle = title;
   });
 }

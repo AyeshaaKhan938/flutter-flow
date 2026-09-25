@@ -7,9 +7,11 @@ import '/flutter_flow/flutter_flow_widgets.dart';
 import '/custom_code/actions/index.dart' as actions;
 import '/flutter_flow/custom_functions.dart' as functions;
 import '/index.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:percent_indicator/percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'pathway_overview_page_model.dart';
 export 'pathway_overview_page_model.dart';
@@ -46,6 +48,10 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       await actions.ensureFirestoreOfflinePersistence();
       _model.loadedLessons = await queryLessonsRecordOnce(
+        queryBuilder: (lessonsRecord) => lessonsRecord.where(
+          'status',
+          isEqualTo: 'published',
+        ),
         limit: 50,
       );
       _model.lessonsList = _model.loadedLessons!.toList().cast<LessonsRecord>();
@@ -78,21 +84,17 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
         safeSetState(() {});
         await actions.persistPathwayProgressLocal(
           PathwayProgressResponseStruct.maybeFromMap(
-                      (_model.progressResult?.jsonBody ?? ''))
-                  ?.completedLessonsCsv ??
-              '',
+                  (_model.progressResult?.jsonBody ?? ''))
+              ?.completedLessonsCsv,
           PathwayProgressResponseStruct.maybeFromMap(
-                      (_model.progressResult?.jsonBody ?? ''))
-                  ?.completedCount ??
-              0,
+                  (_model.progressResult?.jsonBody ?? ''))
+              ?.completedCount,
           PathwayProgressResponseStruct.maybeFromMap(
-                      (_model.progressResult?.jsonBody ?? ''))
-                  ?.totalLessons ??
-              0,
+                  (_model.progressResult?.jsonBody ?? ''))
+              ?.totalLessons,
           PathwayProgressResponseStruct.maybeFromMap(
-                      (_model.progressResult?.jsonBody ?? ''))
-                  ?.pathwayTitle ??
-              '',
+                  (_model.progressResult?.jsonBody ?? ''))
+              ?.pathwayTitle,
         );
       } else {
         _model.completedCount = FFAppState().localCompletedCount;
@@ -167,6 +169,59 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20.0),
+                    child: CachedNetworkImage(
+                      fadeInDuration: Duration(milliseconds: 0),
+                      fadeOutDuration: Duration(milliseconds: 0),
+                      imageUrl:
+                          'https://firebasestorage.googleapis.com/v0/b/kingdom-heirs-discipleshipapp.firebasestorage.app/o/branding%2Fphoto_15.jpg?alt=media',
+                      width: double.infinity,
+                      height: 170.0,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  if (_model.pathwayTitle == 'Pathway')
+                    Row(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        CircularPercentIndicator(
+                          percent: 0.0,
+                          radius: 11.0,
+                          lineWidth: 3.0,
+                          animation: false,
+                          animateFromLastPercent: true,
+                        ),
+                        Text(
+                          FFLocalizations.of(context).getText(
+                            'ptjcyd50' /* Loading… */,
+                          ),
+                          style: FlutterFlowTheme.of(context)
+                              .bodyMedium
+                              .override(
+                                font: GoogleFonts.inter(
+                                  fontWeight: FlutterFlowTheme.of(context)
+                                      .bodyMedium
+                                      .fontWeight,
+                                  fontStyle: FlutterFlowTheme.of(context)
+                                      .bodyMedium
+                                      .fontStyle,
+                                ),
+                                color:
+                                    FlutterFlowTheme.of(context).secondaryText,
+                                letterSpacing: 0.0,
+                                fontWeight: FlutterFlowTheme.of(context)
+                                    .bodyMedium
+                                    .fontWeight,
+                                fontStyle: FlutterFlowTheme.of(context)
+                                    .bodyMedium
+                                    .fontStyle,
+                              ),
+                        ),
+                      ].divide(SizedBox(width: 10.0)),
+                    ),
                   Text(
                     FFLocalizations.of(context).getText(
                       '628s6g31' /* Complete each lesson at your o... */,

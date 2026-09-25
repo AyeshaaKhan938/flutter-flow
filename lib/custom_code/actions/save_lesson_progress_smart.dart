@@ -13,13 +13,13 @@ import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
 
-Future<String> saveLessonProgressSmart(
-  String authToken,
-  String pathwayId,
-  String lessonId,
-  String dayNumber,
-  String reflectionText,
-) async {
+Future<String> saveLessonProgressSmart(String? authToken, String? pathwayId,
+    String? lessonId, String? dayNumber, String? reflectionText) async {
+  authToken ??= '';
+  pathwayId ??= '';
+  lessonId ??= '';
+  dayNumber ??= '';
+  reflectionText ??= '';
   final results = await Connectivity().checkConnectivity();
   final offline =
       results.isEmpty || results.every((r) => r == ConnectivityResult.none);

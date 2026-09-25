@@ -21,7 +21,7 @@ Future<String> setPreferredLanguage(
 ) async {
   var code = languageCode.trim().toLowerCase();
   if (code.isEmpty) code = 'en';
-  final appLocale = code == 'lg' ? 'en' : code;
+  final appLocale = code;
   try {
     await FFLocalizations.storeLocale(appLocale);
     MyApp.of(context).setLocale(appLocale);

@@ -12,12 +12,30 @@ class SignUpPageModel extends FlutterFlowModel<SignUpPageWidget> {
 
   String? password = '';
 
+  String? phone = '';
+
+  String? country = '';
+
+  String? regionCity = '';
+
   ///  State fields for stateful widgets in this page.
 
   // State field(s) for FullNameField widget.
   FocusNode? fullNameFieldFocusNode;
   TextEditingController? fullNameFieldTextController;
   String? Function(BuildContext, String?)? fullNameFieldTextControllerValidator;
+  // State field(s) for PhoneField widget.
+  FocusNode? phoneFieldFocusNode;
+  TextEditingController? phoneFieldTextController;
+  String? Function(BuildContext, String?)? phoneFieldTextControllerValidator;
+  // State field(s) for CountryField widget.
+  FocusNode? countryFieldFocusNode;
+  TextEditingController? countryFieldTextController;
+  String? Function(BuildContext, String?)? countryFieldTextControllerValidator;
+  // State field(s) for CityField widget.
+  FocusNode? cityFieldFocusNode;
+  TextEditingController? cityFieldTextController;
+  String? Function(BuildContext, String?)? cityFieldTextControllerValidator;
   // State field(s) for SignUpEmailField widget.
   FocusNode? signUpEmailFieldFocusNode;
   TextEditingController? signUpEmailFieldTextController;
@@ -29,6 +47,8 @@ class SignUpPageModel extends FlutterFlowModel<SignUpPageWidget> {
   late bool signUpPasswordFieldVisibility;
   String? Function(BuildContext, String?)?
       signUpPasswordFieldTextControllerValidator;
+  // Stores action output result for [Custom Action - SaveSignupProfile] action in SignUpSubmitButton widget.
+  String? signupSaveResult;
 
   @override
   void initState(BuildContext context) {
@@ -39,6 +59,15 @@ class SignUpPageModel extends FlutterFlowModel<SignUpPageWidget> {
   void dispose() {
     fullNameFieldFocusNode?.dispose();
     fullNameFieldTextController?.dispose();
+
+    phoneFieldFocusNode?.dispose();
+    phoneFieldTextController?.dispose();
+
+    countryFieldFocusNode?.dispose();
+    countryFieldTextController?.dispose();
+
+    cityFieldFocusNode?.dispose();
+    cityFieldTextController?.dispose();
 
     signUpEmailFieldFocusNode?.dispose();
     signUpEmailFieldTextController?.dispose();

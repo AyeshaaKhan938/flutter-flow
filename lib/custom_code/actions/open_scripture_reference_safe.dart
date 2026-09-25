@@ -13,9 +13,9 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 Future<String> openScriptureReferenceSafe(
-  String scriptureRef,
-  String languageCode,
-) async {
+    String? scriptureRef, String? languageCode) async {
+  scriptureRef ??= '';
+  languageCode ??= '';
   final ref = scriptureRef.trim();
   if (ref.isEmpty) {
     return 'empty';

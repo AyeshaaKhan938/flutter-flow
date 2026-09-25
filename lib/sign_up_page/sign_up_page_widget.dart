@@ -3,6 +3,7 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/custom_code/actions/index.dart' as actions;
 import '/index.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_debounce/easy_debounce.dart';
@@ -37,6 +38,15 @@ class _SignUpPageWidgetState extends State<SignUpPageWidget> {
 
     _model.fullNameFieldTextController ??= TextEditingController();
     _model.fullNameFieldFocusNode ??= FocusNode();
+
+    _model.phoneFieldTextController ??= TextEditingController();
+    _model.phoneFieldFocusNode ??= FocusNode();
+
+    _model.countryFieldTextController ??= TextEditingController();
+    _model.countryFieldFocusNode ??= FocusNode();
+
+    _model.cityFieldTextController ??= TextEditingController();
+    _model.cityFieldFocusNode ??= FocusNode();
 
     _model.signUpEmailFieldTextController ??= TextEditingController();
     _model.signUpEmailFieldFocusNode ??= FocusNode();
@@ -96,14 +106,14 @@ class _SignUpPageWidgetState extends State<SignUpPageWidget> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(60.0),
+                    borderRadius: BorderRadius.circular(20.0),
                     child: CachedNetworkImage(
                       fadeInDuration: Duration(milliseconds: 0),
                       fadeOutDuration: Duration(milliseconds: 0),
                       imageUrl:
-                          'https://storage.googleapis.com/kingdom-heirs-discipleshipapp.firebasestorage.app/branding/kingdom_heirs_crown_logo.png',
-                      width: 120.0,
-                      height: 120.0,
+                          'https://firebasestorage.googleapis.com/v0/b/kingdom-heirs-discipleshipapp.firebasestorage.app/o/branding%2Fphoto_03.jpg?alt=media',
+                      width: double.infinity,
+                      height: 110.0,
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -193,6 +203,204 @@ class _SignUpPageWidgetState extends State<SignUpPageWidget> {
                     maxLines: null,
                     validator: _model.fullNameFieldTextControllerValidator
                         .asValidator(context),
+                  ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextFormField(
+                        controller: _model.phoneFieldTextController,
+                        focusNode: _model.phoneFieldFocusNode,
+                        onChanged: (_) => EasyDebounce.debounce(
+                          '_model.phoneFieldTextController',
+                          Duration(milliseconds: 2000),
+                          () async {
+                            _model.phone = _model.phoneFieldTextController.text;
+                            safeSetState(() {});
+                          },
+                        ),
+                        obscureText: false,
+                        decoration: InputDecoration(
+                          labelText: FFLocalizations.of(context).getText(
+                            '0yamf9ha' /* Phone number (optional) */,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Color(0x00000000),
+                              width: 1.0,
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(4.0),
+                              topRight: Radius.circular(4.0),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Color(0x00000000),
+                              width: 1.0,
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(4.0),
+                              topRight: Radius.circular(4.0),
+                            ),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Color(0x00000000),
+                              width: 1.0,
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(4.0),
+                              topRight: Radius.circular(4.0),
+                            ),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Color(0x00000000),
+                              width: 1.0,
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(4.0),
+                              topRight: Radius.circular(4.0),
+                            ),
+                          ),
+                          filled: true,
+                        ),
+                        style: TextStyle(),
+                        maxLines: null,
+                        validator: _model.phoneFieldTextControllerValidator
+                            .asValidator(context),
+                      ),
+                      TextFormField(
+                        controller: _model.countryFieldTextController,
+                        focusNode: _model.countryFieldFocusNode,
+                        onChanged: (_) => EasyDebounce.debounce(
+                          '_model.countryFieldTextController',
+                          Duration(milliseconds: 2000),
+                          () async {
+                            _model.country =
+                                _model.countryFieldTextController.text;
+                            safeSetState(() {});
+                          },
+                        ),
+                        obscureText: false,
+                        decoration: InputDecoration(
+                          labelText: FFLocalizations.of(context).getText(
+                            'nzbvfbut' /* Country */,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Color(0x00000000),
+                              width: 1.0,
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(4.0),
+                              topRight: Radius.circular(4.0),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Color(0x00000000),
+                              width: 1.0,
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(4.0),
+                              topRight: Radius.circular(4.0),
+                            ),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Color(0x00000000),
+                              width: 1.0,
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(4.0),
+                              topRight: Radius.circular(4.0),
+                            ),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Color(0x00000000),
+                              width: 1.0,
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(4.0),
+                              topRight: Radius.circular(4.0),
+                            ),
+                          ),
+                          filled: true,
+                        ),
+                        style: TextStyle(),
+                        maxLines: null,
+                        validator: _model.countryFieldTextControllerValidator
+                            .asValidator(context),
+                      ),
+                      TextFormField(
+                        controller: _model.cityFieldTextController,
+                        focusNode: _model.cityFieldFocusNode,
+                        onChanged: (_) => EasyDebounce.debounce(
+                          '_model.cityFieldTextController',
+                          Duration(milliseconds: 2000),
+                          () async {
+                            _model.regionCity =
+                                _model.cityFieldTextController.text;
+                            safeSetState(() {});
+                          },
+                        ),
+                        obscureText: false,
+                        decoration: InputDecoration(
+                          labelText: FFLocalizations.of(context).getText(
+                            '08bkphld' /* City (optional) */,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Color(0x00000000),
+                              width: 1.0,
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(4.0),
+                              topRight: Radius.circular(4.0),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Color(0x00000000),
+                              width: 1.0,
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(4.0),
+                              topRight: Radius.circular(4.0),
+                            ),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Color(0x00000000),
+                              width: 1.0,
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(4.0),
+                              topRight: Radius.circular(4.0),
+                            ),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Color(0x00000000),
+                              width: 1.0,
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(4.0),
+                              topRight: Radius.circular(4.0),
+                            ),
+                          ),
+                          filled: true,
+                        ),
+                        style: TextStyle(),
+                        maxLines: null,
+                        validator: _model.cityFieldTextControllerValidator
+                            .asValidator(context),
+                      ),
+                    ].divide(SizedBox(height: 14.0)),
                   ),
                   TextFormField(
                     controller: _model.signUpEmailFieldTextController,
@@ -339,20 +547,10 @@ class _SignUpPageWidgetState extends State<SignUpPageWidget> {
                   FFButtonWidget(
                     onPressed: () async {
                       GoRouter.of(context).prepareAuthEvent();
-                      if (_model.password! != _model.password!) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Passwords don\'t match!',
-                            ),
-                          ),
-                        );
-                        return;
-                      }
 
                       final user = await authManager.createAccountWithEmail(
                         context,
-                        _model.signUpEmailFieldTextController.text,
+                        _model.email!,
                         _model.password!,
                       );
                       if (user == null) {
@@ -366,8 +564,17 @@ class _SignUpPageWidgetState extends State<SignUpPageWidget> {
                             fullName: _model.fullNameFieldTextController.text,
                           ));
 
+                      _model.signupSaveResult = await actions.saveSignupProfile(
+                        _model.fullName,
+                        _model.phone,
+                        _model.country,
+                        _model.regionCity,
+                      );
+
                       context.goNamedAuth(
                           HomePageWidget.routeName, context.mounted);
+
+                      safeSetState(() {});
                     },
                     text: FFLocalizations.of(context).getText(
                       'q2vm203a' /* Sign Up */,

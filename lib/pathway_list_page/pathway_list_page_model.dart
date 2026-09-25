@@ -17,6 +17,8 @@ class PathwayListPageModel extends FlutterFlowModel<PathwayListPageWidget> {
           int index, Function(PathwaysRecord) updateFn) =>
       pathwaysList[index] = updateFn(pathwaysList[index]);
 
+  bool? isLoading = true;
+
   ///  State fields for stateful widgets in this page.
 
   // Stores action output result for [Firestore Query - Query a collection] action in PathwayListPage widget.

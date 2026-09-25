@@ -25,5 +25,4 @@ export '/custom_code/actions/request_notification_permission.dart'
     show requestNotificationPermission;
 export '/custom_code/actions/apply_locale_directionality.dart'
     show applyLocaleDirectionality;
-export '/custom_code/actions/fetch_bible_verse_api.dart'
-    show fetchBibleVerseApi;
+export '/custom_code/actions/save_signup_profile.dart' show saveSignupProfile;

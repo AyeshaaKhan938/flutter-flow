@@ -1,3 +1,4 @@
+import '/backend/api_requests/api_calls.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import 'profile_timezone_page_widget.dart' show ProfileTimezonePageWidget;
@@ -17,6 +18,8 @@ class ProfileTimezonePageModel
 
   String? displayName = '';
 
+  String? phone = '';
+
   ///  State fields for stateful widgets in this page.
 
   // State field(s) for DisplayNameField widget.
@@ -24,6 +27,10 @@ class ProfileTimezonePageModel
   TextEditingController? displayNameFieldTextController;
   String? Function(BuildContext, String?)?
       displayNameFieldTextControllerValidator;
+  // State field(s) for PhoneField widget.
+  FocusNode? phoneFieldFocusNode;
+  TextEditingController? phoneFieldTextController;
+  String? Function(BuildContext, String?)? phoneFieldTextControllerValidator;
   // State field(s) for CountryField widget.
   FocusNode? countryFieldFocusNode;
   TextEditingController? countryFieldTextController;
@@ -37,6 +44,8 @@ class ProfileTimezonePageModel
   FocusNode? timezoneFieldFocusNode;
   TextEditingController? timezoneFieldTextController;
   String? Function(BuildContext, String?)? timezoneFieldTextControllerValidator;
+  // Stores action output result for [Backend Call - API (SaveProfileDetailsV2)] action in SaveProfileDetailsButton widget.
+  ApiCallResponse? saveProfileDetailsResult;
 
   @override
   void initState(BuildContext context) {}
@@ -45,6 +54,9 @@ class ProfileTimezonePageModel
   void dispose() {
     displayNameFieldFocusNode?.dispose();
     displayNameFieldTextController?.dispose();
+
+    phoneFieldFocusNode?.dispose();
+    phoneFieldTextController?.dispose();
 
     countryFieldFocusNode?.dispose();
     countryFieldTextController?.dispose();

@@ -12,10 +12,10 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 Future<String> adminUpdatePathway(
-  String stableId,
-  String title,
-  String status,
-) async {
+    String? stableId, String? title, String? status) async {
+  stableId ??= '';
+  title ??= '';
+  status ??= '';
   final id = stableId.trim();
   if (id.isEmpty) {
     return 'missing_fields';

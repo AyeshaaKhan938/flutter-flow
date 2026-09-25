@@ -142,61 +142,151 @@ class _OnboardingSurveyPageWidgetState
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      FFButtonWidget(
-                        onPressed: () async {
-                          _model.preferredLanguage = 'en';
-                          safeSetState(() {});
-                          _model.langEnResult =
-                              await actions.setPreferredLanguage(
-                            context,
-                            currentJwtToken,
-                            'en',
-                          );
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          if (_model.preferredLanguage == 'en')
+                            FFButtonWidget(
+                              onPressed: () async {
+                                _model.preferredLanguage = 'en';
+                                safeSetState(() {});
+                                _model.pickLangEnA =
+                                    await actions.setPreferredLanguage(
+                                  context,
+                                  currentJwtToken,
+                                  'en',
+                                );
 
-                          safeSetState(() {});
-                        },
-                        text: FFLocalizations.of(context).getText(
-                          'tcjox8sn' /* English */,
-                        ),
-                        options: FFButtonOptions(
-                          padding: EdgeInsetsDirectional.fromSTEB(
-                              0.0, 0.0, 0.0, 0.0),
-                          iconPadding: EdgeInsetsDirectional.fromSTEB(
-                              0.0, 0.0, 0.0, 0.0),
-                          color: FlutterFlowTheme.of(context).secondary,
-                          textStyle: TextStyle(
-                            color: FlutterFlowTheme.of(context).primaryText,
-                          ),
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
+                                safeSetState(() {});
+                              },
+                              text: FFLocalizations.of(context).getText(
+                                'tyvkilol' /* ✓ English */,
+                              ),
+                              options: FFButtonOptions(
+                                width: 130.0,
+                                padding: EdgeInsetsDirectional.fromSTEB(
+                                    0.0, 0.0, 0.0, 0.0),
+                                iconPadding: EdgeInsetsDirectional.fromSTEB(
+                                    0.0, 0.0, 0.0, 0.0),
+                                color: FlutterFlowTheme.of(context).primary,
+                                textStyle: TextStyle(
+                                  color: FlutterFlowTheme.of(context)
+                                      .primaryBackground,
+                                ),
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                            ),
+                          if (!(_model.preferredLanguage == 'en'))
+                            FFButtonWidget(
+                              onPressed: () async {
+                                _model.preferredLanguage = 'en';
+                                safeSetState(() {});
+                                _model.pickLangEnB =
+                                    await actions.setPreferredLanguage(
+                                  context,
+                                  currentJwtToken,
+                                  'en',
+                                );
+
+                                safeSetState(() {});
+                              },
+                              text: FFLocalizations.of(context).getText(
+                                'o147mscj' /* English */,
+                              ),
+                              options: FFButtonOptions(
+                                width: 130.0,
+                                padding: EdgeInsetsDirectional.fromSTEB(
+                                    0.0, 0.0, 0.0, 0.0),
+                                iconPadding: EdgeInsetsDirectional.fromSTEB(
+                                    0.0, 0.0, 0.0, 0.0),
+                                color: Colors.transparent,
+                                textStyle: TextStyle(
+                                  color: FlutterFlowTheme.of(context).primary,
+                                ),
+                                elevation: 0.0,
+                                borderSide: BorderSide(
+                                  color: FlutterFlowTheme.of(context).primary,
+                                  width: 1.0,
+                                ),
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                            ),
+                        ],
                       ),
-                      FFButtonWidget(
-                        onPressed: () async {
-                          _model.preferredLanguage = 'es';
-                          safeSetState(() {});
-                          _model.langEsResult =
-                              await actions.setPreferredLanguage(
-                            context,
-                            currentJwtToken,
-                            'es',
-                          );
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          if (_model.preferredLanguage == 'es')
+                            FFButtonWidget(
+                              onPressed: () async {
+                                _model.preferredLanguage = 'es';
+                                safeSetState(() {});
+                                _model.pickLangEsA =
+                                    await actions.setPreferredLanguage(
+                                  context,
+                                  currentJwtToken,
+                                  'es',
+                                );
 
-                          safeSetState(() {});
-                        },
-                        text: FFLocalizations.of(context).getText(
-                          'ek8h59pw' /* Español */,
-                        ),
-                        options: FFButtonOptions(
-                          padding: EdgeInsetsDirectional.fromSTEB(
-                              0.0, 0.0, 0.0, 0.0),
-                          iconPadding: EdgeInsetsDirectional.fromSTEB(
-                              0.0, 0.0, 0.0, 0.0),
-                          color: FlutterFlowTheme.of(context).secondary,
-                          textStyle: TextStyle(
-                            color: FlutterFlowTheme.of(context).primaryText,
-                          ),
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
+                                safeSetState(() {});
+                              },
+                              text: FFLocalizations.of(context).getText(
+                                'ivjkmu2g' /* ✓ Español */,
+                              ),
+                              options: FFButtonOptions(
+                                width: 130.0,
+                                padding: EdgeInsetsDirectional.fromSTEB(
+                                    0.0, 0.0, 0.0, 0.0),
+                                iconPadding: EdgeInsetsDirectional.fromSTEB(
+                                    0.0, 0.0, 0.0, 0.0),
+                                color: FlutterFlowTheme.of(context).primary,
+                                textStyle: TextStyle(
+                                  color: FlutterFlowTheme.of(context)
+                                      .primaryBackground,
+                                ),
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                            ),
+                          if (!(_model.preferredLanguage == 'es'))
+                            FFButtonWidget(
+                              onPressed: () async {
+                                _model.preferredLanguage = 'es';
+                                safeSetState(() {});
+                                _model.pickLangEsB =
+                                    await actions.setPreferredLanguage(
+                                  context,
+                                  currentJwtToken,
+                                  'es',
+                                );
+
+                                safeSetState(() {});
+                              },
+                              text: FFLocalizations.of(context).getText(
+                                'u2ase98s' /* Español */,
+                              ),
+                              options: FFButtonOptions(
+                                width: 130.0,
+                                padding: EdgeInsetsDirectional.fromSTEB(
+                                    0.0, 0.0, 0.0, 0.0),
+                                iconPadding: EdgeInsetsDirectional.fromSTEB(
+                                    0.0, 0.0, 0.0, 0.0),
+                                color: Colors.transparent,
+                                textStyle: TextStyle(
+                                  color: FlutterFlowTheme.of(context).primary,
+                                ),
+                                elevation: 0.0,
+                                borderSide: BorderSide(
+                                  color: FlutterFlowTheme.of(context).primary,
+                                  width: 1.0,
+                                ),
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                            ),
+                        ],
                       ),
                     ].divide(SizedBox(width: 8.0)),
                   ),
@@ -205,70 +295,151 @@ class _OnboardingSurveyPageWidgetState
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      FFButtonWidget(
-                        onPressed: () async {
-                          _model.preferredLanguage = 'ur';
-                          safeSetState(() {});
-                          _model.langUrResult =
-                              await actions.setPreferredLanguage(
-                            context,
-                            currentJwtToken,
-                            'ur',
-                          );
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          if (_model.preferredLanguage == 'ur')
+                            FFButtonWidget(
+                              onPressed: () async {
+                                _model.preferredLanguage = 'ur';
+                                safeSetState(() {});
+                                _model.pickLangUrA =
+                                    await actions.setPreferredLanguage(
+                                  context,
+                                  currentJwtToken,
+                                  'ur',
+                                );
 
-                          safeSetState(() {});
-                        },
-                        text: FFLocalizations.of(context).getText(
-                          'opqncqj2' /* اردو */,
-                        ),
-                        options: FFButtonOptions(
-                          padding: EdgeInsetsDirectional.fromSTEB(
-                              0.0, 0.0, 0.0, 0.0),
-                          iconPadding: EdgeInsetsDirectional.fromSTEB(
-                              0.0, 0.0, 0.0, 0.0),
-                          color: FlutterFlowTheme.of(context).secondary,
-                          textStyle: TextStyle(
-                            color: FlutterFlowTheme.of(context).primaryText,
-                          ),
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                      ),
-                      FFButtonWidget(
-                        onPressed: () async {
-                          _model.preferredLanguage = 'lg';
-                          safeSetState(() {});
-                          _model.langLgResult =
-                              await actions.setPreferredLanguage(
-                            context,
-                            currentJwtToken,
-                            'lg',
-                          );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Luganda selected. Content falls back to English where translations are missing.',
-                                style: TextStyle(),
+                                safeSetState(() {});
+                              },
+                              text: FFLocalizations.of(context).getText(
+                                '6v60ckxc' /* ✓ اردو */,
                               ),
-                              duration: Duration(milliseconds: 4000),
+                              options: FFButtonOptions(
+                                width: 130.0,
+                                padding: EdgeInsetsDirectional.fromSTEB(
+                                    0.0, 0.0, 0.0, 0.0),
+                                iconPadding: EdgeInsetsDirectional.fromSTEB(
+                                    0.0, 0.0, 0.0, 0.0),
+                                color: FlutterFlowTheme.of(context).primary,
+                                textStyle: TextStyle(
+                                  color: FlutterFlowTheme.of(context)
+                                      .primaryBackground,
+                                ),
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
                             ),
-                          );
+                          if (!(_model.preferredLanguage == 'ur'))
+                            FFButtonWidget(
+                              onPressed: () async {
+                                _model.preferredLanguage = 'ur';
+                                safeSetState(() {});
+                                _model.pickLangUrB =
+                                    await actions.setPreferredLanguage(
+                                  context,
+                                  currentJwtToken,
+                                  'ur',
+                                );
 
-                          safeSetState(() {});
-                        },
-                        text: FFLocalizations.of(context).getText(
-                          'qls181sb' /* Luganda */,
-                        ),
-                        options: FFButtonOptions(
-                          padding: EdgeInsetsDirectional.fromSTEB(
-                              0.0, 0.0, 0.0, 0.0),
-                          iconPadding: EdgeInsetsDirectional.fromSTEB(
-                              0.0, 0.0, 0.0, 0.0),
-                          color: FlutterFlowTheme.of(context).secondary,
-                          textStyle: TextStyle(
-                            color: FlutterFlowTheme.of(context).primaryText,
-                          ),
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
+                                safeSetState(() {});
+                              },
+                              text: FFLocalizations.of(context).getText(
+                                'z63wbotb' /* اردو */,
+                              ),
+                              options: FFButtonOptions(
+                                width: 130.0,
+                                padding: EdgeInsetsDirectional.fromSTEB(
+                                    0.0, 0.0, 0.0, 0.0),
+                                iconPadding: EdgeInsetsDirectional.fromSTEB(
+                                    0.0, 0.0, 0.0, 0.0),
+                                color: Colors.transparent,
+                                textStyle: TextStyle(
+                                  color: FlutterFlowTheme.of(context).primary,
+                                ),
+                                elevation: 0.0,
+                                borderSide: BorderSide(
+                                  color: FlutterFlowTheme.of(context).primary,
+                                  width: 1.0,
+                                ),
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                            ),
+                        ],
+                      ),
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          if (_model.preferredLanguage == 'lg')
+                            FFButtonWidget(
+                              onPressed: () async {
+                                _model.preferredLanguage = 'lg';
+                                safeSetState(() {});
+                                _model.pickLangLgA =
+                                    await actions.setPreferredLanguage(
+                                  context,
+                                  currentJwtToken,
+                                  'lg',
+                                );
+
+                                safeSetState(() {});
+                              },
+                              text: FFLocalizations.of(context).getText(
+                                'ogv504bm' /* ✓ Luganda */,
+                              ),
+                              options: FFButtonOptions(
+                                width: 130.0,
+                                padding: EdgeInsetsDirectional.fromSTEB(
+                                    0.0, 0.0, 0.0, 0.0),
+                                iconPadding: EdgeInsetsDirectional.fromSTEB(
+                                    0.0, 0.0, 0.0, 0.0),
+                                color: FlutterFlowTheme.of(context).primary,
+                                textStyle: TextStyle(
+                                  color: FlutterFlowTheme.of(context)
+                                      .primaryBackground,
+                                ),
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                            ),
+                          if (!(_model.preferredLanguage == 'lg'))
+                            FFButtonWidget(
+                              onPressed: () async {
+                                _model.preferredLanguage = 'lg';
+                                safeSetState(() {});
+                                _model.pickLangLgB =
+                                    await actions.setPreferredLanguage(
+                                  context,
+                                  currentJwtToken,
+                                  'lg',
+                                );
+
+                                safeSetState(() {});
+                              },
+                              text: FFLocalizations.of(context).getText(
+                                'ooi2ip6x' /* Luganda */,
+                              ),
+                              options: FFButtonOptions(
+                                width: 130.0,
+                                padding: EdgeInsetsDirectional.fromSTEB(
+                                    0.0, 0.0, 0.0, 0.0),
+                                iconPadding: EdgeInsetsDirectional.fromSTEB(
+                                    0.0, 0.0, 0.0, 0.0),
+                                color: Colors.transparent,
+                                textStyle: TextStyle(
+                                  color: FlutterFlowTheme.of(context).primary,
+                                ),
+                                elevation: 0.0,
+                                borderSide: BorderSide(
+                                  color: FlutterFlowTheme.of(context).primary,
+                                  width: 1.0,
+                                ),
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                            ),
+                        ],
                       ),
                     ].divide(SizedBox(width: 8.0)),
                   ),
@@ -403,7 +574,7 @@ class _OnboardingSurveyPageWidgetState
                   FFButtonWidget(
                     onPressed: () async {
                       _model.onboardingSaveResult =
-                          await UpdateUserProfileV2Call.call(
+                          await SaveOnboardingLanguageCall.call(
                         surveyResponses: '{}',
                         authToken: currentJwtToken,
                         preferredLanguage: _model.preferredLanguage,

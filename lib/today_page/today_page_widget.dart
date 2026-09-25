@@ -52,12 +52,25 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
             _model.loadedAnnouncements!.toList().cast<AnnouncementsRecord>();
         safeSetState(() {});
         _model.loadedScriptureToday = await queryDailyScriptureRecordOnce(
+          queryBuilder: (dailyScriptureRecord) => dailyScriptureRecord.where(
+            'status',
+            isEqualTo: 'published',
+          ),
           limit: 5,
         );
         _model.scriptureList =
             _model.loadedScriptureToday!.toList().cast<DailyScriptureRecord>();
         safeSetState(() {});
         _model.loadedEncouragementsToday = await queryEncouragementsRecordOnce(
+          queryBuilder: (encouragementsRecord) => encouragementsRecord
+              .where(
+                'status',
+                isEqualTo: 'published',
+              )
+              .where(
+                'rightsCleared',
+                isEqualTo: true,
+              ),
           limit: 5,
         );
         _model.encouragementList = _model.loadedEncouragementsToday!

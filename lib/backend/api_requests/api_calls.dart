@@ -941,6 +941,98 @@ class LogAnalyticsEventCall {
   }
 }
 
+class SaveProfileDetailsCall {
+  static Future<ApiCallResponse> call({
+    String? authToken = '',
+    String? displayName = '',
+    String? country = '',
+    String? regionCity = '',
+    String? timezone = '',
+  }) async {
+    final ffApiRequestBody = '''
+{"authToken":"${authToken}","displayName":"${displayName}","country":"${country}","regionCity":"${regionCity}","timezone":"${timezone}"}''';
+    return ApiManager.instance.makeApiCall(
+      callName: 'SaveProfileDetails',
+      apiUrl:
+          'https://us-central1-kingdom-heirs-discipleshipapp.cloudfunctions.net/updateUserProfile',
+      callType: ApiCallType.POST,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: {},
+      body: ffApiRequestBody,
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+class SaveOnboardingLanguageCall {
+  static Future<ApiCallResponse> call({
+    String? authToken = '',
+    String? preferredLanguage = '',
+    String? surveyResponses = '',
+  }) async {
+    final ffApiRequestBody = '''
+{"authToken":"${authToken}","preferredLanguage":"${preferredLanguage}","surveyResponses":"${surveyResponses}"}''';
+    return ApiManager.instance.makeApiCall(
+      callName: 'SaveOnboardingLanguage',
+      apiUrl:
+          'https://us-central1-kingdom-heirs-discipleshipapp.cloudfunctions.net/updateUserProfile',
+      callType: ApiCallType.POST,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: {},
+      body: ffApiRequestBody,
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+class SaveProfileDetailsV2Call {
+  static Future<ApiCallResponse> call({
+    String? authToken = '',
+    String? displayName = '',
+    String? phone = '',
+    String? country = '',
+    String? regionCity = '',
+    String? timezone = '',
+  }) async {
+    final ffApiRequestBody = '''
+{"authToken":"${authToken}","displayName":"${displayName}","phone":"${phone}","country":"${country}","regionCity":"${regionCity}","timezone":"${timezone}"}''';
+    return ApiManager.instance.makeApiCall(
+      callName: 'SaveProfileDetailsV2',
+      apiUrl:
+          'https://us-central1-kingdom-heirs-discipleshipapp.cloudfunctions.net/updateUserProfile',
+      callType: ApiCallType.POST,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: {},
+      body: ffApiRequestBody,
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
 class ApiPagingParams {
   int nextPageNumber = 0;
   int numItems = 0;

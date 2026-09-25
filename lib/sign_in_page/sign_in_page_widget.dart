@@ -3,6 +3,7 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -33,17 +34,8 @@ class _SignInPageWidgetState extends State<SignInPageWidget> {
     super.initState();
     _model = createModel(context, () => SignInPageModel());
 
-    _model.cityTextController1 ??= TextEditingController();
-    _model.cityFocusNode1 ??= FocusNode();
-
-    _model.emailFieldTextController1 ??= TextEditingController();
-    _model.emailFieldFocusNode1 ??= FocusNode();
-
-    _model.cityTextController2 ??= TextEditingController();
-    _model.cityFocusNode2 ??= FocusNode();
-
-    _model.emailFieldTextController2 ??= TextEditingController();
-    _model.emailFieldFocusNode2 ??= FocusNode();
+    _model.emailFieldTextController ??= TextEditingController();
+    _model.emailFieldFocusNode ??= FocusNode();
 
     _model.passwordFieldTextController ??= TextEditingController();
     _model.passwordFieldFocusNode ??= FocusNode();
@@ -100,11 +92,14 @@ class _SignInPageWidgetState extends State<SignInPageWidget> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(60.0),
-                    child: Image.asset(
-                      'assets/images/5897405E-1040-4EA6-88DB-8AF83ACE078C.png',
-                      width: 120.0,
-                      height: 329.5,
+                    borderRadius: BorderRadius.circular(20.0),
+                    child: CachedNetworkImage(
+                      fadeInDuration: Duration(milliseconds: 0),
+                      fadeOutDuration: Duration(milliseconds: 0),
+                      imageUrl:
+                          'https://firebasestorage.googleapis.com/v0/b/kingdom-heirs-discipleshipapp.firebasestorage.app/o/branding%2Fphoto_03.jpg?alt=media',
+                      width: double.infinity,
+                      height: 200.0,
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -154,23 +149,20 @@ class _SignInPageWidgetState extends State<SignInPageWidget> {
                         ),
                   ),
                   TextFormField(
-                    controller: _model.cityTextController1,
-                    focusNode: _model.cityFocusNode1,
+                    controller: _model.emailFieldTextController,
+                    focusNode: _model.emailFieldFocusNode,
                     onChanged: (_) => EasyDebounce.debounce(
-                      '_model.cityTextController1',
+                      '_model.emailFieldTextController',
                       Duration(milliseconds: 2000),
                       () async {
-                        _model.email = _model.cityTextController1.text;
+                        _model.email = _model.emailFieldTextController.text;
                         safeSetState(() {});
                       },
                     ),
                     obscureText: false,
                     decoration: InputDecoration(
                       labelText: FFLocalizations.of(context).getText(
-                        'uxww49cp' /* Age */,
-                      ),
-                      hintText: FFLocalizations.of(context).getText(
-                        'dvhl6pis' /* Age */,
+                        '2ahh5sx9' /* Email */,
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(
@@ -216,206 +208,7 @@ class _SignInPageWidgetState extends State<SignInPageWidget> {
                     ),
                     style: TextStyle(),
                     maxLines: null,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: _model.cityTextController1Validator
-                        .asValidator(context),
-                  ),
-                  TextFormField(
-                    controller: _model.emailFieldTextController1,
-                    focusNode: _model.emailFieldFocusNode1,
-                    onChanged: (_) => EasyDebounce.debounce(
-                      '_model.emailFieldTextController1',
-                      Duration(milliseconds: 2000),
-                      () async {
-                        _model.email = _model.emailFieldTextController1.text;
-                        safeSetState(() {});
-                      },
-                    ),
-                    obscureText: false,
-                    decoration: InputDecoration(
-                      labelText: FFLocalizations.of(context).getText(
-                        '3tyry75h' /* Phone Number */,
-                      ),
-                      hintText: FFLocalizations.of(context).getText(
-                        'rd7m3pj1' /* Phone Number (Optional) */,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x00000000),
-                          width: 1.0,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x00000000),
-                          width: 1.0,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x00000000),
-                          width: 1.0,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x00000000),
-                          width: 1.0,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                      filled: true,
-                    ),
-                    style: TextStyle(),
-                    maxLines: null,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: _model.emailFieldTextController1Validator
-                        .asValidator(context),
-                  ),
-                  TextFormField(
-                    controller: _model.cityTextController2,
-                    focusNode: _model.cityFocusNode2,
-                    onChanged: (_) => EasyDebounce.debounce(
-                      '_model.cityTextController2',
-                      Duration(milliseconds: 2000),
-                      () async {
-                        _model.email = _model.cityTextController2.text;
-                        safeSetState(() {});
-                      },
-                    ),
-                    obscureText: false,
-                    decoration: InputDecoration(
-                      labelText: FFLocalizations.of(context).getText(
-                        'ez1wpigw' /* City / Country */,
-                      ),
-                      hintText: FFLocalizations.of(context).getText(
-                        'lngboaf7' /* City/Country */,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x00000000),
-                          width: 1.0,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x00000000),
-                          width: 1.0,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x00000000),
-                          width: 1.0,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x00000000),
-                          width: 1.0,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                      filled: true,
-                    ),
-                    style: TextStyle(),
-                    maxLines: null,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: _model.cityTextController2Validator
-                        .asValidator(context),
-                  ),
-                  TextFormField(
-                    controller: _model.emailFieldTextController2,
-                    focusNode: _model.emailFieldFocusNode2,
-                    onChanged: (_) => EasyDebounce.debounce(
-                      '_model.emailFieldTextController2',
-                      Duration(milliseconds: 2000),
-                      () async {
-                        _model.email = _model.emailFieldTextController2.text;
-                        safeSetState(() {});
-                      },
-                    ),
-                    obscureText: false,
-                    decoration: InputDecoration(
-                      labelText: FFLocalizations.of(context).getText(
-                        'xxhea5vj' /* Email */,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x00000000),
-                          width: 1.0,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x00000000),
-                          width: 1.0,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x00000000),
-                          width: 1.0,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x00000000),
-                          width: 1.0,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                      filled: true,
-                    ),
-                    style: TextStyle(),
-                    maxLines: null,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: _model.emailFieldTextController2Validator
+                    validator: _model.emailFieldTextControllerValidator
                         .asValidator(context),
                   ),
                   TextFormField(
@@ -433,7 +226,7 @@ class _SignInPageWidgetState extends State<SignInPageWidget> {
                     obscureText: !_model.passwordFieldVisibility,
                     decoration: InputDecoration(
                       labelText: FFLocalizations.of(context).getText(
-                        'k6vtv918' /* Password */,
+                        'jwef6i19' /* Password */,
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(

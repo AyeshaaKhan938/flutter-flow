@@ -181,6 +181,8 @@ class AssessmentQuestionsPageModel
   // Stores action output result for [Backend Call - API (GetAssessmentQuestions)] action in AssessmentQuestionsPage widget.
   ApiCallResponse? loadedAssessmentCopy;
   // Stores action output result for [Backend Call - API (GetAssessmentQuestions)] action in AssessmentQuestionsPage widget.
+  ApiCallResponse? loadedAssessmentCopyRetry;
+  // Stores action output result for [Backend Call - API (GetAssessmentQuestions)] action in AssessmentQuestionsPage widget.
   ApiCallResponse? loadedAssessmentCopyFallback;
   // Stores action output result for [Backend Call - API (SubmitAssessmentV2)] action in SubmitAssessmentButton widget.
   ApiCallResponse? submitAssessmentResult;
