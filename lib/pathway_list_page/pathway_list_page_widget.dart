@@ -1,3 +1,5 @@
+import '/auth/firebase_auth/auth_util.dart';
+import '/backend/api_requests/api_calls.dart';
 import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -36,6 +38,15 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       _model.isLoading = true;
       safeSetState(() {});
+      _model.langProfileResult = await GetUserProfileV4Call.call(
+        authToken: currentJwtToken,
+      );
+      if ((_model.langProfileResult?.succeeded ?? true)) {
+        _model.memberLanguage = UserProfileFullResponseStruct.maybeFromMap(
+                (_model.langProfileResult?.jsonBody ?? ''))
+            ?.preferredLanguage;
+        safeSetState(() {});
+      }
       _model.loadedPathways = await queryPathwaysRecordOnce(
         queryBuilder: (pathwaysRecord) => pathwaysRecord.where(
           'status',
@@ -241,7 +252,20 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            pathwaysListItemItem.title.en,
+                                            _model.memberLanguage == 'es' &&
+                                                    pathwaysListItemItem
+                                                        .title.es.isNotEmpty
+                                                ? pathwaysListItemItem.title.es
+                                                : _model.memberLanguage ==
+                                                            'ur' &&
+                                                        pathwaysListItemItem
+                                                            .title
+                                                            .ur
+                                                            .isNotEmpty
+                                                    ? pathwaysListItemItem
+                                                        .title.ur
+                                                    : pathwaysListItemItem
+                                                        .title.en,
                                             style: FlutterFlowTheme.of(context)
                                                 .titleMedium
                                                 .override(
@@ -271,7 +295,23 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
                                                 ),
                                           ),
                                           Text(
-                                            pathwaysListItemItem.description.en,
+                                            _model.memberLanguage == 'es' &&
+                                                    pathwaysListItemItem
+                                                        .description
+                                                        .es
+                                                        .isNotEmpty
+                                                ? pathwaysListItemItem
+                                                    .description.es
+                                                : _model.memberLanguage ==
+                                                            'ur' &&
+                                                        pathwaysListItemItem
+                                                            .description
+                                                            .ur
+                                                            .isNotEmpty
+                                                    ? pathwaysListItemItem
+                                                        .description.ur
+                                                    : pathwaysListItemItem
+                                                        .description.en,
                                             maxLines: 2,
                                             style: FlutterFlowTheme.of(context)
                                                 .bodyMedium

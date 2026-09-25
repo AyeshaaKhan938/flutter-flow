@@ -1,3 +1,4 @@
+import '/backend/api_requests/api_calls.dart';
 import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -18,11 +19,15 @@ class PathwayListPageModel extends FlutterFlowModel<PathwayListPageWidget> {
       pathwaysList[index] = updateFn(pathwaysList[index]);
 
   bool? isLoading = true;
+  String? memberLanguage = 'en';
 
   ///  State fields for stateful widgets in this page.
 
   // Stores action output result for [Firestore Query - Query a collection] action in PathwayListPage widget.
   List<PathwaysRecord>? loadedPathways;
+
+  // Stores action output result for [Backend Call - API (GetUserProfileV4)] action in PathwayListPage widget.
+  ApiCallResponse? langProfileResult;
 
   @override
   void initState(BuildContext context) {}

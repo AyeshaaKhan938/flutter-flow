@@ -51,15 +51,29 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
         _model.announcementList =
             _model.loadedAnnouncements!.toList().cast<AnnouncementsRecord>();
         safeSetState(() {});
+        final todayDateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
         _model.loadedScriptureToday = await queryDailyScriptureRecordOnce(
-          queryBuilder: (dailyScriptureRecord) => dailyScriptureRecord.where(
-            'status',
-            isEqualTo: 'published',
-          ),
-          limit: 5,
+          queryBuilder: (dailyScriptureRecord) => dailyScriptureRecord
+              .where('status', isEqualTo: 'published')
+              .where('date', isEqualTo: todayDateStr),
+          limit: 1,
         );
         _model.scriptureList =
             _model.loadedScriptureToday!.toList().cast<DailyScriptureRecord>();
+        if (_model.scriptureList.isEmpty) {
+          // Fall back to any published entry so the section is never blank
+          // if the stored date format doesn't match yyyy-MM-dd.
+          _model.loadedScriptureToday = await queryDailyScriptureRecordOnce(
+            queryBuilder: (dailyScriptureRecord) => dailyScriptureRecord.where(
+              'status',
+              isEqualTo: 'published',
+            ),
+            limit: 1,
+          );
+          _model.scriptureList = _model.loadedScriptureToday!
+              .toList()
+              .cast<DailyScriptureRecord>();
+        }
         safeSetState(() {});
         _model.loadedEncouragementsToday = await queryEncouragementsRecordOnce(
           queryBuilder: (encouragementsRecord) => encouragementsRecord
