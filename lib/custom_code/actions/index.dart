@@ -31,3 +31,5 @@ export '/custom_code/actions/run_curriculum_import.dart'
     show runCurriculumImport;
 export '/custom_code/actions/device_content_language.dart'
     show deviceContentLanguage;
+export '/custom_code/actions/fetch_bible_verse_api.dart'
+    show fetchBibleVerseApi;
