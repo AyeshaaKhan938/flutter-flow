@@ -574,28 +574,27 @@ class _OnboardingSurveyPageWidgetState
                   FFButtonWidget(
                     onPressed: () async {
                       _model.onboardingSaveResult =
-                          await SaveOnboardingLanguageCall.call(
-                        surveyResponses: '{}',
+                          await SaveOnboardingSurveyCall.call(
                         authToken: currentJwtToken,
                         preferredLanguage: _model.preferredLanguage,
+                        hearAbout: _model.hearAboutFieldTextController.text,
+                        growthGoal: _model.growthGoalFieldTextController.text,
                       );
 
                       if ((_model.onboardingSaveResult?.succeeded ?? true)) {
-                        context.pushNamed(
-                            NotificationPermissionPrimerPageWidget.routeName);
+                        context.pushNamed(ProfileTimezonePageWidget.routeName);
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              'Could not save language. Continuing anyway.',
+                              'Could not save your answers. Continuing anyway.',
                               style: TextStyle(),
                             ),
                             duration: Duration(milliseconds: 4000),
                           ),
                         );
 
-                        context.pushNamed(
-                            NotificationPermissionPrimerPageWidget.routeName);
+                        context.pushNamed(ProfileTimezonePageWidget.routeName);
                       }
 
                       safeSetState(() {});

@@ -40,6 +40,10 @@ Future<String> saveSignupProfile(String? displayName, String? phone,
             'phone': validPhone,
             'country': country.trim(),
             'regionCity': regionCity.trim(),
+            if ((FFLocalizations.getStoredLocale()?.languageCode ?? '')
+                .isNotEmpty)
+              'preferredLanguage':
+                  FFLocalizations.getStoredLocale()!.languageCode,
           }),
         )
         .timeout(const Duration(seconds: 20))

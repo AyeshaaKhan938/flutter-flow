@@ -48,16 +48,20 @@ class TodayPageModel extends FlutterFlowModel<TodayPageWidget> {
 
   String? memberLanguage = 'en';
 
+  String? todayScriptureRef = '';
+
+  String? todayScriptureText = '';
+
+  String? todayEncouragementText = '';
+
+  String? todayEncouragementRef = '';
+
   ///  State fields for stateful widgets in this page.
 
-  // Stores action output result for [Backend Call - API (GetUserProfileV4)] action in TodayPage widget.
-  ApiCallResponse? langProfileResult;
+  // Stores action output result for [Backend Call - API (GetTodayContent)] action in TodayPage widget.
+  ApiCallResponse? todayContentResult;
   // Stores action output result for [Firestore Query - Query a collection] action in TodayPage widget.
   List<AnnouncementsRecord>? loadedAnnouncements;
-  // Stores action output result for [Firestore Query - Query a collection] action in TodayPage widget.
-  List<DailyScriptureRecord>? loadedScriptureToday;
-  // Stores action output result for [Firestore Query - Query a collection] action in TodayPage widget.
-  List<EncouragementsRecord>? loadedEncouragementsToday;
 
   @override
   void initState(BuildContext context) {}

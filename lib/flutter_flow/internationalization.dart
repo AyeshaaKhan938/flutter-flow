@@ -211,11 +211,23 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
       'lg': 'Ebyawandiikibwa by\'olwaleero',
       'ur': 'آج کا کلام',
     },
+    'uxvknhqk': {
+      'en': 'Loading…',
+      'es': 'Cargando…',
+      'lg': 'Kuleeta…',
+      'ur': 'لوڈ ہو رہا ہے…',
+    },
     'zxk458lu': {
       'en': 'Encouragement',
       'es': 'Estímulo',
       'lg': 'Okuzzaamu amaanyi',
       'ur': 'حوصلہ افزائی',
+    },
+    'btry4vm7': {
+      'en': 'Loading…',
+      'es': '',
+      'lg': '',
+      'ur': '',
     },
     'c3m7uoy7': {
       'en': 'Announcements',
@@ -338,18 +350,6 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
       'es': 'Número de teléfono (opcional)',
       'lg': 'Ennamba ya ssimu (si ya buwaze)',
       'ur': 'فون نمبر (اختیاری)',
-    },
-    'nzbvfbut': {
-      'en': 'Country',
-      'es': 'País',
-      'lg': 'Eggwanga',
-      'ur': 'ملک',
-    },
-    '08bkphld': {
-      'en': 'City (optional)',
-      'es': 'Ciudad (opcional)',
-      'lg': 'Ekibuga (si kya buwaze)',
-      'ur': 'شہر (اختیاری)',
     },
     '3wnu1x92': {
       'en': 'Email',
@@ -1454,7 +1454,7 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
       'lg': 'Akabonero akayitibwako: 80%',
       'ur': 'پاس ہونے کا اسکور: 80٪',
     },
-    'uxvknhqk': {
+    '2psuz7nv': {
       'en': 'Loading…',
       'es': 'Cargando…',
       'lg': 'Kuleeta…',

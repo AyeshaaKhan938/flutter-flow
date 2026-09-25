@@ -26,5 +26,6 @@ export '/custom_code/actions/request_notification_permission.dart'
 export '/custom_code/actions/apply_locale_directionality.dart'
     show applyLocaleDirectionality;
 export '/custom_code/actions/save_signup_profile.dart' show saveSignupProfile;
-export '/custom_code/actions/fetch_bible_verse_api.dart'
-    show fetchBibleVerseApi;
+export '/custom_code/actions/sync_device_language.dart' show syncDeviceLanguage;
+export '/custom_code/actions/run_curriculum_import.dart'
+    show runCurriculumImport;

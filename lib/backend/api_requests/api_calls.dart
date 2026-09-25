@@ -1033,6 +1033,63 @@ class SaveProfileDetailsV2Call {
   }
 }
 
+class GetTodayContentCall {
+  static Future<ApiCallResponse> call({
+    String? authToken = '',
+  }) async {
+    final ffApiRequestBody = '''
+{"authToken":"${authToken}"}''';
+    return ApiManager.instance.makeApiCall(
+      callName: 'GetTodayContent',
+      apiUrl:
+          'https://us-central1-kingdom-heirs-discipleshipapp.cloudfunctions.net/getTodayContent',
+      callType: ApiCallType.POST,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: {},
+      body: ffApiRequestBody,
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+class SaveOnboardingSurveyCall {
+  static Future<ApiCallResponse> call({
+    String? authToken = '',
+    String? preferredLanguage = '',
+    String? hearAbout = '',
+    String? growthGoal = '',
+  }) async {
+    final ffApiRequestBody = '''
+{"authToken":"${authToken}","preferredLanguage":"${preferredLanguage}","hearAbout":"${hearAbout}","growthGoal":"${growthGoal}"}''';
+    return ApiManager.instance.makeApiCall(
+      callName: 'SaveOnboardingSurvey',
+      apiUrl:
+          'https://us-central1-kingdom-heirs-discipleshipapp.cloudfunctions.net/updateUserProfile',
+      callType: ApiCallType.POST,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: {},
+      body: ffApiRequestBody,
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
 class ApiPagingParams {
   int nextPageNumber = 0;
   int numItems = 0;

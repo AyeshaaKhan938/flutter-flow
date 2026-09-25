@@ -437,7 +437,7 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
                                 ),
                                 Text(
                                   FFLocalizations.of(context).getText(
-                                    'uxvknhqk' /* Loading… */,
+                                    '2psuz7nv' /* Loading… */,
                                   ),
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium

@@ -4891,69 +4891,29 @@ class _AdminPathwaysPageWidgetState extends State<AdminPathwaysPageWidget> {
                             children: [
                               FFButtonWidget(
                                 onPressed: () async {
-                                  _model.previewResult =
-                                      await ImportCurriculumCall.call(
-                                    previewOnly: 'true',
-                                    authToken: currentJwtToken,
-                                    collection: _model.importCollection,
-                                    csvText: _model.importCsvText,
+                                  _model.importPreviewOutput =
+                                      await actions.runCurriculumImport(
+                                    _model.importCollection,
+                                    _model.importCsvFieldTextController.text,
+                                    true,
                                   );
-
-                                  if ((_model.previewResult?.succeeded ??
-                                      true)) {
-                                    _model.importCreated =
-                                        ImportSummaryResponseStruct
-                                                .maybeFromMap((_model
-                                                        .previewResult
-                                                        ?.jsonBody ??
-                                                    ''))
-                                            ?.created;
-                                    safeSetState(() {});
-                                    _model.importUpdated =
-                                        ImportSummaryResponseStruct
-                                                .maybeFromMap((_model
-                                                        .previewResult
-                                                        ?.jsonBody ??
-                                                    ''))
-                                            ?.updated;
-                                    safeSetState(() {});
-                                    _model.importUnchanged =
-                                        ImportSummaryResponseStruct
-                                                .maybeFromMap((_model
-                                                        .previewResult
-                                                        ?.jsonBody ??
-                                                    ''))
-                                            ?.unchanged;
-                                    safeSetState(() {});
-                                    _model.importErrorCount =
-                                        ImportSummaryResponseStruct
-                                                .maybeFromMap((_model
-                                                        .previewResult
-                                                        ?.jsonBody ??
-                                                    ''))
-                                            ?.errorCount;
-                                    safeSetState(() {});
-                                    _model.importFirstError =
-                                        ImportSummaryResponseStruct
-                                                .maybeFromMap((_model
-                                                        .previewResult
-                                                        ?.jsonBody ??
-                                                    ''))
-                                            ?.firstErrorMessage;
-                                    safeSetState(() {});
-                                    _model.importPreviewed = true;
-                                    safeSetState(() {});
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Preview failed. Check the CSV and try again.',
-                                          style: TextStyle(),
-                                        ),
-                                        duration: Duration(milliseconds: 4000),
-                                      ),
-                                    );
-                                  }
+                                  _model.importCreated =
+                                      _model.importPreviewOutput?.created;
+                                  safeSetState(() {});
+                                  _model.importUpdated =
+                                      _model.importPreviewOutput?.updated;
+                                  safeSetState(() {});
+                                  _model.importUnchanged =
+                                      _model.importPreviewOutput?.unchanged;
+                                  safeSetState(() {});
+                                  _model.importErrorCount =
+                                      _model.importPreviewOutput?.errorCount;
+                                  safeSetState(() {});
+                                  _model.importFirstError = _model
+                                      .importPreviewOutput?.firstErrorMessage;
+                                  safeSetState(() {});
+                                  _model.importPreviewed = true;
+                                  safeSetState(() {});
 
                                   safeSetState(() {});
                                 },
@@ -4976,55 +4936,35 @@ class _AdminPathwaysPageWidgetState extends State<AdminPathwaysPageWidget> {
                               if (_model.importPreviewed ?? true)
                                 FFButtonWidget(
                                   onPressed: () async {
-                                    _model.commitResult =
-                                        await ImportCurriculumCall.call(
-                                      previewOnly: 'false',
-                                      authToken: currentJwtToken,
-                                      collection: _model.importCollection,
-                                      csvText: _model.importCsvText,
+                                    _model.importCommitOutput =
+                                        await actions.runCurriculumImport(
+                                      _model.importCollection,
+                                      _model.importCsvFieldTextController.text,
+                                      false,
                                     );
-
-                                    if ((_model.commitResult?.succeeded ??
-                                        true)) {
-                                      _model.importCreated =
-                                          ImportSummaryResponseStruct
-                                                  .maybeFromMap((_model
-                                                          .commitResult
-                                                          ?.jsonBody ??
-                                                      ''))
-                                              ?.created;
-                                      safeSetState(() {});
-                                      _model.importUpdated =
-                                          ImportSummaryResponseStruct
-                                                  .maybeFromMap((_model
-                                                          .commitResult
-                                                          ?.jsonBody ??
-                                                      ''))
-                                              ?.updated;
-                                      safeSetState(() {});
-                                      _model.importUnchanged =
-                                          ImportSummaryResponseStruct
-                                                  .maybeFromMap((_model
-                                                          .commitResult
-                                                          ?.jsonBody ??
-                                                      ''))
-                                              ?.unchanged;
-                                      safeSetState(() {});
-                                      _model.importErrorCount =
-                                          ImportSummaryResponseStruct
-                                                  .maybeFromMap((_model
-                                                          .commitResult
-                                                          ?.jsonBody ??
-                                                      ''))
-                                              ?.errorCount;
-                                      safeSetState(() {});
-                                      _model.importPreviewed = false;
-                                      safeSetState(() {});
+                                    _model.importCreated =
+                                        _model.importCommitOutput?.created;
+                                    safeSetState(() {});
+                                    _model.importUpdated =
+                                        _model.importCommitOutput?.updated;
+                                    safeSetState(() {});
+                                    _model.importUnchanged =
+                                        _model.importCommitOutput?.unchanged;
+                                    safeSetState(() {});
+                                    _model.importErrorCount =
+                                        _model.importCommitOutput?.errorCount;
+                                    safeSetState(() {});
+                                    _model.importFirstError = _model
+                                        .importCommitOutput?.firstErrorMessage;
+                                    safeSetState(() {});
+                                    _model.importPreviewed = false;
+                                    safeSetState(() {});
+                                    if (_model.importErrorCount == 0) {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         SnackBar(
                                           content: Text(
-                                            'Import complete.',
+                                            'Import complete. The app content is updated.',
                                             style: TextStyle(),
                                           ),
                                           duration:
@@ -5036,7 +4976,7 @@ class _AdminPathwaysPageWidgetState extends State<AdminPathwaysPageWidget> {
                                           .showSnackBar(
                                         SnackBar(
                                           content: Text(
-                                            'Import failed. Please try again.',
+                                            'Import stopped. See the error below.',
                                             style: TextStyle(),
                                           ),
                                           duration:

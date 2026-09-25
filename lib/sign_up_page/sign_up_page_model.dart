@@ -30,14 +30,6 @@ class SignUpPageModel extends FlutterFlowModel<SignUpPageWidget> {
   FocusNode? phoneFieldFocusNode;
   TextEditingController? phoneFieldTextController;
   String? Function(BuildContext, String?)? phoneFieldTextControllerValidator;
-  // State field(s) for CountryField widget.
-  FocusNode? countryFieldFocusNode;
-  TextEditingController? countryFieldTextController;
-  String? Function(BuildContext, String?)? countryFieldTextControllerValidator;
-  // State field(s) for CityField widget.
-  FocusNode? cityFieldFocusNode;
-  TextEditingController? cityFieldTextController;
-  String? Function(BuildContext, String?)? cityFieldTextControllerValidator;
   // State field(s) for SignUpEmailField widget.
   FocusNode? signUpEmailFieldFocusNode;
   TextEditingController? signUpEmailFieldTextController;
@@ -64,12 +56,6 @@ class SignUpPageModel extends FlutterFlowModel<SignUpPageWidget> {
 
     phoneFieldFocusNode?.dispose();
     phoneFieldTextController?.dispose();
-
-    countryFieldFocusNode?.dispose();
-    countryFieldTextController?.dispose();
-
-    cityFieldFocusNode?.dispose();
-    cityFieldTextController?.dispose();
 
     signUpEmailFieldFocusNode?.dispose();
     signUpEmailFieldTextController?.dispose();

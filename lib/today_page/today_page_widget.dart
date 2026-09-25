@@ -9,6 +9,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:percent_indicator/percent_indicator.dart';
 import 'today_page_model.dart';
 export 'today_page_model.dart';
 
@@ -36,60 +37,36 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
 
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
-      _model.langProfileResult = await GetUserProfileV4Call.call(
+      _model.todayContentResult = await GetTodayContentCall.call(
         authToken: currentJwtToken,
       );
 
-      if ((_model.langProfileResult?.succeeded ?? true)) {
-        _model.memberLanguage = UserProfileFullResponseStruct.maybeFromMap(
-                (_model.langProfileResult?.jsonBody ?? ''))
-            ?.preferredLanguage;
+      if ((_model.todayContentResult?.succeeded ?? true)) {
+        _model.todayScriptureRef = TodayContentResponseStruct.maybeFromMap(
+                (_model.todayContentResult?.jsonBody ?? ''))
+            ?.scriptureRef;
+        safeSetState(() {});
+        _model.todayScriptureText = TodayContentResponseStruct.maybeFromMap(
+                (_model.todayContentResult?.jsonBody ?? ''))
+            ?.scriptureText;
+        safeSetState(() {});
+        _model.todayEncouragementText = TodayContentResponseStruct.maybeFromMap(
+                (_model.todayContentResult?.jsonBody ?? ''))
+            ?.encouragementText;
+        safeSetState(() {});
+        _model.todayEncouragementRef = TodayContentResponseStruct.maybeFromMap(
+                (_model.todayContentResult?.jsonBody ?? ''))
+            ?.encouragementRef;
+        safeSetState(() {});
+        _model.memberLanguage = TodayContentResponseStruct.maybeFromMap(
+                (_model.todayContentResult?.jsonBody ?? ''))
+            ?.language;
         safeSetState(() {});
         _model.loadedAnnouncements = await queryAnnouncementsRecordOnce(
           limit: 20,
         );
         _model.announcementList =
             _model.loadedAnnouncements!.toList().cast<AnnouncementsRecord>();
-        safeSetState(() {});
-        final todayDateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
-        _model.loadedScriptureToday = await queryDailyScriptureRecordOnce(
-          queryBuilder: (dailyScriptureRecord) => dailyScriptureRecord
-              .where('status', isEqualTo: 'published')
-              .where('date', isEqualTo: todayDateStr),
-          limit: 1,
-        );
-        _model.scriptureList =
-            _model.loadedScriptureToday!.toList().cast<DailyScriptureRecord>();
-        if (_model.scriptureList.isEmpty) {
-          // Fall back to any published entry so the section is never blank
-          // if the stored date format doesn't match yyyy-MM-dd.
-          _model.loadedScriptureToday = await queryDailyScriptureRecordOnce(
-            queryBuilder: (dailyScriptureRecord) => dailyScriptureRecord.where(
-              'status',
-              isEqualTo: 'published',
-            ),
-            limit: 1,
-          );
-          _model.scriptureList = _model.loadedScriptureToday!
-              .toList()
-              .cast<DailyScriptureRecord>();
-        }
-        safeSetState(() {});
-        _model.loadedEncouragementsToday = await queryEncouragementsRecordOnce(
-          queryBuilder: (encouragementsRecord) => encouragementsRecord
-              .where(
-                'status',
-                isEqualTo: 'published',
-              )
-              .where(
-                'rightsCleared',
-                isEqualTo: true,
-              ),
-          limit: 5,
-        );
-        _model.encouragementList = _model.loadedEncouragementsToday!
-            .toList()
-            .cast<EncouragementsRecord>();
         safeSetState(() {});
       }
     });
@@ -261,27 +238,64 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                       color: FlutterFlowTheme.of(context).alternate,
                       borderRadius: BorderRadius.circular(16.0),
                     ),
-                    child: Builder(
-                      builder: (context) {
-                        final scriptureListItem = _model.scriptureList.toList();
-
-                        return ListView.separated(
-                          padding: EdgeInsets.zero,
-                          primary: false,
-                          shrinkWrap: true,
-                          scrollDirection: Axis.vertical,
-                          itemCount: scriptureListItem.length,
-                          separatorBuilder: (_, __) => SizedBox(height: 8.0),
-                          itemBuilder: (context, scriptureListItemIndex) {
-                            final scriptureListItemItem =
-                                scriptureListItem[scriptureListItemIndex];
-                            return Column(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (_model.todayScriptureText == '')
+                            Row(
+                              mainAxisSize: MainAxisSize.max,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                CircularPercentIndicator(
+                                  percent: 0.0,
+                                  radius: 11.0,
+                                  lineWidth: 3.0,
+                                  animation: false,
+                                  animateFromLastPercent: true,
+                                ),
+                                Text(
+                                  FFLocalizations.of(context).getText(
+                                    'uxvknhqk' /* Loading… */,
+                                  ),
+                                  style: FlutterFlowTheme.of(context)
+                                      .bodyMedium
+                                      .override(
+                                        font: GoogleFonts.inter(
+                                          fontWeight:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyMedium
+                                                  .fontWeight,
+                                          fontStyle:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyMedium
+                                                  .fontStyle,
+                                        ),
+                                        color: FlutterFlowTheme.of(context)
+                                            .secondaryText,
+                                        letterSpacing: 0.0,
+                                        fontWeight: FlutterFlowTheme.of(context)
+                                            .bodyMedium
+                                            .fontWeight,
+                                        fontStyle: FlutterFlowTheme.of(context)
+                                            .bodyMedium
+                                            .fontStyle,
+                                      ),
+                                ),
+                              ].divide(SizedBox(width: 10.0)),
+                            ),
+                          if (!(_model.todayScriptureText == ''))
+                            Column(
                               mainAxisSize: MainAxisSize.min,
                               mainAxisAlignment: MainAxisAlignment.start,
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Text(
-                                  scriptureListItemItem.verseRef,
+                                  _model.todayScriptureRef!,
                                   style: FlutterFlowTheme.of(context)
                                       .labelMedium
                                       .override(
@@ -296,7 +310,7 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                                                   .fontStyle,
                                         ),
                                         color: FlutterFlowTheme.of(context)
-                                            .secondaryText,
+                                            .tertiary,
                                         letterSpacing: 0.0,
                                         fontWeight: FlutterFlowTheme.of(context)
                                             .labelMedium
@@ -306,102 +320,34 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                                             .fontStyle,
                                       ),
                                 ),
-                                Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (_model.memberLanguage == 'en')
-                                      Text(
-                                        scriptureListItemItem.text.en,
-                                        maxLines: 4,
-                                        style: FlutterFlowTheme.of(context)
+                                Text(
+                                  _model.todayScriptureText!,
+                                  style: FlutterFlowTheme.of(context)
+                                      .bodyMedium
+                                      .override(
+                                        font: GoogleFonts.inter(
+                                          fontWeight:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyMedium
+                                                  .fontWeight,
+                                          fontStyle:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyMedium
+                                                  .fontStyle,
+                                        ),
+                                        letterSpacing: 0.0,
+                                        fontWeight: FlutterFlowTheme.of(context)
                                             .bodyMedium
-                                            .override(
-                                              font: GoogleFonts.inter(
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontStyle,
-                                              ),
-                                              letterSpacing: 0.0,
-                                              fontWeight:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontWeight,
-                                              fontStyle:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontStyle,
-                                            ),
-                                      ),
-                                    if (_model.memberLanguage == 'es')
-                                      Text(
-                                        scriptureListItemItem.text.es,
-                                        maxLines: 4,
-                                        style: FlutterFlowTheme.of(context)
+                                            .fontWeight,
+                                        fontStyle: FlutterFlowTheme.of(context)
                                             .bodyMedium
-                                            .override(
-                                              font: GoogleFonts.inter(
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontStyle,
-                                              ),
-                                              letterSpacing: 0.0,
-                                              fontWeight:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontWeight,
-                                              fontStyle:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontStyle,
-                                            ),
+                                            .fontStyle,
                                       ),
-                                    if (_model.memberLanguage == 'ur')
-                                      Text(
-                                        scriptureListItemItem.text.ur,
-                                        maxLines: 4,
-                                        style: FlutterFlowTheme.of(context)
-                                            .bodyMedium
-                                            .override(
-                                              font: GoogleFonts.inter(
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontStyle,
-                                              ),
-                                              letterSpacing: 0.0,
-                                              fontWeight:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontWeight,
-                                              fontStyle:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontStyle,
-                                            ),
-                                      ),
-                                  ],
                                 ),
-                              ].divide(SizedBox(height: 4.0)),
-                            );
-                          },
-                        );
-                      },
+                              ].divide(SizedBox(height: 6.0)),
+                            ),
+                        ].divide(SizedBox(height: 6.0)),
+                      ),
                     ),
                   ),
                   Text(
@@ -431,29 +377,64 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                       color: FlutterFlowTheme.of(context).alternate,
                       borderRadius: BorderRadius.circular(16.0),
                     ),
-                    child: Builder(
-                      builder: (context) {
-                        final encouragementListItem =
-                            _model.encouragementList.toList();
-
-                        return ListView.separated(
-                          padding: EdgeInsets.zero,
-                          primary: false,
-                          shrinkWrap: true,
-                          scrollDirection: Axis.vertical,
-                          itemCount: encouragementListItem.length,
-                          separatorBuilder: (_, __) => SizedBox(height: 8.0),
-                          itemBuilder: (context, encouragementListItemIndex) {
-                            final encouragementListItemItem =
-                                encouragementListItem[
-                                    encouragementListItemIndex];
-                            return Column(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (_model.todayEncouragementText == '')
+                            Row(
+                              mainAxisSize: MainAxisSize.max,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                CircularPercentIndicator(
+                                  percent: 0.0,
+                                  radius: 11.0,
+                                  lineWidth: 3.0,
+                                  animation: false,
+                                  animateFromLastPercent: true,
+                                ),
+                                Text(
+                                  FFLocalizations.of(context).getText(
+                                    'btry4vm7' /* Loading… */,
+                                  ),
+                                  style: FlutterFlowTheme.of(context)
+                                      .bodyMedium
+                                      .override(
+                                        font: GoogleFonts.inter(
+                                          fontWeight:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyMedium
+                                                  .fontWeight,
+                                          fontStyle:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyMedium
+                                                  .fontStyle,
+                                        ),
+                                        color: FlutterFlowTheme.of(context)
+                                            .secondaryText,
+                                        letterSpacing: 0.0,
+                                        fontWeight: FlutterFlowTheme.of(context)
+                                            .bodyMedium
+                                            .fontWeight,
+                                        fontStyle: FlutterFlowTheme.of(context)
+                                            .bodyMedium
+                                            .fontStyle,
+                                      ),
+                                ),
+                              ].divide(SizedBox(width: 10.0)),
+                            ),
+                          if (!(_model.todayEncouragementText == ''))
+                            Column(
                               mainAxisSize: MainAxisSize.min,
                               mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Text(
-                                  encouragementListItemItem.attribution,
+                                  _model.todayEncouragementRef!,
                                   style: FlutterFlowTheme.of(context)
                                       .labelMedium
                                       .override(
@@ -468,7 +449,7 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                                                   .fontStyle,
                                         ),
                                         color: FlutterFlowTheme.of(context)
-                                            .secondaryText,
+                                            .tertiary,
                                         letterSpacing: 0.0,
                                         fontWeight: FlutterFlowTheme.of(context)
                                             .labelMedium
@@ -478,99 +459,34 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                                             .fontStyle,
                                       ),
                                 ),
-                                Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (_model.memberLanguage == 'en')
-                                      Text(
-                                        encouragementListItemItem.quote.en,
-                                        style: FlutterFlowTheme.of(context)
+                                Text(
+                                  _model.todayEncouragementText!,
+                                  style: FlutterFlowTheme.of(context)
+                                      .bodyMedium
+                                      .override(
+                                        font: GoogleFonts.inter(
+                                          fontWeight:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyMedium
+                                                  .fontWeight,
+                                          fontStyle:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyMedium
+                                                  .fontStyle,
+                                        ),
+                                        letterSpacing: 0.0,
+                                        fontWeight: FlutterFlowTheme.of(context)
                                             .bodyMedium
-                                            .override(
-                                              font: GoogleFonts.inter(
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontStyle,
-                                              ),
-                                              letterSpacing: 0.0,
-                                              fontWeight:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontWeight,
-                                              fontStyle:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontStyle,
-                                            ),
-                                      ),
-                                    if (_model.memberLanguage == 'es')
-                                      Text(
-                                        encouragementListItemItem.quote.es,
-                                        style: FlutterFlowTheme.of(context)
+                                            .fontWeight,
+                                        fontStyle: FlutterFlowTheme.of(context)
                                             .bodyMedium
-                                            .override(
-                                              font: GoogleFonts.inter(
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontStyle,
-                                              ),
-                                              letterSpacing: 0.0,
-                                              fontWeight:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontWeight,
-                                              fontStyle:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontStyle,
-                                            ),
+                                            .fontStyle,
                                       ),
-                                    if (_model.memberLanguage == 'ur')
-                                      Text(
-                                        encouragementListItemItem.quote.ur,
-                                        style: FlutterFlowTheme.of(context)
-                                            .bodyMedium
-                                            .override(
-                                              font: GoogleFonts.inter(
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontStyle,
-                                              ),
-                                              letterSpacing: 0.0,
-                                              fontWeight:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontWeight,
-                                              fontStyle:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontStyle,
-                                            ),
-                                      ),
-                                  ],
                                 ),
-                              ].divide(SizedBox(height: 4.0)),
-                            );
-                          },
-                        );
-                      },
+                              ].divide(SizedBox(height: 6.0)),
+                            ),
+                        ].divide(SizedBox(height: 6.0)),
+                      ),
                     ),
                   ),
                   Text(

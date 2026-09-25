@@ -59,7 +59,7 @@ class OnboardingSurveyPageModel
   TextEditingController? growthGoalFieldTextController;
   String? Function(BuildContext, String?)?
       growthGoalFieldTextControllerValidator;
-  // Stores action output result for [Backend Call - API (SaveOnboardingLanguage)] action in OnboardingContinueButton widget.
+  // Stores action output result for [Backend Call - API (SaveOnboardingSurvey)] action in OnboardingContinueButton widget.
   ApiCallResponse? onboardingSaveResult;
 
   @override

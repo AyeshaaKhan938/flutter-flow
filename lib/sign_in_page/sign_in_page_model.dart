@@ -21,6 +21,8 @@ class SignInPageModel extends FlutterFlowModel<SignInPageWidget> {
   TextEditingController? passwordFieldTextController;
   late bool passwordFieldVisibility;
   String? Function(BuildContext, String?)? passwordFieldTextControllerValidator;
+  // Stores action output result for [Custom Action - SyncDeviceLanguage] action in SignInSubmitButton widget.
+  String? syncLanguageResult;
 
   @override
   void initState(BuildContext context) {

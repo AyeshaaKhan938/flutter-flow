@@ -184,6 +184,20 @@ class FFAppState extends ChangeNotifier {
     _localPathwayTitle = value;
     prefs.setString('ff_localPathwayTitle', value);
   }
+
+  /// Value picked on the Sign Up country/city picker (not persisted).
+  String _signupCountry = '';
+  String get signupCountry => _signupCountry;
+  set signupCountry(String value) {
+    _signupCountry = value;
+  }
+
+  /// Value picked on the Sign Up country/city picker (not persisted).
+  String _signupCity = '';
+  String get signupCity => _signupCity;
+  set signupCity(String value) {
+    _signupCity = value;
+  }
 }
 
 void _safeInit(Function() initializeField) {

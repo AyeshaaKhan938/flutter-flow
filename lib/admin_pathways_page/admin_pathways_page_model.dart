@@ -365,10 +365,10 @@ class AdminPathwaysPageModel extends FlutterFlowModel<AdminPathwaysPageWidget> {
   TextEditingController? importCsvFieldTextController;
   String? Function(BuildContext, String?)?
       importCsvFieldTextControllerValidator;
-  // Stores action output result for [Backend Call - API (ImportCurriculum)] action in PreviewImportButton widget.
-  ApiCallResponse? previewResult;
-  // Stores action output result for [Backend Call - API (ImportCurriculum)] action in ConfirmImportButton widget.
-  ApiCallResponse? commitResult;
+  // Stores action output result for [Custom Action - RunCurriculumImport] action in PreviewImportButton widget.
+  ImportSummaryResponseStruct? importPreviewOutput;
+  // Stores action output result for [Custom Action - RunCurriculumImport] action in ConfirmImportButton widget.
+  ImportSummaryResponseStruct? importCommitOutput;
 
   @override
   void initState(BuildContext context) {

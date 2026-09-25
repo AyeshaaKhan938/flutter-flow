@@ -4,11 +4,13 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/custom_code/actions/index.dart' as actions;
+import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/index.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'sign_up_page_model.dart';
 export 'sign_up_page_model.dart';
 
@@ -42,12 +44,6 @@ class _SignUpPageWidgetState extends State<SignUpPageWidget> {
     _model.phoneFieldTextController ??= TextEditingController();
     _model.phoneFieldFocusNode ??= FocusNode();
 
-    _model.countryFieldTextController ??= TextEditingController();
-    _model.countryFieldFocusNode ??= FocusNode();
-
-    _model.cityFieldTextController ??= TextEditingController();
-    _model.cityFieldFocusNode ??= FocusNode();
-
     _model.signUpEmailFieldTextController ??= TextEditingController();
     _model.signUpEmailFieldFocusNode ??= FocusNode();
 
@@ -64,6 +60,8 @@ class _SignUpPageWidgetState extends State<SignUpPageWidget> {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<FFAppState>();
+
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -272,133 +270,8 @@ class _SignUpPageWidgetState extends State<SignUpPageWidget> {
                         validator: _model.phoneFieldTextControllerValidator
                             .asValidator(context),
                       ),
-                      TextFormField(
-                        controller: _model.countryFieldTextController,
-                        focusNode: _model.countryFieldFocusNode,
-                        onChanged: (_) => EasyDebounce.debounce(
-                          '_model.countryFieldTextController',
-                          Duration(milliseconds: 2000),
-                          () async {
-                            _model.country =
-                                _model.countryFieldTextController.text;
-                            safeSetState(() {});
-                          },
-                        ),
-                        obscureText: false,
-                        decoration: InputDecoration(
-                          labelText: FFLocalizations.of(context).getText(
-                            'nzbvfbut' /* Country */,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Color(0x00000000),
-                              width: 1.0,
-                            ),
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(4.0),
-                              topRight: Radius.circular(4.0),
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Color(0x00000000),
-                              width: 1.0,
-                            ),
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(4.0),
-                              topRight: Radius.circular(4.0),
-                            ),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Color(0x00000000),
-                              width: 1.0,
-                            ),
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(4.0),
-                              topRight: Radius.circular(4.0),
-                            ),
-                          ),
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Color(0x00000000),
-                              width: 1.0,
-                            ),
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(4.0),
-                              topRight: Radius.circular(4.0),
-                            ),
-                          ),
-                          filled: true,
-                        ),
-                        style: TextStyle(),
-                        maxLines: null,
-                        validator: _model.countryFieldTextControllerValidator
-                            .asValidator(context),
-                      ),
-                      TextFormField(
-                        controller: _model.cityFieldTextController,
-                        focusNode: _model.cityFieldFocusNode,
-                        onChanged: (_) => EasyDebounce.debounce(
-                          '_model.cityFieldTextController',
-                          Duration(milliseconds: 2000),
-                          () async {
-                            _model.regionCity =
-                                _model.cityFieldTextController.text;
-                            safeSetState(() {});
-                          },
-                        ),
-                        obscureText: false,
-                        decoration: InputDecoration(
-                          labelText: FFLocalizations.of(context).getText(
-                            '08bkphld' /* City (optional) */,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Color(0x00000000),
-                              width: 1.0,
-                            ),
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(4.0),
-                              topRight: Radius.circular(4.0),
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Color(0x00000000),
-                              width: 1.0,
-                            ),
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(4.0),
-                              topRight: Radius.circular(4.0),
-                            ),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Color(0x00000000),
-                              width: 1.0,
-                            ),
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(4.0),
-                              topRight: Radius.circular(4.0),
-                            ),
-                          ),
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Color(0x00000000),
-                              width: 1.0,
-                            ),
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(4.0),
-                              topRight: Radius.circular(4.0),
-                            ),
-                          ),
-                          filled: true,
-                        ),
-                        style: TextStyle(),
-                        maxLines: null,
-                        validator: _model.cityFieldTextControllerValidator
-                            .asValidator(context),
+                      Container(
+                        child: custom_widgets.CountryCityPicker(),
                       ),
                     ].divide(SizedBox(height: 14.0)),
                   ),
@@ -546,33 +419,49 @@ class _SignUpPageWidgetState extends State<SignUpPageWidget> {
                   ),
                   FFButtonWidget(
                     onPressed: () async {
-                      GoRouter.of(context).prepareAuthEvent();
+                      if (FFAppState().signupCountry == '') {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Please choose your country.',
+                              style: TextStyle(),
+                            ),
+                            duration: Duration(milliseconds: 4000),
+                          ),
+                        );
+                      } else {
+                        GoRouter.of(context).prepareAuthEvent();
 
-                      final user = await authManager.createAccountWithEmail(
-                        context,
-                        _model.signUpEmailFieldTextController.text,
-                        _model.signUpPasswordFieldTextController.text,
-                      );
-                      if (user == null) {
-                        return;
+                        final user = await authManager.createAccountWithEmail(
+                          context,
+                          _model.signUpEmailFieldTextController.text,
+                          _model.signUpPasswordFieldTextController.text,
+                        );
+                        if (user == null) {
+                          return;
+                        }
+
+                        await UsersRecord.collection
+                            .doc(user.uid)
+                            .update(createUsersRecordData(
+                              role: '',
+                              fullName: _model.fullNameFieldTextController.text,
+                            ));
+
+                        _model.signupSaveResult =
+                            await actions.saveSignupProfile(
+                          _model.fullNameFieldTextController.text,
+                          _model.phoneFieldTextController.text,
+                          FFAppState().signupCountry,
+                          FFAppState().signupCity,
+                        );
+                        if (Navigator.of(context).canPop()) {
+                          context.pop();
+                        }
+                        context.pushNamedAuth(
+                            OnboardingSurveyPageWidget.routeName,
+                            context.mounted);
                       }
-
-                      await UsersRecord.collection
-                          .doc(user.uid)
-                          .update(createUsersRecordData(
-                            role: '',
-                            fullName: _model.fullNameFieldTextController.text,
-                          ));
-
-                      _model.signupSaveResult = await actions.saveSignupProfile(
-                        _model.fullNameFieldTextController.text,
-                        _model.phoneFieldTextController.text,
-                        _model.countryFieldTextController.text,
-                        _model.cityFieldTextController.text,
-                      );
-
-                      context.goNamedAuth(
-                          HomePageWidget.routeName, context.mounted);
 
                       safeSetState(() {});
                     },

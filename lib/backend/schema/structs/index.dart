@@ -18,6 +18,7 @@ export 'quiz_attempt_response_struct.dart';
 export 'quiz_response_struct.dart';
 export 'rag_http_response_struct.dart';
 export 'submit_quiz_response_struct.dart';
+export 'today_content_response_struct.dart';
 export 'translation_drafts_response_struct.dart';
 export 'user_profile_entry_struct.dart';
 export 'user_profile_full_response_struct.dart';
