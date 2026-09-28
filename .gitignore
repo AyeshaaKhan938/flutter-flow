@@ -7,3 +7,8 @@ api_keys.json
 .flutter-plugins-dependencies
 build/
 ios/Flutter/ephemeral/
+
+# Android release signing (keep the keystore and passwords out of git)
+android/key.properties
+*.jks
+*.keystore

@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -153,9 +154,10 @@ class _MyAppState extends State<MyApp> {
       ),
       themeMode: _themeMode,
       routerConfig: _router,
-      builder: (_, child) => MockDebugOverlay(
-        child: child!,
-      ),
+      // The mock-data debug panel is for development only; hide it from
+      // members in release builds.
+      builder: (_, child) =>
+          kReleaseMode ? child! : MockDebugOverlay(child: child!),
     );
   }
 }

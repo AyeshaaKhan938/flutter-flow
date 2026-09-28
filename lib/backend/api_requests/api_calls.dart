@@ -143,7 +143,7 @@ class CreateUserProfileCall {
     String? preferredLanguage = '',
   }) async {
     final ffApiRequestBody = '''
-{"fullName":"${fullName}","preferredLanguage":"${preferredLanguage}","role":"member","surveyResponses":{}}''';
+{"fullName":"${_jsonEsc(fullName)}","preferredLanguage":"${_jsonEsc(preferredLanguage)}","role":"member","surveyResponses":{}}''';
     if (FFDataSource.isMock) {
       return MockApiAdapter.createUserProfileCall(
         fullName: fullName,
@@ -176,7 +176,7 @@ class UpdateUserProfileCall {
     String? surveyResponses = '',
   }) async {
     final ffApiRequestBody = '''
-{"preferredLanguage":"${preferredLanguage}","surveyResponses":"${surveyResponses}"}''';
+{"preferredLanguage":"${_jsonEsc(preferredLanguage)}","surveyResponses":"${_jsonEsc(surveyResponses)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'UpdateUserProfile',
       apiUrl:
@@ -212,7 +212,7 @@ class UpdateUserProfileFullCall {
     String? assessmentGoals = '',
   }) async {
     final ffApiRequestBody = '''
-{"preferredLanguage":"${preferredLanguage}","surveyResponses":"${surveyResponses}","recommendedPathwayId":"${recommendedPathwayId}","recommendationReason":"${recommendationReason}","assessmentBibleConfidence":"${assessmentBibleConfidence}","assessmentNeeds":"${assessmentNeeds}","assessmentHabits":"${assessmentHabits}","assessmentGoals":"${assessmentGoals}"}''';
+{"preferredLanguage":"${_jsonEsc(preferredLanguage)}","surveyResponses":"${_jsonEsc(surveyResponses)}","recommendedPathwayId":"${_jsonEsc(recommendedPathwayId)}","recommendationReason":"${_jsonEsc(recommendationReason)}","assessmentBibleConfidence":"${_jsonEsc(assessmentBibleConfidence)}","assessmentNeeds":"${_jsonEsc(assessmentNeeds)}","assessmentHabits":"${_jsonEsc(assessmentHabits)}","assessmentGoals":"${_jsonEsc(assessmentGoals)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'UpdateUserProfileFull',
       apiUrl:
@@ -248,7 +248,7 @@ class UpdateUserProfileV2Call {
     String? assessmentGoals = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","preferredLanguage":"${preferredLanguage}","surveyResponses":"${surveyResponses}","recommendedPathwayId":"${recommendedPathwayId}","recommendationReason":"${recommendationReason}","assessmentBibleConfidence":"${assessmentBibleConfidence}","assessmentNeeds":"${assessmentNeeds}","assessmentHabits":"${assessmentHabits}","assessmentGoals":"${assessmentGoals}"}''';
+{"authToken":"${_jsonEsc(authToken)}","preferredLanguage":"${_jsonEsc(preferredLanguage)}","surveyResponses":"${_jsonEsc(surveyResponses)}","recommendedPathwayId":"${_jsonEsc(recommendedPathwayId)}","recommendationReason":"${_jsonEsc(recommendationReason)}","assessmentBibleConfidence":"${_jsonEsc(assessmentBibleConfidence)}","assessmentNeeds":"${_jsonEsc(assessmentNeeds)}","assessmentHabits":"${_jsonEsc(assessmentHabits)}","assessmentGoals":"${_jsonEsc(assessmentGoals)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'UpdateUserProfileV2',
       apiUrl:
@@ -275,7 +275,7 @@ class GetUserProfileV2Call {
     String? authToken = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}"}''';
+{"authToken":"${_jsonEsc(authToken)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetUserProfileV2',
       apiUrl:
@@ -302,7 +302,7 @@ class GetUserProfileV3Call {
     String? authToken = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}"}''';
+{"authToken":"${_jsonEsc(authToken)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetUserProfileV3',
       apiUrl:
@@ -330,7 +330,7 @@ class GetPathwayProgressCall {
     String? pathwayId = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","pathwayId":"${pathwayId}"}''';
+{"authToken":"${_jsonEsc(authToken)}","pathwayId":"${_jsonEsc(pathwayId)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetPathwayProgress',
       apiUrl:
@@ -362,7 +362,7 @@ class SaveLessonProgressCall {
     String? clientWriteId = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","pathwayId":"${pathwayId}","lessonId":"${lessonId}","dayNumber":"${dayNumber}","reflectionText":"${reflectionText}","clientWriteId":"${clientWriteId}"}''';
+{"authToken":"${_jsonEsc(authToken)}","pathwayId":"${_jsonEsc(pathwayId)}","lessonId":"${_jsonEsc(lessonId)}","dayNumber":"${_jsonEsc(dayNumber)}","reflectionText":"${_jsonEsc(reflectionText)}","clientWriteId":"${_jsonEsc(clientWriteId)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'SaveLessonProgress',
       apiUrl:
@@ -390,7 +390,7 @@ class GetQuizCall {
     String? quizId = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","quizId":"${quizId}"}''';
+{"authToken":"${_jsonEsc(authToken)}","quizId":"${_jsonEsc(quizId)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetQuiz',
       apiUrl:
@@ -428,7 +428,7 @@ class SubmitQuizAttemptCall {
     String? q10 = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","quizId":"${quizId}","q1":"${q1}","q2":"${q2}","q3":"${q3}","q4":"${q4}","q5":"${q5}","q6":"${q6}","q7":"${q7}","q8":"${q8}","q9":"${q9}","q10":"${q10}"}''';
+{"authToken":"${_jsonEsc(authToken)}","quizId":"${_jsonEsc(quizId)}","q1":"${_jsonEsc(q1)}","q2":"${_jsonEsc(q2)}","q3":"${_jsonEsc(q3)}","q4":"${_jsonEsc(q4)}","q5":"${_jsonEsc(q5)}","q6":"${_jsonEsc(q6)}","q7":"${_jsonEsc(q7)}","q8":"${_jsonEsc(q8)}","q9":"${_jsonEsc(q9)}","q10":"${_jsonEsc(q10)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'SubmitQuizAttempt',
       apiUrl:
@@ -458,7 +458,7 @@ class ImportCurriculumCall {
     String? previewOnly = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","collection":"${collection}","csvText":"${csvText}","previewOnly":"${previewOnly}"}''';
+{"authToken":"${_jsonEsc(authToken)}","collection":"${_jsonEsc(collection)}","csvText":"${_jsonEsc(csvText)}","previewOnly":"${_jsonEsc(previewOnly)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'ImportCurriculum',
       apiUrl:
@@ -487,7 +487,7 @@ class GetQuizV2Call {
     String? locale = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","quizId":"${quizId}","locale":"${locale}"}''';
+{"authToken":"${_jsonEsc(authToken)}","quizId":"${_jsonEsc(quizId)}","locale":"${_jsonEsc(locale)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetQuizV2',
       apiUrl:
@@ -515,7 +515,7 @@ class GetQuizAttemptCall {
     String? quizId = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","quizId":"${quizId}"}''';
+{"authToken":"${_jsonEsc(authToken)}","quizId":"${_jsonEsc(quizId)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetQuizAttempt',
       apiUrl:
@@ -554,7 +554,7 @@ class SubmitQuizAttemptV2Call {
     String? q10 = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","quizId":"${quizId}","pathwayId":"${pathwayId}","q1":"${q1}","q2":"${q2}","q3":"${q3}","q4":"${q4}","q5":"${q5}","q6":"${q6}","q7":"${q7}","q8":"${q8}","q9":"${q9}","q10":"${q10}"}''';
+{"authToken":"${_jsonEsc(authToken)}","quizId":"${_jsonEsc(quizId)}","pathwayId":"${_jsonEsc(pathwayId)}","q1":"${_jsonEsc(q1)}","q2":"${_jsonEsc(q2)}","q3":"${_jsonEsc(q3)}","q4":"${_jsonEsc(q4)}","q5":"${_jsonEsc(q5)}","q6":"${_jsonEsc(q6)}","q7":"${_jsonEsc(q7)}","q8":"${_jsonEsc(q8)}","q9":"${_jsonEsc(q9)}","q10":"${_jsonEsc(q10)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'SubmitQuizAttemptV2',
       apiUrl:
@@ -581,7 +581,7 @@ class GetUserProfileV4Call {
     String? authToken = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}"}''';
+{"authToken":"${_jsonEsc(authToken)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetUserProfileV4',
       apiUrl:
@@ -618,7 +618,7 @@ class SubmitAssessmentCall {
     String? q10 = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","q1":"${q1}","q2":"${q2}","q3":"${q3}","q4":"${q4}","q5":"${q5}","q6":"${q6}","q7":"${q7}","q8":"${q8}","q9":"${q9}","q10":"${q10}"}''';
+{"authToken":"${_jsonEsc(authToken)}","q1":"${_jsonEsc(q1)}","q2":"${_jsonEsc(q2)}","q3":"${_jsonEsc(q3)}","q4":"${_jsonEsc(q4)}","q5":"${_jsonEsc(q5)}","q6":"${_jsonEsc(q6)}","q7":"${_jsonEsc(q7)}","q8":"${_jsonEsc(q8)}","q9":"${_jsonEsc(q9)}","q10":"${_jsonEsc(q10)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'SubmitAssessment',
       apiUrl:
@@ -647,7 +647,7 @@ class RagQueryHttpCall {
     String? locale = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","question":"${question}","locale":"${locale}"}''';
+{"authToken":"${_jsonEsc(authToken)}","question":"${_jsonEsc(question)}","locale":"${_jsonEsc(locale)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'RagQueryHttp',
       apiUrl:
@@ -674,7 +674,7 @@ class GetAdminReportCall {
     String? authToken = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}"}''';
+{"authToken":"${_jsonEsc(authToken)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetAdminReport',
       apiUrl:
@@ -701,7 +701,7 @@ class GetAssessmentConfigCall {
     String? authToken = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}"}''';
+{"authToken":"${_jsonEsc(authToken)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetAssessmentConfig',
       apiUrl:
@@ -734,7 +734,7 @@ class UpdateAssessmentConfigCall {
     String? activate = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","assessmentVersion":"${assessmentVersion}","scoreBandsJson":"${scoreBandsJson}","overridesJson":"${overridesJson}","explanationsJson":"${explanationsJson}","pointMapJson":"${pointMapJson}","activate":"${activate}"}''';
+{"authToken":"${_jsonEsc(authToken)}","assessmentVersion":"${_jsonEsc(assessmentVersion)}","scoreBandsJson":"${_jsonEsc(scoreBandsJson)}","overridesJson":"${_jsonEsc(overridesJson)}","explanationsJson":"${_jsonEsc(explanationsJson)}","pointMapJson":"${_jsonEsc(pointMapJson)}","activate":"${_jsonEsc(activate)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'UpdateAssessmentConfig',
       apiUrl:
@@ -762,7 +762,7 @@ class GetAssessmentQuestionsCall {
     String? locale = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","locale":"${locale}"}''';
+{"authToken":"${_jsonEsc(authToken)}","locale":"${_jsonEsc(locale)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetAssessmentQuestions',
       apiUrl:
@@ -789,7 +789,7 @@ class GetUserProfileV5Call {
     String? authToken = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}"}''';
+{"authToken":"${_jsonEsc(authToken)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetUserProfileV5',
       apiUrl:
@@ -826,7 +826,7 @@ class SubmitAssessmentV2Call {
     String? q10 = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","q1":"${q1}","q2":"${q2}","q3":"${q3}","q4":"${q4}","q5":"${q5}","q6":"${q6}","q7":"${q7}","q8":"${q8}","q9":"${q9}","q10":"${q10}"}''';
+{"authToken":"${_jsonEsc(authToken)}","q1":"${_jsonEsc(q1)}","q2":"${_jsonEsc(q2)}","q3":"${_jsonEsc(q3)}","q4":"${_jsonEsc(q4)}","q5":"${_jsonEsc(q5)}","q6":"${_jsonEsc(q6)}","q7":"${_jsonEsc(q7)}","q8":"${_jsonEsc(q8)}","q9":"${_jsonEsc(q9)}","q10":"${_jsonEsc(q10)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'SubmitAssessmentV2',
       apiUrl:
@@ -861,7 +861,7 @@ class PublishAnnouncementCall {
     String? sendPush = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","titleEn":"${titleEn}","titleEs":"${titleEs}","titleUr":"${titleUr}","bodyEn":"${bodyEn}","bodyEs":"${bodyEs}","bodyUr":"${bodyUr}","audience":"${audience}","sendPush":"${sendPush}"}''';
+{"authToken":"${_jsonEsc(authToken)}","titleEn":"${_jsonEsc(titleEn)}","titleEs":"${_jsonEsc(titleEs)}","titleUr":"${_jsonEsc(titleUr)}","bodyEn":"${_jsonEsc(bodyEn)}","bodyEs":"${_jsonEsc(bodyEs)}","bodyUr":"${_jsonEsc(bodyUr)}","audience":"${_jsonEsc(audience)}","sendPush":"${_jsonEsc(sendPush)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'PublishAnnouncement',
       apiUrl:
@@ -889,7 +889,7 @@ class GenerateTranslationDraftsCall {
     String? target = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","target":"${target}"}''';
+{"authToken":"${_jsonEsc(authToken)}","target":"${_jsonEsc(target)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GenerateTranslationDrafts',
       apiUrl:
@@ -919,7 +919,7 @@ class LogAnalyticsEventCall {
     String? screen = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","eventName":"${eventName}","propsJson":"${propsJson}","screen":"${screen}"}''';
+{"authToken":"${_jsonEsc(authToken)}","eventName":"${_jsonEsc(eventName)}","propsJson":"${_jsonEsc(propsJson)}","screen":"${_jsonEsc(screen)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'LogAnalyticsEvent',
       apiUrl:
@@ -950,7 +950,7 @@ class SaveProfileDetailsCall {
     String? timezone = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","displayName":"${displayName}","country":"${country}","regionCity":"${regionCity}","timezone":"${timezone}"}''';
+{"authToken":"${_jsonEsc(authToken)}","displayName":"${_jsonEsc(displayName)}","country":"${_jsonEsc(country)}","regionCity":"${_jsonEsc(regionCity)}","timezone":"${_jsonEsc(timezone)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'SaveProfileDetails',
       apiUrl:
@@ -979,7 +979,7 @@ class SaveOnboardingLanguageCall {
     String? surveyResponses = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","preferredLanguage":"${preferredLanguage}","surveyResponses":"${surveyResponses}"}''';
+{"authToken":"${_jsonEsc(authToken)}","preferredLanguage":"${_jsonEsc(preferredLanguage)}","surveyResponses":"${_jsonEsc(surveyResponses)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'SaveOnboardingLanguage',
       apiUrl:
@@ -1011,7 +1011,7 @@ class SaveProfileDetailsV2Call {
     String? timezone = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","displayName":"${displayName}","phone":"${phone}","country":"${country}","regionCity":"${regionCity}","timezone":"${timezone}"}''';
+{"authToken":"${_jsonEsc(authToken)}","displayName":"${_jsonEsc(displayName)}","phone":"${_jsonEsc(phone)}","country":"${_jsonEsc(country)}","regionCity":"${_jsonEsc(regionCity)}","timezone":"${_jsonEsc(timezone)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'SaveProfileDetailsV2',
       apiUrl:
@@ -1038,7 +1038,7 @@ class GetTodayContentCall {
     String? authToken = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}"}''';
+{"authToken":"${_jsonEsc(authToken)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetTodayContent',
       apiUrl:
@@ -1068,7 +1068,7 @@ class SaveOnboardingSurveyCall {
     String? growthGoal = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","preferredLanguage":"${preferredLanguage}","hearAbout":"${hearAbout}","growthGoal":"${growthGoal}"}''';
+{"authToken":"${_jsonEsc(authToken)}","preferredLanguage":"${_jsonEsc(preferredLanguage)}","hearAbout":"${_jsonEsc(hearAbout)}","growthGoal":"${_jsonEsc(growthGoal)}"}''';
     return ApiManager.instance.makeApiCall(
       callName: 'SaveOnboardingSurvey',
       apiUrl:
@@ -1135,4 +1135,12 @@ String _serializeJson(dynamic jsonVar, [bool isList = false]) {
     }
     return isList ? '[]' : '{}';
   }
+}
+
+/// Escapes a value for use inside a JSON string literal in the request
+/// bodies above, so quotes or newlines in member text (reflections,
+/// questions) no longer produce invalid JSON.
+String _jsonEsc(Object? value) {
+  final encoded = json.encode(value?.toString() ?? '');
+  return encoded.substring(1, encoded.length - 1);
 }
