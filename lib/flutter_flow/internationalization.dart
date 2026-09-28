@@ -34,8 +34,12 @@ class FFLocalizations {
       ? languages().indexOf(languageCode)
       : 0;
 
-  String getText(String key) =>
-      (kTranslationsMap[key] ?? {})[locale.toString()] ?? '';
+  // Untranslated UI strings fall back to English instead of rendering blank.
+  String getText(String key) {
+    final texts = kTranslationsMap[key] ?? {};
+    final text = texts[locale.toString()] ?? '';
+    return text.isNotEmpty ? text : (texts['en'] ?? '');
+  }
 
   String getVariableText({
     String? enText = '',
@@ -43,7 +47,10 @@ class FFLocalizations {
     String? esText = '',
     String? lgText = '',
   }) =>
-      [enText, urText, esText, lgText][languageIndex] ?? '';
+      _orEnglish([enText, urText, esText, lgText][languageIndex], enText);
+
+  static String _orEnglish(String? text, String? english) =>
+      (text ?? '').isNotEmpty ? text! : (english ?? '');
 
   static const Set<String> _languagesWithShortCode = {
     'ar',
