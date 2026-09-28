@@ -188,7 +188,7 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
       'ur': 'آج',
     },
     'pymmndk7': {
-      'en': 'Ask Kingdom Heirs (RAG)',
+      'en': 'Ask Kingdom Heirs',
       'es': 'Pregunta a Kingdom Heirs',
       'lg': 'Buuza Kingdom Heirs',
       'ur': 'کنگڈم ہائرز سے پوچھیں',

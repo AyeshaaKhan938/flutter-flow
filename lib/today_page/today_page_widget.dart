@@ -127,7 +127,7 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                       context.pushNamed(RagSearchPageWidget.routeName);
                     },
                     text: FFLocalizations.of(context).getText(
-                      'pymmndk7' /* Ask Kingdom Heirs (RAG) */,
+                      'pymmndk7' /* Ask Kingdom Heirs */,
                     ),
                     options: FFButtonOptions(
                       width: double.infinity,

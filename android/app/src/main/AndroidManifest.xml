@@ -60,4 +60,11 @@
 
 
     </application>
+    <!-- Android 11+: lets canLaunchUrl see a browser for Bible links. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
 </manifest>
