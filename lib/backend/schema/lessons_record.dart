@@ -42,6 +42,16 @@ class LessonsRecord extends FirestoreRecord {
       _reflectionPrompt ?? LocaleTextStruct();
   bool hasReflectionPrompt() => _reflectionPrompt != null;
 
+  // "application" field: how to live out the lesson today.
+  LocaleTextStruct? _application;
+  LocaleTextStruct get application => _application ?? LocaleTextStruct();
+  bool hasApplication() => _application != null;
+
+  // "prayer" field: closing prayer for the lesson.
+  LocaleTextStruct? _prayer;
+  LocaleTextStruct get prayer => _prayer ?? LocaleTextStruct();
+  bool hasPrayer() => _prayer != null;
+
   // "mediaUrl" field.
   String? _mediaUrl;
   String get mediaUrl => _mediaUrl ?? '';
@@ -76,6 +86,12 @@ class LessonsRecord extends FirestoreRecord {
     _reflectionPrompt = snapshotData['reflectionPrompt'] is LocaleTextStruct
         ? snapshotData['reflectionPrompt']
         : LocaleTextStruct.maybeFromMap(snapshotData['reflectionPrompt']);
+    _application = snapshotData['application'] is LocaleTextStruct
+        ? snapshotData['application']
+        : LocaleTextStruct.maybeFromMap(snapshotData['application']);
+    _prayer = snapshotData['prayer'] is LocaleTextStruct
+        ? snapshotData['prayer']
+        : LocaleTextStruct.maybeFromMap(snapshotData['prayer']);
     _mediaUrl = snapshotData['mediaUrl'] as String?;
     _status = snapshotData['status'] as String?;
     _stableId = snapshotData['stableId'] as String?;

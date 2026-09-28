@@ -1,5 +1,6 @@
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/api_requests/api_calls.dart';
+import '/custom_code/actions/index.dart' as actions;
 import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -47,20 +48,26 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
         _model.memberLanguage = UserProfileFullResponseStruct.maybeFromMap(
                 (_model.pathwayLangProfile?.jsonBody ?? ''))
             ?.preferredLanguage;
-        safeSetState(() {});
+      } else {
+        // Offline with no saved profile: don't leave the list loading forever.
+        _model.memberLanguage = await actions.deviceContentLanguage();
+      }
+      safeSetState(() {});
+      try {
         _model.loadedPathways = await queryPathwaysRecordOnce(
           queryBuilder: (pathwaysRecord) => pathwaysRecord.where(
             'status',
             isEqualTo: 'published',
           ),
-          limit: 20,
+          limit: 100,
         );
-        _model.pathwaysList =
-            _model.loadedPathways!.toList().cast<PathwaysRecord>();
-        safeSetState(() {});
-        _model.isLoading = false;
-        safeSetState(() {});
+        _model.pathwaysList = await _pathwaysWithLessons(
+            _model.loadedPathways!.toList().cast<PathwaysRecord>());
+      } catch (_) {
+        _model.pathwaysList = [];
       }
+      _model.isLoading = false;
+      safeSetState(() {});
     });
   }
 
@@ -69,6 +76,23 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
     _model.dispose();
 
     super.dispose();
+  }
+
+  /// Published pathways that have at least one published lesson, in their
+  /// CMS `order`, so unfinished or empty pathways never appear to members.
+  Future<List<PathwaysRecord>> _pathwaysWithLessons(
+    List<PathwaysRecord> pathways,
+  ) async {
+    final lessons = await queryLessonsRecordOnce(
+      queryBuilder: (lessonsRecord) => lessonsRecord.where(
+        'status',
+        isEqualTo: 'published',
+      ),
+      limit: 1000,
+    );
+    final withLessons = lessons.map((l) => l.pathwayId).toSet();
+    return pathways.where((p) => withLessons.contains(p.stableId)).toList()
+      ..sort((a, b) => a.order.compareTo(b.order));
   }
 
   @override

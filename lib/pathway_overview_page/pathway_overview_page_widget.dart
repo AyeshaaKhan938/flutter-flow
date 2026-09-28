@@ -78,7 +78,8 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
             'status',
             isEqualTo: 'published',
           ),
-          limit: 50,
+          // Lessons are filtered by pathway on the client, so load them all.
+          limit: 1000,
         );
         _model.lessonsList =
             _model.loadedLessons!.toList().cast<LessonsRecord>();
@@ -114,7 +115,8 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
             'status',
             isEqualTo: 'published',
           ),
-          limit: 50,
+          // Lessons are filtered by pathway on the client, so load them all.
+          limit: 1000,
         );
         _model.lessonsList =
             _model.loadedLessonsOffline!.toList().cast<LessonsRecord>();
@@ -137,6 +139,100 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
     _model.dispose();
 
     super.dispose();
+  }
+
+  static const _completionText = {
+    'en': (
+      'Pathway complete!',
+      'Well done. Take the assessment again to find your next pathway, or explore the others.',
+      'Find my next pathway',
+      'Explore pathways',
+    ),
+    'es': (
+      '¡Camino completado!',
+      'Bien hecho. Vuelve a hacer la evaluación para encontrar tu próximo camino, o explora los demás.',
+      'Encontrar mi próximo camino',
+      'Explorar caminos',
+    ),
+    'ur': (
+      'راستہ مکمل ہو گیا!',
+      'شاباش۔ اپنا اگلا راستہ جاننے کے لیے دوبارہ جائزہ دیں، یا دوسرے راستے دیکھیں۔',
+      'میرا اگلا راستہ',
+      'راستے دیکھیں',
+    ),
+    'lg': (
+      'Omukutu guwedde!',
+      'Weebale nnyo. Ddamu okukebera okuzuula omukutu gwo oguddako, oba noonya emirala.',
+      'Zuula omukutu gwange oguddako',
+      'Laba emikutu',
+    ),
+  };
+
+  /// Shown once every lesson in the pathway is complete: a clear next step.
+  Widget _buildCompletionCard() {
+    final theme = FlutterFlowTheme.of(context);
+    final text =
+        _completionText[_model.memberLanguage] ?? _completionText['en']!;
+    return Container(
+      padding: const EdgeInsets.all(20.0),
+      decoration: BoxDecoration(
+        color: theme.secondaryBackground,
+        borderRadius: BorderRadius.circular(16.0),
+        border: Border.all(color: theme.secondary, width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Icon(Icons.emoji_events_outlined, color: theme.secondary, size: 36.0),
+          const SizedBox(height: 8.0),
+          Text(
+            text.$1,
+            textAlign: TextAlign.center,
+            style: theme.titleLarge.override(
+              font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+              letterSpacing: 0.0,
+            ),
+          ),
+          const SizedBox(height: 8.0),
+          Text(
+            text.$2,
+            textAlign: TextAlign.center,
+            style: theme.bodyMedium.override(
+              font: GoogleFonts.inter(),
+              color: theme.secondaryText,
+              letterSpacing: 0.0,
+            ),
+          ),
+          const SizedBox(height: 16.0),
+          FFButtonWidget(
+            onPressed: () =>
+                context.pushNamed(AssessmentIntroPageWidget.routeName),
+            text: text.$3,
+            options: FFButtonOptions(
+              width: double.infinity,
+              height: 48.0,
+              color: theme.secondary,
+              textStyle: TextStyle(color: theme.primaryText),
+              borderRadius: BorderRadius.circular(16.0),
+            ),
+          ),
+          const SizedBox(height: 8.0),
+          FFButtonWidget(
+            onPressed: () => context.pushNamed(PathwayListPageWidget.routeName),
+            text: text.$4,
+            options: FFButtonOptions(
+              width: double.infinity,
+              height: 48.0,
+              color: Colors.transparent,
+              textStyle: TextStyle(color: theme.primaryText),
+              elevation: 0.0,
+              borderSide: BorderSide(color: theme.tertiary, width: 1.0),
+              borderRadius: BorderRadius.circular(16.0),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -195,6 +291,9 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
                       fit: BoxFit.cover,
                     ),
                   ),
+                  if ((_model.totalLessons ?? 0) > 0 &&
+                      (_model.completedCount ?? 0) >= _model.totalLessons!)
+                    _buildCompletionCard(),
                   if (_model.pathwayTitle == 'Pathway')
                     Row(
                       mainAxisSize: MainAxisSize.max,

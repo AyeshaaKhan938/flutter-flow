@@ -63,7 +63,8 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
             'status',
             isEqualTo: 'published',
           ),
-          limit: 50,
+          // Lessons are filtered by pathway on the client, so load them all.
+          limit: 1000,
         );
         _model.lessonsList =
             _model.loadedLessons!.toList().cast<LessonsRecord>();
@@ -81,7 +82,8 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
             'status',
             isEqualTo: 'published',
           ),
-          limit: 50,
+          // Lessons are filtered by pathway on the client, so load them all.
+          limit: 1000,
         );
         _model.lessonsList =
             _model.loadedLessonsOffline!.toList().cast<LessonsRecord>();
@@ -108,6 +110,133 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
     _model.dispose();
 
     super.dispose();
+  }
+
+
+  /// Quizzes linked before quizzes carried a lessonId; kept as a fallback.
+  static const _legacyQuizIds = {
+    'LESSON-COME-007': 'come-and-see-quiz-1',
+    'LESSON-COME-014': 'come-and-see-quiz-2',
+    'LESSON-ROOTED-005': 'rooted-in-christ-quiz-1',
+  };
+
+  /// The published quiz that follows this lesson, if any. All quizzes are
+  /// loaded and filtered here because a filtered collection-group query
+  /// would need an extra Firestore index.
+  Future<String?> _quizIdForLesson() async {
+    try {
+      final quizzes = await queryQuizzesRecordOnce();
+      for (final quiz in quizzes) {
+        if (quiz.lessonId == widget.lessonId && quiz.status == 'published') {
+          return quiz.stableId.isNotEmpty ? quiz.stableId : quiz.reference.id;
+        }
+      }
+    } catch (_) {}
+    return _legacyQuizIds[widget.lessonId];
+  }
+
+  static const _sectionLabels = {
+    'application': {
+      'en': 'Application',
+      'es': 'Aplicación',
+      'ur': 'عملی اطلاق',
+      'lg': 'Okukikozesa',
+    },
+    'prayer': {
+      'en': 'Prayer',
+      'es': 'Oración',
+      'ur': 'دعا',
+      'lg': 'Okusaba',
+    },
+    'fallback': {
+      'en': '',
+      'es':
+          'Parte de esta lección se muestra en inglés porque la traducción aún no está disponible.',
+      'ur': 'اس سبق کا کچھ حصہ انگریزی میں دکھایا گیا ہے کیونکہ ترجمہ ابھی دستیاب نہیں۔',
+      'lg':
+          'Ebimu ku ssomo lino biri mu Lungereza kubanga okuvvuunula tekunnaba kubaawo.',
+    },
+  };
+
+  String _label(String key) {
+    final labels = _sectionLabels[key]!;
+    return labels[_model.memberLanguage] ?? labels['en']!;
+  }
+
+  /// True when the member reads a non-English language and at least one
+  /// lesson field has no translation, so English is shown in its place.
+  bool _usesEnglishFallback(LessonsRecord lesson) {
+    final lang = _model.memberLanguage;
+    if (lang == null || lang == 'en') {
+      return false;
+    }
+    return [
+      lesson.title,
+      lesson.scriptureText,
+      lesson.reflectionPrompt,
+      lesson.application,
+      lesson.prayer,
+    ].any((t) => t.en.isNotEmpty && t.forLanguage(lang) == t.en);
+  }
+
+  Widget _buildFallbackNotice() {
+    final theme = FlutterFlowTheme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(12.0),
+      decoration: BoxDecoration(
+        color: theme.alternate,
+        borderRadius: BorderRadius.circular(12.0),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.translate, size: 18.0, color: theme.secondaryText),
+          const SizedBox(width: 8.0),
+          Expanded(
+            child: Text(
+              _label('fallback'),
+              style: theme.labelMedium.override(
+                font: GoogleFonts.inter(),
+                color: theme.secondaryText,
+                letterSpacing: 0.0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Application and prayer sections, shown only when the lesson has them.
+  List<Widget> _buildApplicationAndPrayer(LessonsRecord lesson) {
+    final theme = FlutterFlowTheme.of(context);
+    Widget section(String labelKey, LocaleTextStruct text) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _label(labelKey),
+              style: theme.titleMedium.override(
+                font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                letterSpacing: 0.0,
+              ),
+            ),
+            const SizedBox(height: 6.0),
+            Text(
+              text.forLanguage(_model.memberLanguage),
+              style: theme.bodyMedium.override(
+                font: GoogleFonts.inter(),
+                color: theme.secondaryText,
+                letterSpacing: 0.0,
+              ),
+            ),
+          ],
+        );
+    return [
+      if (lesson.application.en.isNotEmpty)
+        section('application', lesson.application),
+      if (lesson.prayer.en.isNotEmpty) section('prayer', lesson.prayer),
+    ];
   }
 
   /// Full Scripture passage, kept visually apart from lesson commentary and
@@ -251,6 +380,8 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                               mainAxisAlignment: MainAxisAlignment.start,
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
+                                if (_usesEnglishFallback(lessonsListItemItem))
+                                  _buildFallbackNotice(),
                                 Column(
                                   mainAxisSize: MainAxisSize.min,
                                   mainAxisAlignment: MainAxisAlignment.start,
@@ -787,6 +918,8 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                       ),
                                   ],
                                 ),
+                                ..._buildApplicationAndPrayer(
+                                    lessonsListItemItem),
                               ].divide(SizedBox(height: 20.0)),
                             ),
                           );
@@ -1060,7 +1193,8 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                             duration: Duration(milliseconds: 4000),
                           ),
                         );
-                        if (widget.lessonId == 'LESSON-COME-007') {
+                        final quizId = await _quizIdForLesson();
+                        if (quizId != null) {
                           context.pushNamed(
                             QuizPageWidget.routeName,
                             queryParameters: {
@@ -1069,35 +1203,7 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                 ParamType.String,
                               ),
                               'quizId': serializeParam(
-                                'come-and-see-quiz-1',
-                                ParamType.String,
-                              ),
-                            }.withoutNulls,
-                          );
-                        } else if (widget.lessonId == 'LESSON-COME-014') {
-                          context.pushNamed(
-                            QuizPageWidget.routeName,
-                            queryParameters: {
-                              'pathwayId': serializeParam(
-                                widget.pathwayId,
-                                ParamType.String,
-                              ),
-                              'quizId': serializeParam(
-                                'come-and-see-quiz-2',
-                                ParamType.String,
-                              ),
-                            }.withoutNulls,
-                          );
-                        } else if (widget.lessonId == 'LESSON-ROOTED-005') {
-                          context.pushNamed(
-                            QuizPageWidget.routeName,
-                            queryParameters: {
-                              'pathwayId': serializeParam(
-                                widget.pathwayId,
-                                ParamType.String,
-                              ),
-                              'quizId': serializeParam(
-                                'rooted-in-christ-quiz-1',
+                                quizId,
                                 ParamType.String,
                               ),
                             }.withoutNulls,
