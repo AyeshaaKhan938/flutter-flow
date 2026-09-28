@@ -85,6 +85,16 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
             _model.loadedLessonsOffline!.toList().cast<LessonsRecord>();
         safeSetState(() {});
       }
+      final savedReflection = await actions.loadSavedReflection(
+        currentUserUid,
+        widget.lessonId,
+      );
+      if (savedReflection.isNotEmpty &&
+          _model.reflectionFieldTextController!.text.isEmpty) {
+        _model.reflectionFieldTextController!.text = savedReflection;
+        _model.reflectionInput = savedReflection;
+        safeSetState(() {});
+      }
     });
 
     _model.reflectionFieldTextController ??= TextEditingController();
@@ -877,7 +887,7 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                       Duration(milliseconds: 2000),
                       () async {
                         _model.reflectionInput =
-                            _model.reflectionFieldTextController.text;
+                            _model.reflectionFieldTextController!.text;
                         safeSetState(() {});
                       },
                     ),
@@ -935,6 +945,9 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                   ),
                   FFButtonWidget(
                     onPressed: () async {
+                      // Don't lose text typed within the 2s debounce window.
+                      _model.reflectionInput =
+                          _model.reflectionFieldTextController!.text;
                       _model.saveSmartResult =
                           await actions.saveLessonProgressSmart(
                         currentJwtToken,
