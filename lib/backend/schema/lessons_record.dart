@@ -67,11 +67,6 @@ class LessonsRecord extends FirestoreRecord {
   LocaleTextStruct get application => _application ?? LocaleTextStruct();
   bool hasApplication() => _application != null;
 
-  // "prayer" field.
-  LocaleTextStruct? _prayer;
-  LocaleTextStruct get prayer => _prayer ?? LocaleTextStruct();
-  bool hasPrayer() => _prayer != null;
-
   DocumentReference get parentReference => reference.parent.parent!;
 
   void _initializeFields() {
@@ -93,9 +88,6 @@ class LessonsRecord extends FirestoreRecord {
     _application = snapshotData['application'] is LocaleTextStruct
         ? snapshotData['application']
         : LocaleTextStruct.maybeFromMap(snapshotData['application']);
-    _prayer = snapshotData['prayer'] is LocaleTextStruct
-        ? snapshotData['prayer']
-        : LocaleTextStruct.maybeFromMap(snapshotData['prayer']);
   }
 
   static Query<Map<String, dynamic>> collection([DocumentReference? parent]) =>
@@ -148,7 +140,6 @@ Map<String, dynamic> createLessonsRecordData({
   String? stableId,
   String? pathwayId,
   LocaleTextStruct? application,
-  LocaleTextStruct? prayer,
 }) {
   final firestoreData = mapToFirestore(
     <String, dynamic>{
@@ -162,7 +153,6 @@ Map<String, dynamic> createLessonsRecordData({
       'stableId': stableId,
       'pathwayId': pathwayId,
       'application': LocaleTextStruct().toMap(),
-      'prayer': LocaleTextStruct().toMap(),
     }.withoutNulls,
   );
 
@@ -177,9 +167,6 @@ Map<String, dynamic> createLessonsRecordData({
 
   // Handle nested data for "application" field.
   addLocaleTextStructData(firestoreData, application, 'application');
-
-  // Handle nested data for "prayer" field.
-  addLocaleTextStructData(firestoreData, prayer, 'prayer');
 
   return firestoreData;
 }
@@ -198,8 +185,7 @@ class LessonsRecordDocumentEquality implements Equality<LessonsRecord> {
         e1?.status == e2?.status &&
         e1?.stableId == e2?.stableId &&
         e1?.pathwayId == e2?.pathwayId &&
-        e1?.application == e2?.application &&
-        e1?.prayer == e2?.prayer;
+        e1?.application == e2?.application;
   }
 
   @override
@@ -213,8 +199,7 @@ class LessonsRecordDocumentEquality implements Equality<LessonsRecord> {
         e?.status,
         e?.stableId,
         e?.pathwayId,
-        e?.application,
-        e?.prayer
+        e?.application
       ]);
 
   @override
