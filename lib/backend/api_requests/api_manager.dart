@@ -16,6 +16,7 @@ import 'package:http/browser_client.dart'
 import '/flutter_flow/uploaded_file.dart';
 
 import 'get_streamed_response.dart';
+import 'offline_api_cache.dart';
 
 enum ApiCallType {
   GET,
@@ -606,6 +607,19 @@ class ApiManager {
       }
     } catch (e) {
       result = ApiCallResponse(null, {}, -1, exception: e);
+    }
+
+    // Offline support: remember successful reads, and serve the last one
+    // when the request could not reach the server.
+    if (OfflineApiCache.isCacheable(callName)) {
+      if (result.succeeded) {
+        await OfflineApiCache.save(callName, body, result);
+      } else if (result.statusCode <= 0) {
+        final cached = await OfflineApiCache.load(callName, body);
+        if (cached != null) {
+          return cached;
+        }
+      }
     }
 
     return result;

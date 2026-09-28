@@ -4,7 +4,7 @@ export '/custom_code/actions/refresh_today_content.dart'
 export '/custom_code/actions/open_scripture_reference.dart'
     show openScriptureReference;
 export '/custom_code/actions/refresh_connectivity_and_sync.dart'
-    show refreshConnectivityAndSync;
+    show refreshConnectivityAndSync, kPendingLanguageSyncKey;
 export '/custom_code/actions/save_lesson_progress_smart.dart'
     show saveLessonProgressSmart;
 export '/custom_code/actions/admin_create_pathway.dart' show adminCreatePathway;

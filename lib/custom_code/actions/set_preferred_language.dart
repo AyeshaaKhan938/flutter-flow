@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '/main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 Future<String> setPreferredLanguage(
   BuildContext context,
@@ -27,9 +28,12 @@ Future<String> setPreferredLanguage(
     MyApp.of(context).setLocale(appLocale);
   } catch (_) {}
 
+  // Assume the server update fails until it succeeds, so a change made
+  // offline is retried by refreshConnectivityAndSync on reconnect.
+  var synced = false;
   if (authToken.isNotEmpty) {
     try {
-      await http.post(
+      final response = await http.post(
         Uri.parse(
           'https://us-central1-kingdom-heirs-discipleshipapp.cloudfunctions.net/updateUserProfile',
         ),
@@ -39,7 +43,16 @@ Future<String> setPreferredLanguage(
           'preferredLanguage': code,
         }),
       );
+      synced = response.statusCode >= 200 && response.statusCode < 300;
     } catch (_) {}
   }
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    if (synced) {
+      await prefs.remove(kPendingLanguageSyncKey);
+    } else {
+      await prefs.setString(kPendingLanguageSyncKey, code);
+    }
+  } catch (_) {}
   return code;
 }
