@@ -48,7 +48,7 @@ reads; see "Needs input" at the end.
 | Field | Type | Notes |
 |---|---|---|
 | `stableId` | string | |
-| `date` | string | `yyyy-MM-dd` |
+| `date` | string | `MM-dd` (month-day, repeats every year) |
 | `verseRef` | string | |
 | `text` | Loc | |
 | `status` | string | `published` / `draft` / `unpublished` (the new admin page uses these three) |
@@ -57,7 +57,7 @@ reads; see "Needs input" at the end.
 | Field | Type | Notes |
 |---|---|---|
 | `stableId` | string | |
-| `date` | string | `yyyy-MM-dd` |
+| `date` | string | `MM-dd` (month-day, repeats every year) |
 | `quote` | Loc | |
 | `attribution` | string | |
 | `rightsCleared` | bool | Confirms you have the right to publish the quote |

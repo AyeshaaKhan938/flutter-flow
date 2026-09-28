@@ -20,7 +20,7 @@ class AdminContentPageModel extends FlutterFlowModel<AdminContentPageWidget> {
 
   AdminContentKind kind = AdminContentKind.scripture;
 
-  /// 'yyyy-MM' month filter, or null for all months.
+  /// 'MM' month filter, or null for all months.
   String? monthFilter;
 
   /// Status filter, or null for all statuses.
@@ -45,4 +45,22 @@ class AdminContentPageModel extends FlutterFlowModel<AdminContentPageWidget> {
     searchFieldFocusNode?.dispose();
     searchFieldTextController?.dispose();
   }
+}
+
+/// Daily Scripture and Encouragement records repeat every year, so their
+/// `date` is month-day ("01-31"), as in the imported content.
+const kContentDateFormat = 'MM-dd';
+
+/// Parses a month-day content date (a leap year, so 02-29 is valid).
+DateTime? parseContentDate(String date) {
+  final parts = date.split('-');
+  if (parts.length != 2) {
+    return null;
+  }
+  final month = int.tryParse(parts[0]);
+  final day = int.tryParse(parts[1]);
+  if (month == null || day == null) {
+    return null;
+  }
+  return DateTime(2024, month, day);
 }

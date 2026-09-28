@@ -20,7 +20,7 @@ The field dictionary and CSV templates for the **Bulk Curriculum Importer** (see
 | Quoting | Wrap any value that contains a comma, quote, or line break in `"…"`. Write a literal quote as `""` |
 | `stableId` | **Required, unique within its collection, and never changed.** It is the upsert key: an existing stableId is **updated**, and a new one is **created** |
 | Languages | `en` is required. `es`, `ur`, and `lg` are optional. Blank translations fall back to English in the app |
-| Dates | `yyyy-MM-dd` (e.g. `2026-10-01`) and nothing else. A value like `10/1/2026` will not match any day |
+| Dates | Daily Scripture and Encouragements: `MM-dd` (e.g. `10-01`), because they repeat every year. A value like `10/1/2026` will not match any day |
 | `status` | `draft`, `in_review`, or `published` (daily Scripture and encouragements also accept `unpublished`). If you're unsure, import as `draft` and publish from the admin page |
 | Booleans | `true` / `false` |
 
@@ -65,7 +65,7 @@ LESSON-COME-001,come-and-see,1,Jesus Invites Us,,,,John 1:35-39,"""Come,"" he re
 | Column | Required | Notes |
 |---|---|---|
 | `stableId` | yes | Use one id per day, e.g. `DS-2026-10-01` |
-| `date` | yes | `yyyy-MM-dd`, one entry per date |
+| `date` | yes | `MM-dd`, one entry per day of the year |
 | `verseRef` | yes | e.g. `Psalm 23:1` |
 | `text_en` … `text_lg` | en | |
 | `status` | recommended | |
@@ -80,7 +80,7 @@ DS-2026-10-01,2026-10-01,Psalm 23:1,"The Lord is my shepherd, I lack nothing.",,
 | Column | Required | Notes |
 |---|---|---|
 | `stableId` | yes | e.g. `ENC-2026-10-01` |
-| `date` | yes | `yyyy-MM-dd` |
+| `date` | yes | `MM-dd` |
 | `quote_en` … `quote_lg` | en | |
 | `attribution` | recommended | Author or source |
 | `rightsCleared` | yes | `true` only if you have permission to publish |

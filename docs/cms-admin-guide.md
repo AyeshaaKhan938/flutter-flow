@@ -60,7 +60,7 @@ files. Column parsing and validation happen on the server.
 
 ## Daily Scripture and encouragements
 
-- Each entry has a `date` (`yyyy-MM-dd`), which is the day it appears on **Today**.
+- Each entry has a `date` (`MM-dd`, e.g. `01-31`), the day of the year it appears on **Today**, every year.
   Today's content comes from `getTodayContent`.
 - Load a month or a year at a time with the importer (`dailyScripture` / `encouragements`).
 - For encouragements, set `rightsCleared` only when you have permission to publish the quote.

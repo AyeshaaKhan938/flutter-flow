@@ -341,7 +341,7 @@ class _AdminContentPageWidgetState extends State<AdminContentPageWidget> {
     }
 
     final months = allRows
-        .map((r) => r.date.length >= 7 ? r.date.substring(0, 7) : '')
+        .map((r) => r.date.length >= 2 ? r.date.substring(0, 2) : '')
         .where((m) => m.isNotEmpty)
         .toSet()
         .toList()
@@ -477,9 +477,9 @@ class _AdminContentPageWidgetState extends State<AdminContentPageWidget> {
     );
   }
 
-  String _monthLabel(String yyyyMm) {
-    final parsed = DateTime.tryParse('$yyyyMm-01');
-    return parsed == null ? yyyyMm : DateFormat('MMM yyyy').format(parsed);
+  String _monthLabel(String month) {
+    final parsed = parseContentDate('$month-01');
+    return parsed == null ? month : DateFormat('MMMM').format(parsed);
   }
 
   Widget _buildRow(

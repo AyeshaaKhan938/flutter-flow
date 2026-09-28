@@ -66,7 +66,7 @@ class _ContentEditorDialogState extends State<ContentEditorDialog> {
 
     _date = (s?.date ?? e?.date ?? '').isNotEmpty
         ? (s?.date ?? e?.date)!
-        : DateFormat('yyyy-MM-dd').format(DateTime.now());
+        : DateFormat(kContentDateFormat).format(DateTime.now());
     final status = s?.status ?? e?.status ?? '';
     _status = kContentStatuses.contains(status) ? status : 'draft';
     _rightsCleared = e?.rightsCleared ?? false;
@@ -101,7 +101,7 @@ class _ContentEditorDialogState extends State<ContentEditorDialog> {
   }
 
   Future<void> _pickDate() async {
-    final initial = DateTime.tryParse(_date) ?? DateTime.now();
+    final initial = parseContentDate(_date) ?? DateTime.now();
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
@@ -109,7 +109,7 @@ class _ContentEditorDialogState extends State<ContentEditorDialog> {
       lastDate: DateTime(2100),
     );
     if (picked != null) {
-      setState(() => _date = DateFormat('yyyy-MM-dd').format(picked));
+      setState(() => _date = DateFormat(kContentDateFormat).format(picked));
     }
   }
 
@@ -130,13 +130,14 @@ class _ContentEditorDialogState extends State<ContentEditorDialog> {
         : '${_isScripture ? 'scripture' : 'encouragement'}-$_date';
 
     final data = _isScripture
-        ? createDailyScriptureRecordData(
+        // The imported records carry the reference twice; keep both equal.
+        ? (createDailyScriptureRecordData(
             date: _date,
             verseRef: _referenceController.text.trim(),
             text: localeText,
             status: _status,
             stableId: stableId,
-          )
+          )..['reference'] = _referenceController.text.trim())
         : createEncouragementsRecordData(
             date: _date,
             quote: localeText,
