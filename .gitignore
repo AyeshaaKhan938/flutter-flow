@@ -1,0 +1,9 @@
+# Secrets: build-time keys (see README "API keys"). Never commit.
+api_keys.json
+
+# Flutter / Dart build output
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+ios/Flutter/ephemeral/

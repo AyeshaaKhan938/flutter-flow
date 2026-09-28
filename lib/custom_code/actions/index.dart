@@ -32,7 +32,7 @@ export '/custom_code/actions/run_curriculum_import.dart'
 export '/custom_code/actions/device_content_language.dart'
     show deviceContentLanguage;
 export '/custom_code/actions/fetch_bible_verse_api.dart'
-    show fetchBibleVerseApi;
+    show fetchBibleVerseApi, fetchBiblePassage, BiblePassage;
 export '/custom_code/actions/load_saved_reflection.dart'
     show loadSavedReflection;
 export '/custom_code/actions/quiz_answers_store.dart'

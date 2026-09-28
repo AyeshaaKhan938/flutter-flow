@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/api_requests/api_calls.dart';
 import '/backend/backend.dart';
@@ -108,6 +110,68 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
     super.dispose();
   }
 
+  /// Full Scripture passage, kept visually apart from lesson commentary and
+  /// labelled with its translation and copyright as API.Bible requires.
+  Future<void> _showPassageDialog(actions.BiblePassage passage) {
+    final theme = FlutterFlowTheme.of(context);
+    final rtl = _model.memberLanguage == 'ur';
+    return showDialog(
+      context: context,
+      builder: (dialogContext) => Directionality(
+        textDirection: rtl ? ui.TextDirection.rtl : ui.TextDirection.ltr,
+        child: AlertDialog(
+          title: Text('${passage.reference} (${passage.version})'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  passage.text,
+                  style: theme.bodyLarge.override(
+                    font: GoogleFonts.lora(),
+                    letterSpacing: 0.0,
+                    lineHeight: 1.5,
+                  ),
+                ),
+                if (passage.fromCache) ...[
+                  const SizedBox(height: 12.0),
+                  Text(
+                    'Offline: showing the copy saved on this device.',
+                    style: theme.labelSmall.override(
+                      font: GoogleFonts.inter(),
+                      color: theme.secondaryText,
+                      letterSpacing: 0.0,
+                    ),
+                  ),
+                ],
+                if (passage.copyright.isNotEmpty) ...[
+                  const Divider(height: 24.0),
+                  Text(
+                    passage.copyright,
+                    style: theme.labelSmall.override(
+                      font: GoogleFonts.inter(),
+                      color: theme.secondaryText,
+                      letterSpacing: 0.0,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(
+                MaterialLocalizations.of(dialogContext).closeButtonLabel,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     context.watch<FFAppState>();
@@ -180,8 +244,8 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                           final lessonsListItemItem =
                               lessonsListItem[lessonsListItemIndex];
                           return Visibility(
-                            visible: lessonsListItemItem.stableId ==
-                                widget.lessonId,
+                            visible:
+                                lessonsListItemItem.stableId == widget.lessonId,
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               mainAxisAlignment: MainAxisAlignment.start,
@@ -192,9 +256,11 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (!['es', 'ur'].contains(_model.memberLanguage))
+                                    if (!['es', 'ur']
+                                        .contains(_model.memberLanguage))
                                       Text(
-                                        lessonsListItemItem.title.forLanguage(_model.memberLanguage),
+                                        lessonsListItemItem.title
+                                            .forLanguage(_model.memberLanguage),
                                         style: FlutterFlowTheme.of(context)
                                             .headlineSmall
                                             .override(
@@ -221,7 +287,8 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                       ),
                                     if (_model.memberLanguage == 'es')
                                       Text(
-                                        lessonsListItemItem.title.forLanguage('es'),
+                                        lessonsListItemItem.title
+                                            .forLanguage('es'),
                                         style: FlutterFlowTheme.of(context)
                                             .headlineSmall
                                             .override(
@@ -248,7 +315,8 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                       ),
                                     if (_model.memberLanguage == 'ur')
                                       Text(
-                                        lessonsListItemItem.title.forLanguage('ur'),
+                                        lessonsListItemItem.title
+                                            .forLanguage('ur'),
                                         style: FlutterFlowTheme.of(context)
                                             .headlineSmall
                                             .override(
@@ -281,30 +349,13 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                   hoverColor: Colors.transparent,
                                   highlightColor: Colors.transparent,
                                   onTap: () async {
-                                    final liveVerseText =
-                                        await actions.fetchBibleVerseApi(
+                                    final passage =
+                                        await actions.fetchBiblePassage(
                                       lessonsListItemItem.scriptureRef,
-                                      _model.memberLanguage ?? 'en',
+                                      _model.memberLanguage,
                                     );
-                                    if (liveVerseText.isNotEmpty) {
-                                      await showDialog(
-                                        context: context,
-                                        builder: (dialogContext) =>
-                                            AlertDialog(
-                                          title: Text(
-                                              lessonsListItemItem.scriptureRef),
-                                          content: SingleChildScrollView(
-                                            child: Text(liveVerseText),
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () =>
-                                                  Navigator.pop(dialogContext),
-                                              child: Text('Close'),
-                                            ),
-                                          ],
-                                        ),
-                                      );
+                                    if (passage != null) {
+                                      await _showPassageDialog(passage);
                                       return;
                                     }
                                     _model.bibleOpenResult = await actions
@@ -496,10 +547,15 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
-                                              if (!['es', 'ur'].contains(_model.memberLanguage))
+                                              if (![
+                                                'es',
+                                                'ur'
+                                              ].contains(_model.memberLanguage))
                                                 Text(
                                                   lessonsListItemItem
-                                                      .scriptureText.forLanguage(_model.memberLanguage),
+                                                      .scriptureText
+                                                      .forLanguage(_model
+                                                          .memberLanguage),
                                                   style: FlutterFlowTheme.of(
                                                           context)
                                                       .bodyLarge
@@ -532,7 +588,8 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                               if (_model.memberLanguage == 'es')
                                                 Text(
                                                   lessonsListItemItem
-                                                      .scriptureText.forLanguage('es'),
+                                                      .scriptureText
+                                                      .forLanguage('es'),
                                                   style: FlutterFlowTheme.of(
                                                           context)
                                                       .bodyLarge
@@ -565,7 +622,8 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                               if (_model.memberLanguage == 'ur')
                                                 Text(
                                                   lessonsListItemItem
-                                                      .scriptureText.forLanguage('ur'),
+                                                      .scriptureText
+                                                      .forLanguage('ur'),
                                                   style: FlutterFlowTheme.of(
                                                           context)
                                                       .bodyLarge
@@ -633,9 +691,11 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (!['es', 'ur'].contains(_model.memberLanguage))
+                                    if (!['es', 'ur']
+                                        .contains(_model.memberLanguage))
                                       Text(
-                                        lessonsListItemItem.reflectionPrompt.forLanguage(_model.memberLanguage),
+                                        lessonsListItemItem.reflectionPrompt
+                                            .forLanguage(_model.memberLanguage),
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(
@@ -665,7 +725,8 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                       ),
                                     if (_model.memberLanguage == 'es')
                                       Text(
-                                        lessonsListItemItem.reflectionPrompt.forLanguage('es'),
+                                        lessonsListItemItem.reflectionPrompt
+                                            .forLanguage('es'),
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(
@@ -695,7 +756,8 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                       ),
                                     if (_model.memberLanguage == 'ur')
                                       Text(
-                                        lessonsListItemItem.reflectionPrompt.forLanguage('ur'),
+                                        lessonsListItemItem.reflectionPrompt
+                                            .forLanguage('ur'),
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(
