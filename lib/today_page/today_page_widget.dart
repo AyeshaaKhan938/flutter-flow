@@ -541,9 +541,9 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (_model.memberLanguage == 'en')
+                                    if (!['es', 'ur'].contains(_model.memberLanguage))
                                       Text(
-                                        announcementListItemItem.title.en,
+                                        announcementListItemItem.title.forLanguage(_model.memberLanguage),
                                         style: FlutterFlowTheme.of(context)
                                             .titleMedium
                                             .override(
@@ -570,7 +570,7 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                                       ),
                                     if (_model.memberLanguage == 'es')
                                       Text(
-                                        announcementListItemItem.title.es,
+                                        announcementListItemItem.title.forLanguage('es'),
                                         style: FlutterFlowTheme.of(context)
                                             .titleMedium
                                             .override(
@@ -597,7 +597,7 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                                       ),
                                     if (_model.memberLanguage == 'ur')
                                       Text(
-                                        announcementListItemItem.title.ur,
+                                        announcementListItemItem.title.forLanguage('ur'),
                                         style: FlutterFlowTheme.of(context)
                                             .titleMedium
                                             .override(
@@ -629,9 +629,9 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (_model.memberLanguage == 'en')
+                                    if (!['es', 'ur'].contains(_model.memberLanguage))
                                       Text(
-                                        announcementListItemItem.body.en,
+                                        announcementListItemItem.body.forLanguage(_model.memberLanguage),
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(
@@ -661,7 +661,7 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                                       ),
                                     if (_model.memberLanguage == 'es')
                                       Text(
-                                        announcementListItemItem.body.es,
+                                        announcementListItemItem.body.forLanguage('es'),
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(
@@ -691,7 +691,7 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                                       ),
                                     if (_model.memberLanguage == 'ur')
                                       Text(
-                                        announcementListItemItem.body.ur,
+                                        announcementListItemItem.body.forLanguage('ur'),
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(
