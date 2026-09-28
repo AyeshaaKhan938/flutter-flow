@@ -42,16 +42,6 @@ class LessonsRecord extends FirestoreRecord {
       _reflectionPrompt ?? LocaleTextStruct();
   bool hasReflectionPrompt() => _reflectionPrompt != null;
 
-  // "application" field: how to live out the lesson today.
-  LocaleTextStruct? _application;
-  LocaleTextStruct get application => _application ?? LocaleTextStruct();
-  bool hasApplication() => _application != null;
-
-  // "prayer" field: closing prayer for the lesson.
-  LocaleTextStruct? _prayer;
-  LocaleTextStruct get prayer => _prayer ?? LocaleTextStruct();
-  bool hasPrayer() => _prayer != null;
-
   // "mediaUrl" field.
   String? _mediaUrl;
   String get mediaUrl => _mediaUrl ?? '';
@@ -72,6 +62,16 @@ class LessonsRecord extends FirestoreRecord {
   String get pathwayId => _pathwayId ?? '';
   bool hasPathwayId() => _pathwayId != null;
 
+  // "application" field.
+  LocaleTextStruct? _application;
+  LocaleTextStruct get application => _application ?? LocaleTextStruct();
+  bool hasApplication() => _application != null;
+
+  // "prayer" field.
+  LocaleTextStruct? _prayer;
+  LocaleTextStruct get prayer => _prayer ?? LocaleTextStruct();
+  bool hasPrayer() => _prayer != null;
+
   DocumentReference get parentReference => reference.parent.parent!;
 
   void _initializeFields() {
@@ -86,16 +86,16 @@ class LessonsRecord extends FirestoreRecord {
     _reflectionPrompt = snapshotData['reflectionPrompt'] is LocaleTextStruct
         ? snapshotData['reflectionPrompt']
         : LocaleTextStruct.maybeFromMap(snapshotData['reflectionPrompt']);
+    _mediaUrl = snapshotData['mediaUrl'] as String?;
+    _status = snapshotData['status'] as String?;
+    _stableId = snapshotData['stableId'] as String?;
+    _pathwayId = snapshotData['pathwayId'] as String?;
     _application = snapshotData['application'] is LocaleTextStruct
         ? snapshotData['application']
         : LocaleTextStruct.maybeFromMap(snapshotData['application']);
     _prayer = snapshotData['prayer'] is LocaleTextStruct
         ? snapshotData['prayer']
         : LocaleTextStruct.maybeFromMap(snapshotData['prayer']);
-    _mediaUrl = snapshotData['mediaUrl'] as String?;
-    _status = snapshotData['status'] as String?;
-    _stableId = snapshotData['stableId'] as String?;
-    _pathwayId = snapshotData['pathwayId'] as String?;
   }
 
   static Query<Map<String, dynamic>> collection([DocumentReference? parent]) =>
@@ -147,6 +147,8 @@ Map<String, dynamic> createLessonsRecordData({
   String? status,
   String? stableId,
   String? pathwayId,
+  LocaleTextStruct? application,
+  LocaleTextStruct? prayer,
 }) {
   final firestoreData = mapToFirestore(
     <String, dynamic>{
@@ -159,6 +161,8 @@ Map<String, dynamic> createLessonsRecordData({
       'status': status,
       'stableId': stableId,
       'pathwayId': pathwayId,
+      'application': LocaleTextStruct().toMap(),
+      'prayer': LocaleTextStruct().toMap(),
     }.withoutNulls,
   );
 
@@ -170,6 +174,12 @@ Map<String, dynamic> createLessonsRecordData({
 
   // Handle nested data for "reflectionPrompt" field.
   addLocaleTextStructData(firestoreData, reflectionPrompt, 'reflectionPrompt');
+
+  // Handle nested data for "application" field.
+  addLocaleTextStructData(firestoreData, application, 'application');
+
+  // Handle nested data for "prayer" field.
+  addLocaleTextStructData(firestoreData, prayer, 'prayer');
 
   return firestoreData;
 }
@@ -187,7 +197,9 @@ class LessonsRecordDocumentEquality implements Equality<LessonsRecord> {
         e1?.mediaUrl == e2?.mediaUrl &&
         e1?.status == e2?.status &&
         e1?.stableId == e2?.stableId &&
-        e1?.pathwayId == e2?.pathwayId;
+        e1?.pathwayId == e2?.pathwayId &&
+        e1?.application == e2?.application &&
+        e1?.prayer == e2?.prayer;
   }
 
   @override
@@ -200,7 +212,9 @@ class LessonsRecordDocumentEquality implements Equality<LessonsRecord> {
         e?.mediaUrl,
         e?.status,
         e?.stableId,
-        e?.pathwayId
+        e?.pathwayId,
+        e?.application,
+        e?.prayer
       ]);
 
   @override

@@ -17,8 +17,6 @@ class LocaleTextStruct extends FFFirebaseStruct {
 
     /// LocaleText.ur
     String? ur,
-
-    /// LocaleText.lg (Luganda)
     String? lg,
     FirestoreUtilData firestoreUtilData = const FirestoreUtilData(),
   })  : _en = en,
