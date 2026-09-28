@@ -141,9 +141,6 @@ class QuizPageModel extends FlutterFlowModel<QuizPageWidget> {
 
   int? attemptCount = 0;
 
-  // Whether the completed-quiz card is showing the member's answers.
-  bool showAnswerReview = false;
-
   ///  State fields for stateful widgets in this page.
 
   // Stores action output result for [Backend Call - API (GetUserProfileV3)] action in QuizPage widget.

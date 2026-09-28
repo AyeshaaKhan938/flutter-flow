@@ -85,16 +85,6 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
             _model.loadedLessonsOffline!.toList().cast<LessonsRecord>();
         safeSetState(() {});
       }
-      final savedReflection = await actions.loadSavedReflection(
-        currentUserUid,
-        widget.lessonId,
-      );
-      if (savedReflection.isNotEmpty &&
-          _model.reflectionFieldTextController!.text.isEmpty) {
-        _model.reflectionFieldTextController!.text = savedReflection;
-        _model.reflectionInput = savedReflection;
-        safeSetState(() {});
-      }
     });
 
     _model.reflectionFieldTextController ??= TextEditingController();
@@ -192,9 +182,9 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (!['es', 'ur'].contains(_model.memberLanguage))
+                                    if (_model.memberLanguage == 'en')
                                       Text(
-                                        lessonsListItemItem.title.forLanguage(_model.memberLanguage),
+                                        lessonsListItemItem.title.en,
                                         style: FlutterFlowTheme.of(context)
                                             .headlineSmall
                                             .override(
@@ -221,7 +211,7 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                       ),
                                     if (_model.memberLanguage == 'es')
                                       Text(
-                                        lessonsListItemItem.title.forLanguage('es'),
+                                        lessonsListItemItem.title.es,
                                         style: FlutterFlowTheme.of(context)
                                             .headlineSmall
                                             .override(
@@ -248,7 +238,7 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                       ),
                                     if (_model.memberLanguage == 'ur')
                                       Text(
-                                        lessonsListItemItem.title.forLanguage('ur'),
+                                        lessonsListItemItem.title.ur,
                                         style: FlutterFlowTheme.of(context)
                                             .headlineSmall
                                             .override(
@@ -281,36 +271,10 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                   hoverColor: Colors.transparent,
                                   highlightColor: Colors.transparent,
                                   onTap: () async {
-                                    final liveVerseText =
-                                        await actions.fetchBibleVerseApi(
-                                      lessonsListItemItem.scriptureRef,
-                                      _model.memberLanguage ?? 'en',
-                                    );
-                                    if (liveVerseText.isNotEmpty) {
-                                      await showDialog(
-                                        context: context,
-                                        builder: (dialogContext) =>
-                                            AlertDialog(
-                                          title: Text(
-                                              lessonsListItemItem.scriptureRef),
-                                          content: SingleChildScrollView(
-                                            child: Text(liveVerseText),
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () =>
-                                                  Navigator.pop(dialogContext),
-                                              child: Text('Close'),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                      return;
-                                    }
                                     _model.bibleOpenResult = await actions
                                         .openScriptureReferenceSafe(
                                       lessonsListItemItem.scriptureRef,
-                                      _model.memberLanguage ?? 'en',
+                                      _model.memberLanguage,
                                     );
                                     if (_model.bibleOpenResult == 'opened') {
                                       ScaffoldMessenger.of(context)
@@ -326,13 +290,10 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                       );
                                       await actions.cacheLessonForOffline(
                                         lessonsListItemItem.stableId,
-                                        lessonsListItemItem.title
-                                            .forLanguage(_model.memberLanguage),
+                                        lessonsListItemItem.title.en,
                                         lessonsListItemItem.scriptureRef,
-                                        lessonsListItemItem.scriptureText
-                                            .forLanguage(_model.memberLanguage),
-                                        lessonsListItemItem.reflectionPrompt
-                                            .forLanguage(_model.memberLanguage),
+                                        lessonsListItemItem.scriptureText.en,
+                                        lessonsListItemItem.reflectionPrompt.en,
                                       );
                                     } else if (_model.bibleOpenResult ==
                                         'fallback') {
@@ -349,13 +310,10 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                       );
                                       await actions.cacheLessonForOffline(
                                         lessonsListItemItem.stableId,
-                                        lessonsListItemItem.title
-                                            .forLanguage(_model.memberLanguage),
+                                        lessonsListItemItem.title.en,
                                         lessonsListItemItem.scriptureRef,
-                                        lessonsListItemItem.scriptureText
-                                            .forLanguage(_model.memberLanguage),
-                                        lessonsListItemItem.reflectionPrompt
-                                            .forLanguage(_model.memberLanguage),
+                                        lessonsListItemItem.scriptureText.en,
+                                        lessonsListItemItem.reflectionPrompt.en,
                                       );
                                     } else if (_model.bibleOpenResult ==
                                         'empty') {
@@ -372,13 +330,10 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                       );
                                       await actions.cacheLessonForOffline(
                                         lessonsListItemItem.stableId,
-                                        lessonsListItemItem.title
-                                            .forLanguage(_model.memberLanguage),
+                                        lessonsListItemItem.title.en,
                                         lessonsListItemItem.scriptureRef,
-                                        lessonsListItemItem.scriptureText
-                                            .forLanguage(_model.memberLanguage),
-                                        lessonsListItemItem.reflectionPrompt
-                                            .forLanguage(_model.memberLanguage),
+                                        lessonsListItemItem.scriptureText.en,
+                                        lessonsListItemItem.reflectionPrompt.en,
                                       );
                                     } else {
                                       ScaffoldMessenger.of(context)
@@ -394,13 +349,10 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                       );
                                       await actions.cacheLessonForOffline(
                                         lessonsListItemItem.stableId,
-                                        lessonsListItemItem.title
-                                            .forLanguage(_model.memberLanguage),
+                                        lessonsListItemItem.title.en,
                                         lessonsListItemItem.scriptureRef,
-                                        lessonsListItemItem.scriptureText
-                                            .forLanguage(_model.memberLanguage),
-                                        lessonsListItemItem.reflectionPrompt
-                                            .forLanguage(_model.memberLanguage),
+                                        lessonsListItemItem.scriptureText.en,
+                                        lessonsListItemItem.reflectionPrompt.en,
                                       );
                                     }
 
@@ -496,10 +448,10 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
-                                              if (!['es', 'ur'].contains(_model.memberLanguage))
+                                              if (_model.memberLanguage == 'en')
                                                 Text(
                                                   lessonsListItemItem
-                                                      .scriptureText.forLanguage(_model.memberLanguage),
+                                                      .scriptureText.en,
                                                   style: FlutterFlowTheme.of(
                                                           context)
                                                       .bodyLarge
@@ -532,7 +484,7 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                               if (_model.memberLanguage == 'es')
                                                 Text(
                                                   lessonsListItemItem
-                                                      .scriptureText.forLanguage('es'),
+                                                      .scriptureText.es,
                                                   style: FlutterFlowTheme.of(
                                                           context)
                                                       .bodyLarge
@@ -565,7 +517,7 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                               if (_model.memberLanguage == 'ur')
                                                 Text(
                                                   lessonsListItemItem
-                                                      .scriptureText.forLanguage('ur'),
+                                                      .scriptureText.ur,
                                                   style: FlutterFlowTheme.of(
                                                           context)
                                                       .bodyLarge
@@ -633,9 +585,9 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (!['es', 'ur'].contains(_model.memberLanguage))
+                                    if (_model.memberLanguage == 'en')
                                       Text(
-                                        lessonsListItemItem.reflectionPrompt.forLanguage(_model.memberLanguage),
+                                        lessonsListItemItem.reflectionPrompt.en,
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(
@@ -665,7 +617,7 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                       ),
                                     if (_model.memberLanguage == 'es')
                                       Text(
-                                        lessonsListItemItem.reflectionPrompt.forLanguage('es'),
+                                        lessonsListItemItem.reflectionPrompt.es,
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(
@@ -695,7 +647,7 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                       ),
                                     if (_model.memberLanguage == 'ur')
                                       Text(
-                                        lessonsListItemItem.reflectionPrompt.forLanguage('ur'),
+                                        lessonsListItemItem.reflectionPrompt.ur,
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(
@@ -899,7 +851,7 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                       Duration(milliseconds: 2000),
                       () async {
                         _model.reflectionInput =
-                            _model.reflectionFieldTextController!.text;
+                            _model.reflectionFieldTextController.text;
                         safeSetState(() {});
                       },
                     ),
@@ -957,9 +909,6 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                   ),
                   FFButtonWidget(
                     onPressed: () async {
-                      // Don't lose text typed within the 2s debounce window.
-                      _model.reflectionInput =
-                          _model.reflectionFieldTextController!.text;
                       _model.saveSmartResult =
                           await actions.saveLessonProgressSmart(
                         currentJwtToken,
