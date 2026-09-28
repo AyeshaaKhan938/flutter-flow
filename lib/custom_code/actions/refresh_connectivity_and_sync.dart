@@ -12,6 +12,33 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// Set by setPreferredLanguage when the member changes language offline.
+const kPendingLanguageSyncKey = 'pending_language_sync';
+
+Future<void> _syncPendingLanguage(String authToken) async {
+  final prefs = await SharedPreferences.getInstance();
+  final code = prefs.getString(kPendingLanguageSyncKey) ?? '';
+  if (code.isEmpty || authToken.isEmpty) {
+    return;
+  }
+  try {
+    final response = await http.post(
+      Uri.parse(
+        'https://us-central1-kingdom-heirs-discipleshipapp.cloudfunctions.net/updateUserProfile',
+      ),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'authToken': authToken,
+        'preferredLanguage': code,
+      }),
+    );
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      await prefs.remove(kPendingLanguageSyncKey);
+    }
+  } catch (_) {}
+}
 
 Future<String> refreshConnectivityAndSync(String authToken) async {
   final results = await Connectivity().checkConnectivity();
@@ -25,6 +52,8 @@ Future<String> refreshConnectivityAndSync(String authToken) async {
   if (offline) {
     return 'offline';
   }
+
+  await _syncPendingLanguage(authToken);
 
   final pending = FFAppState().pendingOfflineWrites;
   final map = pending is Map
@@ -41,17 +70,23 @@ Future<String> refreshConnectivityAndSync(String authToken) async {
     return 'online_pending_auth';
   }
 
-  final response = await http.post(
-    Uri.parse(
-      'https://us-central1-kingdom-heirs-discipleshipapp.cloudfunctions.net/syncOfflineProgressHttp',
-    ),
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({
-      'authToken': authToken,
-      'reflections': reflections,
-      'progress': progress,
-    }),
-  );
+  final http.Response response;
+  try {
+    response = await http.post(
+      Uri.parse(
+        'https://us-central1-kingdom-heirs-discipleshipapp.cloudfunctions.net/syncOfflineProgressHttp',
+      ),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'authToken': authToken,
+        'reflections': reflections,
+        'progress': progress,
+      }),
+    );
+  } catch (_) {
+    // Connected to a network without internet; keep the queue for later.
+    return 'sync_failed';
+  }
 
   if (response.statusCode >= 200 && response.statusCode < 300) {
     FFAppState().update(() {

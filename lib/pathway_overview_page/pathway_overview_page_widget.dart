@@ -562,9 +562,9 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           children: [
-                                            if (_model.memberLanguage == 'en')
+                                            if (!['es', 'ur'].contains(_model.memberLanguage))
                                               Text(
-                                                lessonsListItemItem.title.en,
+                                                lessonsListItemItem.title.forLanguage(_model.memberLanguage),
                                                 style:
                                                     FlutterFlowTheme.of(context)
                                                         .titleSmall
@@ -597,7 +597,7 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
                                               ),
                                             if (_model.memberLanguage == 'es')
                                               Text(
-                                                lessonsListItemItem.title.es,
+                                                lessonsListItemItem.title.forLanguage('es'),
                                                 style:
                                                     FlutterFlowTheme.of(context)
                                                         .titleSmall
@@ -630,7 +630,7 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
                                               ),
                                             if (_model.memberLanguage == 'ur')
                                               Text(
-                                                lessonsListItemItem.title.ur,
+                                                lessonsListItemItem.title.forLanguage('ur'),
                                                 style:
                                                     FlutterFlowTheme.of(context)
                                                         .titleSmall

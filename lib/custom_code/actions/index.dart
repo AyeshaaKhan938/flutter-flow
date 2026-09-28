@@ -4,7 +4,7 @@ export '/custom_code/actions/refresh_today_content.dart'
 export '/custom_code/actions/open_scripture_reference.dart'
     show openScriptureReference;
 export '/custom_code/actions/refresh_connectivity_and_sync.dart'
-    show refreshConnectivityAndSync;
+    show refreshConnectivityAndSync, kPendingLanguageSyncKey;
 export '/custom_code/actions/save_lesson_progress_smart.dart'
     show saveLessonProgressSmart;
 export '/custom_code/actions/admin_create_pathway.dart' show adminCreatePathway;
@@ -31,3 +31,9 @@ export '/custom_code/actions/run_curriculum_import.dart'
     show runCurriculumImport;
 export '/custom_code/actions/device_content_language.dart'
     show deviceContentLanguage;
+export '/custom_code/actions/fetch_bible_verse_api.dart'
+    show fetchBibleVerseApi;
+export '/custom_code/actions/load_saved_reflection.dart'
+    show loadSavedReflection;
+export '/custom_code/actions/quiz_answers_store.dart'
+    show saveQuizAnswers, loadQuizAnswers;

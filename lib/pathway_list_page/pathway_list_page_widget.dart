@@ -262,7 +262,7 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.stretch,
                                       children: [
-                                        if (_model.memberLanguage == 'en')
+                                        if (!['es', 'ur'].contains(_model.memberLanguage))
                                           Column(
                                             mainAxisSize: MainAxisSize.min,
                                             mainAxisAlignment:
@@ -271,11 +271,8 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
                                                 CrossAxisAlignment.stretch,
                                             children: [
                                               Text(
-                                                functions.textOrEnglish(
-                                                    pathwaysListItemItem
-                                                        .title.en,
-                                                    pathwaysListItemItem
-                                                        .title.en)!,
+                                                pathwaysListItemItem.title
+                                                    .forLanguage(_model.memberLanguage),
                                                 style: FlutterFlowTheme.of(
                                                         context)
                                                     .titleMedium
@@ -418,7 +415,7 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.stretch,
                                       children: [
-                                        if (_model.memberLanguage == 'en')
+                                        if (!['es', 'ur'].contains(_model.memberLanguage))
                                           Column(
                                             mainAxisSize: MainAxisSize.min,
                                             mainAxisAlignment:
@@ -427,11 +424,8 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
                                                 CrossAxisAlignment.stretch,
                                             children: [
                                               Text(
-                                                functions.textOrEnglish(
-                                                    pathwaysListItemItem
-                                                        .description.en,
-                                                    pathwaysListItemItem
-                                                        .description.en)!,
+                                                pathwaysListItemItem.description
+                                                    .forLanguage(_model.memberLanguage),
                                                 maxLines: 2,
                                                 style: FlutterFlowTheme.of(
                                                         context)

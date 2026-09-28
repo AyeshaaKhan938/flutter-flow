@@ -11,5 +11,6 @@ import 'package:flutter/material.dart';
 
 Future<String> deviceContentLanguage() async {
   final code = FFLocalizations.getStoredLocale()?.languageCode ?? '';
-  return (code == 'es' || code == 'ur') ? code : 'en';
+  // Pages fall back to English per field when a translation is missing.
+  return (code == 'es' || code == 'ur' || code == 'lg') ? code : 'en';
 }
