@@ -26,7 +26,9 @@ Future<String> loadSavedReflection(String? userId, String? lessonId) async {
   if (pending is Map) {
     final queued = List<dynamic>.from(pending['reflections'] ?? const [])
         .whereType<Map>()
-        .where((r) => r['lessonId'] == lessonId)
+        .where((r) =>
+            r['lessonId'] == lessonId &&
+            (r['userId'] == null || r['userId'] == userId))
         .toList();
     if (queued.isNotEmpty) {
       return (queued.last['text'] as String? ?? '').trim();

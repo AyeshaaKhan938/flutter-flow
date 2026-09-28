@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Set by setPreferredLanguage when the member changes language offline.
@@ -59,8 +60,15 @@ Future<String> refreshConnectivityAndSync(String authToken) async {
   final map = pending is Map
       ? Map<String, dynamic>.from(pending as Map)
       : <String, dynamic>{'reflections': [], 'progress': []};
-  final reflections = List<dynamic>.from(map['reflections'] ?? const []);
-  final progress = List<dynamic>.from(map['progress'] ?? const []);
+  // Only sync work queued by the member signed in now; entries from
+  // another account stay queued until that member signs back in.
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+  bool mine(dynamic e) =>
+      e is Map && (e['userId'] == null || e['userId'] == uid);
+  final allReflections = List<dynamic>.from(map['reflections'] ?? const []);
+  final allProgress = List<dynamic>.from(map['progress'] ?? const []);
+  final reflections = allReflections.where(mine).toList();
+  final progress = allProgress.where(mine).toList();
 
   if (reflections.isEmpty && progress.isEmpty) {
     return 'online';
@@ -90,9 +98,10 @@ Future<String> refreshConnectivityAndSync(String authToken) async {
 
   if (response.statusCode >= 200 && response.statusCode < 300) {
     FFAppState().update(() {
-      FFAppState().pendingOfflineWrites = jsonDecode(
-        '{"reflections":[],"progress":[]}',
-      );
+      FFAppState().pendingOfflineWrites = {
+        'reflections': allReflections.where((e) => !mine(e)).toList(),
+        'progress': allProgress.where((e) => !mine(e)).toList(),
+      };
     });
     return 'synced';
   }
