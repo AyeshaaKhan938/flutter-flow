@@ -129,6 +129,14 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
                   page: AdminPathwaysPageWidget(),
                 )),
         FFRoute(
+            name: AdminContentPageWidget.routeName,
+            path: AdminContentPageWidget.routePath,
+            requireAuth: true,
+            builder: (context, params) => NavBarPage(
+                  initialPage: '',
+                  page: AdminContentPageWidget(),
+                )),
+        FFRoute(
           name: ProfilePageWidget.routeName,
           path: ProfilePageWidget.routePath,
           builder: (context, params) => params.isEmpty

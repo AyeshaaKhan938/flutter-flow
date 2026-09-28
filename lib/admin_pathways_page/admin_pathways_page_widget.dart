@@ -6,6 +6,7 @@ import '/components/status_badge_widget.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/index.dart';
 import '/custom_code/actions/index.dart' as actions;
 import '/flutter_flow/custom_functions.dart' as functions;
 import 'package:easy_debounce/easy_debounce.dart';
@@ -175,7 +176,17 @@ class _AdminPathwaysPageWidgetState extends State<AdminPathwaysPageWidget> {
                   fontStyle: FlutterFlowTheme.of(context).titleLarge.fontStyle,
                 ),
           ),
-          actions: [],
+          actions: [
+            IconButton(
+              tooltip: 'Daily Scripture & Encouragements',
+              icon: Icon(
+                Icons.calendar_month_rounded,
+                color: FlutterFlowTheme.of(context).primaryText,
+              ),
+              onPressed: () =>
+                  context.pushNamed(AdminContentPageWidget.routeName),
+            ),
+          ],
           centerTitle: true,
           elevation: 0.0,
         ),
