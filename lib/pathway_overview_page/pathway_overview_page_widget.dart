@@ -47,21 +47,16 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       await actions.ensureFirestoreOfflinePersistence();
-      _model.loadedLessons = await queryLessonsRecordOnce(
-        queryBuilder: (lessonsRecord) => lessonsRecord.where(
-          'status',
-          isEqualTo: 'published',
-        ),
-        limit: 50,
-      );
-      _model.lessonsList = _model.loadedLessons!.toList().cast<LessonsRecord>();
-      safeSetState(() {});
       _model.progressResult = await GetPathwayProgressCall.call(
         authToken: currentJwtToken,
         pathwayId: widget.pathwayId,
       );
 
       if ((_model.progressResult?.succeeded ?? true)) {
+        _model.memberLanguage = PathwayProgressResponseStruct.maybeFromMap(
+                (_model.progressResult?.jsonBody ?? ''))
+            ?.preferredLanguage;
+        safeSetState(() {});
         _model.completedCount = PathwayProgressResponseStruct.maybeFromMap(
                 (_model.progressResult?.jsonBody ?? ''))
             ?.completedCount;
@@ -74,13 +69,19 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
                 (_model.progressResult?.jsonBody ?? ''))
             ?.pathwayTitle;
         safeSetState(() {});
-        _model.memberLanguage = PathwayProgressResponseStruct.maybeFromMap(
-                (_model.progressResult?.jsonBody ?? ''))
-            ?.preferredLanguage;
-        safeSetState(() {});
         _model.completedLessonsCsv = PathwayProgressResponseStruct.maybeFromMap(
                 (_model.progressResult?.jsonBody ?? ''))
             ?.completedLessonsCsv;
+        safeSetState(() {});
+        _model.loadedLessons = await queryLessonsRecordOnce(
+          queryBuilder: (lessonsRecord) => lessonsRecord.where(
+            'status',
+            isEqualTo: 'published',
+          ),
+          limit: 50,
+        );
+        _model.lessonsList =
+            _model.loadedLessons!.toList().cast<LessonsRecord>();
         safeSetState(() {});
         await actions.persistPathwayProgressLocal(
           PathwayProgressResponseStruct.maybeFromMap(
@@ -97,6 +98,9 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
               ?.pathwayTitle,
         );
       } else {
+        _model.overviewDeviceLanguage = await actions.deviceContentLanguage();
+        _model.memberLanguage = _model.overviewDeviceLanguage;
+        safeSetState(() {});
         _model.completedCount = FFAppState().localCompletedCount;
         safeSetState(() {});
         _model.totalLessons = FFAppState().localTotalLessons;
@@ -104,6 +108,16 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
         _model.pathwayTitle = FFAppState().localPathwayTitle;
         safeSetState(() {});
         _model.completedLessonsCsv = FFAppState().localProgressCsv;
+        safeSetState(() {});
+        _model.loadedLessonsOffline = await queryLessonsRecordOnce(
+          queryBuilder: (lessonsRecord) => lessonsRecord.where(
+            'status',
+            isEqualTo: 'published',
+          ),
+          limit: 50,
+        );
+        _model.lessonsList =
+            _model.loadedLessonsOffline!.toList().cast<LessonsRecord>();
         safeSetState(() {});
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

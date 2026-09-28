@@ -5,6 +5,7 @@ import '/backend/schema/structs/index.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/custom_code/actions/index.dart' as actions;
 import '/index.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -45,6 +46,10 @@ class _ProfilePageWidgetState extends State<ProfilePageWidget> {
         _model.userRole = UserProfileResponseStruct.maybeFromMap(
                 (_model.profileResult?.jsonBody ?? ''))
             ?.role;
+        safeSetState(() {});
+        _model.currentLanguage = UserProfileResponseStruct.maybeFromMap(
+                (_model.profileResult?.jsonBody ?? ''))
+            ?.preferredLanguage;
         safeSetState(() {});
       }
     });
@@ -386,6 +391,380 @@ class _ProfilePageWidgetState extends State<ProfilePageWidget> {
                         ),
                       ),
                     ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: FlutterFlowTheme.of(context).secondaryBackground,
+                      borderRadius: BorderRadius.circular(16.0),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            FFLocalizations.of(context).getText(
+                              'o8r4yn5u' /* Language */,
+                            ),
+                            style: FlutterFlowTheme.of(context)
+                                .titleMedium
+                                .override(
+                                  font: GoogleFonts.inter(
+                                    fontWeight: FlutterFlowTheme.of(context)
+                                        .titleMedium
+                                        .fontWeight,
+                                    fontStyle: FlutterFlowTheme.of(context)
+                                        .titleMedium
+                                        .fontStyle,
+                                  ),
+                                  letterSpacing: 0.0,
+                                  fontWeight: FlutterFlowTheme.of(context)
+                                      .titleMedium
+                                      .fontWeight,
+                                  fontStyle: FlutterFlowTheme.of(context)
+                                      .titleMedium
+                                      .fontStyle,
+                                ),
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.max,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  if (_model.currentLanguage == 'en')
+                                    FFButtonWidget(
+                                      onPressed: () async {
+                                        _model.currentLanguage = 'en';
+                                        safeSetState(() {});
+                                        _model.profileLangLangEnA =
+                                            await actions.setPreferredLanguage(
+                                          context,
+                                          currentJwtToken,
+                                          'en',
+                                        );
+
+                                        safeSetState(() {});
+                                      },
+                                      text: FFLocalizations.of(context).getText(
+                                        'twm4zq0p' /* ✓ English */,
+                                      ),
+                                      options: FFButtonOptions(
+                                        width: 130.0,
+                                        padding: EdgeInsetsDirectional.fromSTEB(
+                                            0.0, 0.0, 0.0, 0.0),
+                                        iconPadding:
+                                            EdgeInsetsDirectional.fromSTEB(
+                                                0.0, 0.0, 0.0, 0.0),
+                                        color: FlutterFlowTheme.of(context)
+                                            .primary,
+                                        textStyle: TextStyle(
+                                          color: FlutterFlowTheme.of(context)
+                                              .primaryBackground,
+                                        ),
+                                        borderRadius:
+                                            BorderRadius.circular(12.0),
+                                      ),
+                                    ),
+                                  if (!(_model.currentLanguage == 'en'))
+                                    FFButtonWidget(
+                                      onPressed: () async {
+                                        _model.currentLanguage = 'en';
+                                        safeSetState(() {});
+                                        _model.profileLangLangEnB =
+                                            await actions.setPreferredLanguage(
+                                          context,
+                                          currentJwtToken,
+                                          'en',
+                                        );
+
+                                        safeSetState(() {});
+                                      },
+                                      text: FFLocalizations.of(context).getText(
+                                        '5301adtv' /* English */,
+                                      ),
+                                      options: FFButtonOptions(
+                                        width: 130.0,
+                                        padding: EdgeInsetsDirectional.fromSTEB(
+                                            0.0, 0.0, 0.0, 0.0),
+                                        iconPadding:
+                                            EdgeInsetsDirectional.fromSTEB(
+                                                0.0, 0.0, 0.0, 0.0),
+                                        color: Colors.transparent,
+                                        textStyle: TextStyle(
+                                          color: FlutterFlowTheme.of(context)
+                                              .primary,
+                                        ),
+                                        elevation: 0.0,
+                                        borderSide: BorderSide(
+                                          color: FlutterFlowTheme.of(context)
+                                              .primary,
+                                          width: 1.0,
+                                        ),
+                                        borderRadius:
+                                            BorderRadius.circular(12.0),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  if (_model.currentLanguage == 'es')
+                                    FFButtonWidget(
+                                      onPressed: () async {
+                                        _model.currentLanguage = 'es';
+                                        safeSetState(() {});
+                                        _model.profileLangLangEsA =
+                                            await actions.setPreferredLanguage(
+                                          context,
+                                          currentJwtToken,
+                                          'es',
+                                        );
+
+                                        safeSetState(() {});
+                                      },
+                                      text: FFLocalizations.of(context).getText(
+                                        'h9q8em43' /* ✓ Español */,
+                                      ),
+                                      options: FFButtonOptions(
+                                        width: 130.0,
+                                        padding: EdgeInsetsDirectional.fromSTEB(
+                                            0.0, 0.0, 0.0, 0.0),
+                                        iconPadding:
+                                            EdgeInsetsDirectional.fromSTEB(
+                                                0.0, 0.0, 0.0, 0.0),
+                                        color: FlutterFlowTheme.of(context)
+                                            .primary,
+                                        textStyle: TextStyle(
+                                          color: FlutterFlowTheme.of(context)
+                                              .primaryBackground,
+                                        ),
+                                        borderRadius:
+                                            BorderRadius.circular(12.0),
+                                      ),
+                                    ),
+                                  if (!(_model.currentLanguage == 'es'))
+                                    FFButtonWidget(
+                                      onPressed: () async {
+                                        _model.currentLanguage = 'es';
+                                        safeSetState(() {});
+                                        _model.profileLangLangEsB =
+                                            await actions.setPreferredLanguage(
+                                          context,
+                                          currentJwtToken,
+                                          'es',
+                                        );
+
+                                        safeSetState(() {});
+                                      },
+                                      text: FFLocalizations.of(context).getText(
+                                        '6sr0i3lk' /* Español */,
+                                      ),
+                                      options: FFButtonOptions(
+                                        width: 130.0,
+                                        padding: EdgeInsetsDirectional.fromSTEB(
+                                            0.0, 0.0, 0.0, 0.0),
+                                        iconPadding:
+                                            EdgeInsetsDirectional.fromSTEB(
+                                                0.0, 0.0, 0.0, 0.0),
+                                        color: Colors.transparent,
+                                        textStyle: TextStyle(
+                                          color: FlutterFlowTheme.of(context)
+                                              .primary,
+                                        ),
+                                        elevation: 0.0,
+                                        borderSide: BorderSide(
+                                          color: FlutterFlowTheme.of(context)
+                                              .primary,
+                                          width: 1.0,
+                                        ),
+                                        borderRadius:
+                                            BorderRadius.circular(12.0),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ].divide(SizedBox(width: 8.0)),
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.max,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  if (_model.currentLanguage == 'ur')
+                                    FFButtonWidget(
+                                      onPressed: () async {
+                                        _model.currentLanguage = 'ur';
+                                        safeSetState(() {});
+                                        _model.profileLangLangUrA =
+                                            await actions.setPreferredLanguage(
+                                          context,
+                                          currentJwtToken,
+                                          'ur',
+                                        );
+
+                                        safeSetState(() {});
+                                      },
+                                      text: FFLocalizations.of(context).getText(
+                                        'cj32n82b' /* ✓ اردو */,
+                                      ),
+                                      options: FFButtonOptions(
+                                        width: 130.0,
+                                        padding: EdgeInsetsDirectional.fromSTEB(
+                                            0.0, 0.0, 0.0, 0.0),
+                                        iconPadding:
+                                            EdgeInsetsDirectional.fromSTEB(
+                                                0.0, 0.0, 0.0, 0.0),
+                                        color: FlutterFlowTheme.of(context)
+                                            .primary,
+                                        textStyle: TextStyle(
+                                          color: FlutterFlowTheme.of(context)
+                                              .primaryBackground,
+                                        ),
+                                        borderRadius:
+                                            BorderRadius.circular(12.0),
+                                      ),
+                                    ),
+                                  if (!(_model.currentLanguage == 'ur'))
+                                    FFButtonWidget(
+                                      onPressed: () async {
+                                        _model.currentLanguage = 'ur';
+                                        safeSetState(() {});
+                                        _model.profileLangLangUrB =
+                                            await actions.setPreferredLanguage(
+                                          context,
+                                          currentJwtToken,
+                                          'ur',
+                                        );
+
+                                        safeSetState(() {});
+                                      },
+                                      text: FFLocalizations.of(context).getText(
+                                        'taxam4ds' /* اردو */,
+                                      ),
+                                      options: FFButtonOptions(
+                                        width: 130.0,
+                                        padding: EdgeInsetsDirectional.fromSTEB(
+                                            0.0, 0.0, 0.0, 0.0),
+                                        iconPadding:
+                                            EdgeInsetsDirectional.fromSTEB(
+                                                0.0, 0.0, 0.0, 0.0),
+                                        color: Colors.transparent,
+                                        textStyle: TextStyle(
+                                          color: FlutterFlowTheme.of(context)
+                                              .primary,
+                                        ),
+                                        elevation: 0.0,
+                                        borderSide: BorderSide(
+                                          color: FlutterFlowTheme.of(context)
+                                              .primary,
+                                          width: 1.0,
+                                        ),
+                                        borderRadius:
+                                            BorderRadius.circular(12.0),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  if (_model.currentLanguage == 'lg')
+                                    FFButtonWidget(
+                                      onPressed: () async {
+                                        _model.currentLanguage = 'lg';
+                                        safeSetState(() {});
+                                        _model.profileLangLangLgA =
+                                            await actions.setPreferredLanguage(
+                                          context,
+                                          currentJwtToken,
+                                          'lg',
+                                        );
+
+                                        safeSetState(() {});
+                                      },
+                                      text: FFLocalizations.of(context).getText(
+                                        'k4r3pxmr' /* ✓ Luganda */,
+                                      ),
+                                      options: FFButtonOptions(
+                                        width: 130.0,
+                                        padding: EdgeInsetsDirectional.fromSTEB(
+                                            0.0, 0.0, 0.0, 0.0),
+                                        iconPadding:
+                                            EdgeInsetsDirectional.fromSTEB(
+                                                0.0, 0.0, 0.0, 0.0),
+                                        color: FlutterFlowTheme.of(context)
+                                            .primary,
+                                        textStyle: TextStyle(
+                                          color: FlutterFlowTheme.of(context)
+                                              .primaryBackground,
+                                        ),
+                                        borderRadius:
+                                            BorderRadius.circular(12.0),
+                                      ),
+                                    ),
+                                  if (!(_model.currentLanguage == 'lg'))
+                                    FFButtonWidget(
+                                      onPressed: () async {
+                                        _model.currentLanguage = 'lg';
+                                        safeSetState(() {});
+                                        _model.profileLangLangLgB =
+                                            await actions.setPreferredLanguage(
+                                          context,
+                                          currentJwtToken,
+                                          'lg',
+                                        );
+
+                                        safeSetState(() {});
+                                      },
+                                      text: FFLocalizations.of(context).getText(
+                                        'bsttfksb' /* Luganda */,
+                                      ),
+                                      options: FFButtonOptions(
+                                        width: 130.0,
+                                        padding: EdgeInsetsDirectional.fromSTEB(
+                                            0.0, 0.0, 0.0, 0.0),
+                                        iconPadding:
+                                            EdgeInsetsDirectional.fromSTEB(
+                                                0.0, 0.0, 0.0, 0.0),
+                                        color: Colors.transparent,
+                                        textStyle: TextStyle(
+                                          color: FlutterFlowTheme.of(context)
+                                              .primary,
+                                        ),
+                                        elevation: 0.0,
+                                        borderSide: BorderSide(
+                                          color: FlutterFlowTheme.of(context)
+                                              .primary,
+                                          width: 1.0,
+                                        ),
+                                        borderRadius:
+                                            BorderRadius.circular(12.0),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ].divide(SizedBox(width: 8.0)),
+                          ),
+                        ].divide(SizedBox(height: 10.0)),
+                      ),
+                    ),
+                  ),
                   FFButtonWidget(
                     onPressed: () async {
                       GoRouter.of(context).prepareAuthEvent();

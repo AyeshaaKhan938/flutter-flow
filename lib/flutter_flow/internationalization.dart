@@ -225,9 +225,9 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
     },
     'btry4vm7': {
       'en': 'Loading…',
-      'es': '',
-      'lg': '',
-      'ur': '',
+      'es': 'Cargando…',
+      'lg': 'Kuleeta…',
+      'ur': 'لوڈ ہو رہا ہے…',
     },
     'c3m7uoy7': {
       'en': 'Announcements',
@@ -963,6 +963,60 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
       'es': '',
       'lg': 'Visible only to admin and ministry reviewer roles',
       'ur': '',
+    },
+    'o8r4yn5u': {
+      'en': 'Language',
+      'es': 'Idioma',
+      'lg': 'Olulimi',
+      'ur': 'زبان',
+    },
+    'twm4zq0p': {
+      'en': '✓ English',
+      'es': '',
+      'lg': '✓ English',
+      'ur': '',
+    },
+    '5301adtv': {
+      'en': 'English',
+      'es': 'English',
+      'lg': 'English',
+      'ur': 'English',
+    },
+    'h9q8em43': {
+      'en': '✓ Español',
+      'es': '',
+      'lg': '✓ Español',
+      'ur': '',
+    },
+    '6sr0i3lk': {
+      'en': 'Español',
+      'es': 'Español',
+      'lg': 'Español',
+      'ur': 'Español',
+    },
+    'cj32n82b': {
+      'en': '✓ اردو',
+      'es': '',
+      'lg': '✓ اردو',
+      'ur': '',
+    },
+    'taxam4ds': {
+      'en': 'اردو',
+      'es': 'اردو',
+      'lg': 'اردو',
+      'ur': 'اردو',
+    },
+    'k4r3pxmr': {
+      'en': '✓ Luganda',
+      'es': '',
+      'lg': '✓ Luganda',
+      'ur': '',
+    },
+    'bsttfksb': {
+      'en': 'Luganda',
+      'es': 'Luganda',
+      'lg': 'Luganda',
+      'ur': 'Luganda',
     },
     'fqju2unp': {
       'en': 'Sign Out',

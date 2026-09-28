@@ -23,12 +23,16 @@ class DailyLessonPageModel extends FlutterFlowModel<DailyLessonPageWidget> {
 
   ///  State fields for stateful widgets in this page.
 
-  // Stores action output result for [Firestore Query - Query a collection] action in DailyLessonPage widget.
-  List<LessonsRecord>? loadedLessons;
   // Stores action output result for [Backend Call - API (GetPathwayProgress)] action in DailyLessonPage widget.
   ApiCallResponse? langResult;
+  // Stores action output result for [Firestore Query - Query a collection] action in DailyLessonPage widget.
+  List<LessonsRecord>? loadedLessons;
   // Stores action output result for [Custom Action - RefreshConnectivityAndSync] action in DailyLessonPage widget.
   String? lessonConnectivityResult;
+  // Stores action output result for [Custom Action - DeviceContentLanguage] action in DailyLessonPage widget.
+  String? lessonDeviceLanguage;
+  // Stores action output result for [Firestore Query - Query a collection] action in DailyLessonPage widget.
+  List<LessonsRecord>? loadedLessonsOffline;
   // Stores action output result for [Custom Action - OpenScriptureReferenceSafe] action in ScriptureCard widget.
   String? bibleOpenResult;
   // State field(s) for ReflectionField widget.

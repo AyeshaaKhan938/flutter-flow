@@ -46,15 +46,6 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
 
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
-      _model.loadedLessons = await queryLessonsRecordOnce(
-        queryBuilder: (lessonsRecord) => lessonsRecord.where(
-          'status',
-          isEqualTo: 'published',
-        ),
-        limit: 50,
-      );
-      _model.lessonsList = _model.loadedLessons!.toList().cast<LessonsRecord>();
-      safeSetState(() {});
       _model.langResult = await GetPathwayProgressCall.call(
         authToken: currentJwtToken,
         pathwayId: widget.pathwayId,
@@ -65,10 +56,34 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                 (_model.langResult?.jsonBody ?? ''))
             ?.preferredLanguage;
         safeSetState(() {});
+        _model.loadedLessons = await queryLessonsRecordOnce(
+          queryBuilder: (lessonsRecord) => lessonsRecord.where(
+            'status',
+            isEqualTo: 'published',
+          ),
+          limit: 50,
+        );
+        _model.lessonsList =
+            _model.loadedLessons!.toList().cast<LessonsRecord>();
+        safeSetState(() {});
         _model.lessonConnectivityResult =
             await actions.refreshConnectivityAndSync(
           currentJwtToken,
         );
+      } else {
+        _model.lessonDeviceLanguage = await actions.deviceContentLanguage();
+        _model.memberLanguage = _model.lessonDeviceLanguage;
+        safeSetState(() {});
+        _model.loadedLessonsOffline = await queryLessonsRecordOnce(
+          queryBuilder: (lessonsRecord) => lessonsRecord.where(
+            'status',
+            isEqualTo: 'published',
+          ),
+          limit: 50,
+        );
+        _model.lessonsList =
+            _model.loadedLessonsOffline!.toList().cast<LessonsRecord>();
+        safeSetState(() {});
       }
     });
 

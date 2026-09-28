@@ -29,3 +29,5 @@ export '/custom_code/actions/save_signup_profile.dart' show saveSignupProfile;
 export '/custom_code/actions/sync_device_language.dart' show syncDeviceLanguage;
 export '/custom_code/actions/run_curriculum_import.dart'
     show runCurriculumImport;
+export '/custom_code/actions/device_content_language.dart'
+    show deviceContentLanguage;

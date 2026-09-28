@@ -30,10 +30,14 @@ class PathwayOverviewPageModel
 
   ///  State fields for stateful widgets in this page.
 
-  // Stores action output result for [Firestore Query - Query a collection] action in PathwayOverviewPage widget.
-  List<LessonsRecord>? loadedLessons;
   // Stores action output result for [Backend Call - API (GetPathwayProgress)] action in PathwayOverviewPage widget.
   ApiCallResponse? progressResult;
+  // Stores action output result for [Firestore Query - Query a collection] action in PathwayOverviewPage widget.
+  List<LessonsRecord>? loadedLessons;
+  // Stores action output result for [Custom Action - DeviceContentLanguage] action in PathwayOverviewPage widget.
+  String? overviewDeviceLanguage;
+  // Stores action output result for [Firestore Query - Query a collection] action in PathwayOverviewPage widget.
+  List<LessonsRecord>? loadedLessonsOffline;
 
   @override
   void initState(BuildContext context) {}
