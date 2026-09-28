@@ -35,3 +35,5 @@ export '/custom_code/actions/fetch_bible_verse_api.dart'
     show fetchBibleVerseApi;
 export '/custom_code/actions/load_saved_reflection.dart'
     show loadSavedReflection;
+export '/custom_code/actions/quiz_answers_store.dart'
+    show saveQuizAnswers, loadQuizAnswers;

@@ -4,6 +4,7 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/backend/schema/structs/index.dart';
+import '/custom_code/actions/index.dart' as actions;
 import '/index.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -295,6 +296,12 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
                       (_model.priorAttemptResult?.jsonBody ?? ''))
                   ?.attemptCount;
               safeSetState(() {});
+              final storedAnswers = await actions.loadQuizAnswers(
+                currentUserUid,
+                widget.quizId,
+              );
+              _setAnswers(storedAnswers);
+              safeSetState(() {});
             } else {
               _model.submitted = false;
               safeSetState(() {});
@@ -322,6 +329,140 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
     _model.dispose();
 
     super.dispose();
+  }
+
+  List<String> _answers() => [
+        _model.q1Answer ?? '',
+        _model.q2Answer ?? '',
+        _model.q3Answer ?? '',
+        _model.q4Answer ?? '',
+        _model.q5Answer ?? '',
+        _model.q6Answer ?? '',
+        _model.q7Answer ?? '',
+        _model.q8Answer ?? '',
+        _model.q9Answer ?? '',
+        _model.q10Answer ?? '',
+      ];
+
+  void _setAnswers(List<String> answers) {
+    String at(int i) => i < answers.length ? answers[i] : '';
+    _model.q1Answer = at(0);
+    _model.q2Answer = at(1);
+    _model.q3Answer = at(2);
+    _model.q4Answer = at(3);
+    _model.q5Answer = at(4);
+    _model.q6Answer = at(5);
+    _model.q7Answer = at(6);
+    _model.q8Answer = at(7);
+    _model.q9Answer = at(8);
+    _model.q10Answer = at(9);
+  }
+
+  /// Question text plus its A-D option texts, for questions 1-10.
+  List<(String?, Map<String, String?>)> _questions() => [
+        (
+          _model.q1Text,
+          {'A': _model.q1A, 'B': _model.q1B, 'C': _model.q1C, 'D': _model.q1D}
+        ),
+        (
+          _model.q2Text,
+          {'A': _model.q2A, 'B': _model.q2B, 'C': _model.q2C, 'D': _model.q2D}
+        ),
+        (
+          _model.q3Text,
+          {'A': _model.q3A, 'B': _model.q3B, 'C': _model.q3C, 'D': _model.q3D}
+        ),
+        (
+          _model.q4Text,
+          {'A': _model.q4A, 'B': _model.q4B, 'C': _model.q4C, 'D': _model.q4D}
+        ),
+        (
+          _model.q5Text,
+          {'A': _model.q5A, 'B': _model.q5B, 'C': _model.q5C, 'D': _model.q5D}
+        ),
+        (
+          _model.q6Text,
+          {'A': _model.q6A, 'B': _model.q6B, 'C': _model.q6C, 'D': _model.q6D}
+        ),
+        (
+          _model.q7Text,
+          {'A': _model.q7A, 'B': _model.q7B, 'C': _model.q7C, 'D': _model.q7D}
+        ),
+        (
+          _model.q8Text,
+          {'A': _model.q8A, 'B': _model.q8B, 'C': _model.q8C, 'D': _model.q8D}
+        ),
+        (
+          _model.q9Text,
+          {'A': _model.q9A, 'B': _model.q9B, 'C': _model.q9C, 'D': _model.q9D}
+        ),
+        (
+          _model.q10Text,
+          {
+            'A': _model.q10A,
+            'B': _model.q10B,
+            'C': _model.q10C,
+            'D': _model.q10D
+          }
+        ),
+      ];
+
+  /// Read-only list of the member's submitted answers, behind a toggle.
+  Widget _buildAnswerReview(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+    final answers = _answers();
+    final questions = _questions();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextButton.icon(
+          onPressed: () => safeSetState(
+              () => _model.showAnswerReview = !_model.showAnswerReview),
+          icon: Icon(
+            _model.showAnswerReview ? Icons.expand_less : Icons.expand_more,
+            color: theme.primaryText,
+          ),
+          label: Text(
+            _model.showAnswerReview ? 'Hide my answers' : 'Review my answers',
+            style: theme.bodyMedium.override(
+              font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+              color: theme.primaryText,
+              letterSpacing: 0.0,
+            ),
+          ),
+        ),
+        if (_model.showAnswerReview)
+          for (var i = 0; i < questions.length; i++)
+            if ((questions[i].$1 ?? '').isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${i + 1}. ${questions[i].$1}',
+                      style: theme.bodyMedium.override(
+                        font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                        letterSpacing: 0.0,
+                      ),
+                    ),
+                    const SizedBox(height: 4.0),
+                    Text(
+                      answers[i].isEmpty
+                          ? 'Not answered'
+                          : '${answers[i]}. ${questions[i].$2[answers[i]] ?? ''}',
+                      style: theme.bodyMedium.override(
+                        font: GoogleFonts.inter(),
+                        color: theme.secondaryText,
+                        letterSpacing: 0.0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+      ],
+    );
   }
 
   @override
@@ -8305,7 +8446,13 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
                               );
 
                               if ((_model.submitResult?.succeeded ?? true)) {
+                                await actions.saveQuizAnswers(
+                                  currentUserUid,
+                                  widget.quizId,
+                                  _answers(),
+                                );
                                 _model.submitted = true;
+                                _model.showAnswerReview = false;
                                 safeSetState(() {});
                                 _model.percentage =
                                     SubmitQuizResponseStruct.maybeFromMap(
@@ -8536,6 +8683,8 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
                                           .fontStyle,
                                     ),
                               ),
+                            if (_answers().any((a) => a.isNotEmpty))
+                              _buildAnswerReview(context),
                             Column(
                               mainAxisSize: MainAxisSize.min,
                               mainAxisAlignment: MainAxisAlignment.start,
@@ -8544,6 +8693,7 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
                                 FFButtonWidget(
                                   onPressed: () async {
                                     _model.submitted = false;
+                                    _model.showAnswerReview = false;
                                     safeSetState(() {});
                                     _model.passed = false;
                                     safeSetState(() {});
