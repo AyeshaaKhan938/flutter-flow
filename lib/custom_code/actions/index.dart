@@ -37,3 +37,5 @@ export '/custom_code/actions/load_saved_reflection.dart'
     show loadSavedReflection;
 export '/custom_code/actions/quiz_answers_store.dart'
     show saveQuizAnswers, loadQuizAnswers;
+export '/custom_code/actions/prefetch_offline_content.dart'
+    show prefetchOfflineContent;

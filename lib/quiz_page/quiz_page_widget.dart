@@ -5,6 +5,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/backend/schema/structs/index.dart';
 import '/custom_code/actions/index.dart' as actions;
+import '/custom_code/offline_submissions.dart';
 import '/index.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -330,6 +331,18 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
 
     super.dispose();
   }
+
+
+  String _offlineMessage() => switch (_model.memberLanguage) {
+        'es' =>
+          'Sin conexión: tus respuestas se guardaron y se calificarán cuando vuelvas a conectarte.',
+        'ur' =>
+          'آپ آف لائن ہیں: آپ کے جوابات محفوظ ہو گئے، انٹرنیٹ آنے پر نتیجہ ملے گا۔',
+        'lg' =>
+          'Tolina yintaneeti: eby\'okuddamu byo biterekeddwa, bijja kukeberebwa ng\'oddamu okuyungibwa.',
+        _ =>
+          "You're offline. Your answers are saved and will be scored when you're back online.",
+      };
 
   List<String> _answers() => [
         _model.q1Answer ?? '',
@@ -8475,6 +8488,31 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
                                     duration: Duration(milliseconds: 4000),
                                   ),
                                 );
+                              } else if ((_model.submitResult?.statusCode ??
+                                      0) <=
+                                  0) {
+                                // Offline: keep the answers and send them
+                                // (and get the score) once reconnected.
+                                await OfflineSubmissions.queueQuiz(
+                                  quizId: widget.quizId ?? '',
+                                  pathwayId: widget.pathwayId ?? '',
+                                  answers: _answers(),
+                                );
+                                await actions.saveQuizAnswers(
+                                  currentUserUid,
+                                  widget.quizId,
+                                  _answers(),
+                                );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      _offlineMessage(),
+                                      style: TextStyle(),
+                                    ),
+                                    duration: Duration(milliseconds: 6000),
+                                  ),
+                                );
+                                context.safePop();
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(

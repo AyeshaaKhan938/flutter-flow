@@ -206,10 +206,23 @@ class _RagSearchPageWidgetState extends State<RagSearchPageWidget> {
                                   ?.fallbackMessage;
                           safeSetState(() {});
                         } else {
+                          final offline =
+                              (_model.ragResult?.statusCode ?? 0) <= 0;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                'Search failed. Please try again.',
+                                offline
+                                    ? switch (_model.memberLanguage) {
+                                        'es' =>
+                                          'Sin conexión. Preguntar a Kingdom Heirs necesita internet.',
+                                        'ur' =>
+                                          'آپ آف لائن ہیں۔ کنگڈم ہائرز سے پوچھنے کے لیے انٹرنیٹ درکار ہے۔',
+                                        'lg' =>
+                                          'Tolina yintaneeti. Okubuuza Kingdom Heirs kyetaaga yintaneeti.',
+                                        _ =>
+                                          "You're offline. Ask Kingdom Heirs needs an internet connection.",
+                                      }
+                                    : 'Search failed. Please try again.',
                                 style: TextStyle(),
                               ),
                               duration: Duration(milliseconds: 4000),

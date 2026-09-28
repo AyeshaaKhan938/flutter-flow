@@ -5,6 +5,7 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/backend/schema/structs/index.dart';
+import '/custom_code/offline_submissions.dart';
 import '/index.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -8302,6 +8303,43 @@ class _AssessmentQuestionsPageWidgetState
                                     true)) {
                                   context.pushNamed(
                                       RecommendationResultPageWidget.routeName);
+                                } else if ((_model.submitAssessmentResult
+                                            ?.statusCode ??
+                                        0) <=
+                                    0) {
+                                  // Offline: the recommendation is computed
+                                  // on the server, so keep the answers and
+                                  // submit them once reconnected.
+                                  await OfflineSubmissions.queueAssessment([
+                                    _model.ans1 ?? '',
+                                    _model.ans2 ?? '',
+                                    _model.ans3 ?? '',
+                                    _model.ans4 ?? '',
+                                    _model.ans5 ?? '',
+                                    _model.ans6 ?? '',
+                                    _model.ans7 ?? '',
+                                    _model.ans8 ?? '',
+                                    _model.ans9 ?? '',
+                                    _model.ans10 ?? '',
+                                  ]);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        switch (_model.memberLanguage) {
+                                          'es' =>
+                                            'Sin conexión: tus respuestas se guardaron. Tu recomendación estará lista cuando vuelvas a conectarte.',
+                                          'ur' =>
+                                            'آپ آف لائن ہیں: جوابات محفوظ ہو گئے۔ انٹرنیٹ آنے پر آپ کی تجویز تیار ہو گی۔',
+                                          'lg' =>
+                                            'Tolina yintaneeti: eby\'okuddamu byo biterekeddwa. Ekiteeso kijja kubaawo ng\'oddamu okuyungibwa.',
+                                          _ =>
+                                            "You're offline. Your answers are saved; your recommendation will be ready when you're back online.",
+                                        },
+                                        style: TextStyle(),
+                                      ),
+                                      duration: Duration(milliseconds: 6000),
+                                    ),
+                                  );
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(

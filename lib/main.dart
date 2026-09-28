@@ -93,6 +93,10 @@ class _MyAppState extends State<MyApp> {
     userStream = kingdomHeirsDiscipleshipAppFirebaseUserStream()
       ..listen((user) {
         _appStateNotifier.update(user);
+        // Download content in the background so the app works offline.
+        if (user.loggedIn) {
+          actions.prefetchOfflineContent();
+        }
       });
     jwtTokenStream.listen((_) {});
     // Push progress, reflections and language changes made offline as soon
@@ -100,9 +104,14 @@ class _MyAppState extends State<MyApp> {
     _connectivitySub = Connectivity().onConnectivityChanged.listen((results) {
       final online = results.any((r) => r != ConnectivityResult.none);
       if (online && currentUserUid.isNotEmpty) {
-        actions.refreshConnectivityAndSync(currentJwtToken).catchError((_) {
-          return 'sync_failed';
-        });
+        () async {
+          try {
+            await actions.refreshConnectivityAndSync(currentJwtToken);
+          } catch (_) {}
+          // Refresh the offline copy, including results of anything that
+          // was just synced.
+          await actions.prefetchOfflineContent(force: true);
+        }();
       }
     });
     Future.delayed(

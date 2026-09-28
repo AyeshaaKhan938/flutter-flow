@@ -14,6 +14,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '/custom_code/offline_submissions.dart';
 
 /// Set by setPreferredLanguage when the member changes language offline.
 const kPendingLanguageSyncKey = 'pending_language_sync';
@@ -55,6 +56,9 @@ Future<String> refreshConnectivityAndSync(String authToken) async {
   }
 
   await _syncPendingLanguage(authToken);
+  try {
+    await OfflineSubmissions.flush(authToken);
+  } catch (_) {}
 
   final pending = FFAppState().pendingOfflineWrites;
   final map = pending is Map
