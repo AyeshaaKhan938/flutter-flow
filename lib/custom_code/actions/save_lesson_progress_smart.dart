@@ -12,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
-import 'package:firebase_auth/firebase_auth.dart';
 
 Future<String> saveLessonProgressSmart(String? authToken, String? pathwayId,
     String? lessonId, String? dayNumber, String? reflectionText) async {
@@ -33,13 +32,7 @@ Future<String> saveLessonProgressSmart(String? authToken, String? pathwayId,
   final clientWriteId =
       '${now.microsecondsSinceEpoch.toRadixString(36)}-${now.microsecond}';
 
-  // Non-null copies: parameters reassigned above don't stay promoted
-  // inside the closure below.
-  final reflection = reflectionText;
-  final day = dayNumber;
-
-  // Queue the completion (and reflection) locally; it syncs on reconnect.
-  String queueOffline() {
+  if (offline) {
     final pending = FFAppState().pendingOfflineWrites;
     final map = pending is Map
         ? Map<String, dynamic>.from(pending as Map)
@@ -48,22 +41,18 @@ Future<String> saveLessonProgressSmart(String? authToken, String? pathwayId,
     final reflections = List<dynamic>.from(map['reflections'] ?? const []);
     final progress = List<dynamic>.from(map['progress'] ?? const []);
 
-    if (reflection.trim().isNotEmpty) {
+    if (reflectionText.trim().isNotEmpty) {
       reflections.add({
-        // Tag queued work with its owner so it never syncs under another
-        // account signed in on the same device.
-        'userId': FirebaseAuth.instance.currentUser?.uid,
         'clientWriteId': clientWriteId,
         'lessonId': lessonId,
-        'text': reflection,
+        'text': reflectionText,
         'createdAt': now.toIso8601String(),
       });
     }
 
     progress.add({
-      'userId': FirebaseAuth.instance.currentUser?.uid,
       'pathwayId': pathwayId,
-      'currentDay': int.tryParse(day) ?? 0,
+      'currentDay': int.tryParse(dayNumber) ?? 0,
       'completedLessons': [lessonId],
       'quizScores': <String, dynamic>{},
     });
@@ -77,39 +66,51 @@ Future<String> saveLessonProgressSmart(String? authToken, String? pathwayId,
     return 'queued';
   }
 
-  if (offline) {
-    return queueOffline();
-  }
-
-  final http.Response response;
-  try {
-    response = await http.post(
-      Uri.parse(
-        'https://us-central1-kingdom-heirs-discipleshipapp.cloudfunctions.net/saveLessonProgress',
-      ),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'authToken': authToken,
-        'pathwayId': pathwayId,
-        'lessonId': lessonId,
-        'dayNumber': dayNumber,
-        'reflectionText': reflectionText,
-        'clientWriteId': clientWriteId,
-      }),
-    );
-  } catch (_) {
-    // On a network but can't reach the server: keep the member's work.
-    return queueOffline();
-  }
+  final response = await http.post(
+    Uri.parse(
+      'https://us-central1-kingdom-heirs-discipleshipapp.cloudfunctions.net/saveLessonProgress',
+    ),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'authToken': authToken,
+      'pathwayId': pathwayId,
+      'lessonId': lessonId,
+      'dayNumber': dayNumber,
+      'reflectionText': reflectionText,
+      'clientWriteId': clientWriteId,
+    }),
+  );
 
   if (response.statusCode < 200 || response.statusCode >= 300) {
     return 'error';
   }
 
-  // Flush anything queued offline by this member (filtered per user).
-  try {
-    await refreshConnectivityAndSync(authToken);
-  } catch (_) {}
+  final pending = FFAppState().pendingOfflineWrites;
+  final map = pending is Map
+      ? Map<String, dynamic>.from(pending as Map)
+      : <String, dynamic>{'reflections': [], 'progress': []};
+  final reflections = List<dynamic>.from(map['reflections'] ?? const []);
+  final progress = List<dynamic>.from(map['progress'] ?? const []);
+  if (reflections.isNotEmpty || progress.isNotEmpty) {
+    final syncResponse = await http.post(
+      Uri.parse(
+        'https://us-central1-kingdom-heirs-discipleshipapp.cloudfunctions.net/syncOfflineProgressHttp',
+      ),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'authToken': authToken,
+        'reflections': reflections,
+        'progress': progress,
+      }),
+    );
+    if (syncResponse.statusCode >= 200 && syncResponse.statusCode < 300) {
+      FFAppState().update(() {
+        FFAppState().pendingOfflineWrites = jsonDecode(
+          '{"reflections":[],"progress":[]}',
+        );
+      });
+    }
+  }
 
   return 'saved';
 }

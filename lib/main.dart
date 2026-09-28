@@ -1,9 +1,5 @@
 import '/custom_code/actions/index.dart' as actions;
-import 'dart:async';
-
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -72,7 +68,6 @@ class _MyAppState extends State<MyApp> {
           .map((e) => getRoute(e))
           .toList();
   late Stream<BaseAuthUser> userStream;
-  StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
 
   final authUserSub = authenticatedUserStream.listen((_) {});
   final fcmTokenSub = fcmTokenUserStream.listen(
@@ -95,16 +90,6 @@ class _MyAppState extends State<MyApp> {
         _appStateNotifier.update(user);
       });
     jwtTokenStream.listen((_) {});
-    // Push progress, reflections and language changes made offline as soon
-    // as the device reconnects, instead of waiting for a lesson to be opened.
-    _connectivitySub = Connectivity().onConnectivityChanged.listen((results) {
-      final online = results.any((r) => r != ConnectivityResult.none);
-      if (online && currentUserUid.isNotEmpty) {
-        actions.refreshConnectivityAndSync(currentJwtToken).catchError((_) {
-          return 'sync_failed';
-        });
-      }
-    });
     Future.delayed(
       Duration(milliseconds: 1000),
       () => _appStateNotifier.stopShowingSplashImage(),
@@ -115,7 +100,6 @@ class _MyAppState extends State<MyApp> {
   void dispose() {
     authUserSub.cancel();
     fcmTokenSub.cancel();
-    _connectivitySub?.cancel();
     super.dispose();
   }
 
@@ -154,10 +138,9 @@ class _MyAppState extends State<MyApp> {
       ),
       themeMode: _themeMode,
       routerConfig: _router,
-      // The mock-data debug panel is for development only; hide it from
-      // members in release builds.
-      builder: (_, child) =>
-          kReleaseMode ? child! : MockDebugOverlay(child: child!),
+      builder: (_, child) => MockDebugOverlay(
+        child: child!,
+      ),
     );
   }
 }

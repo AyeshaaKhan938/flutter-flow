@@ -1,6 +1,5 @@
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/api_requests/api_calls.dart';
-import '/custom_code/actions/index.dart' as actions;
 import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -48,26 +47,20 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
         _model.memberLanguage = UserProfileFullResponseStruct.maybeFromMap(
                 (_model.pathwayLangProfile?.jsonBody ?? ''))
             ?.preferredLanguage;
-      } else {
-        // Offline with no saved profile: don't leave the list loading forever.
-        _model.memberLanguage = await actions.deviceContentLanguage();
-      }
-      safeSetState(() {});
-      try {
+        safeSetState(() {});
         _model.loadedPathways = await queryPathwaysRecordOnce(
           queryBuilder: (pathwaysRecord) => pathwaysRecord.where(
             'status',
             isEqualTo: 'published',
           ),
-          limit: 100,
+          limit: 20,
         );
-        _model.pathwaysList = await _pathwaysWithLessons(
-            _model.loadedPathways!.toList().cast<PathwaysRecord>());
-      } catch (_) {
-        _model.pathwaysList = [];
+        _model.pathwaysList =
+            _model.loadedPathways!.toList().cast<PathwaysRecord>();
+        safeSetState(() {});
+        _model.isLoading = false;
+        safeSetState(() {});
       }
-      _model.isLoading = false;
-      safeSetState(() {});
     });
   }
 
@@ -76,23 +69,6 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
     _model.dispose();
 
     super.dispose();
-  }
-
-  /// Published pathways that have at least one published lesson, in their
-  /// CMS `order`, so unfinished or empty pathways never appear to members.
-  Future<List<PathwaysRecord>> _pathwaysWithLessons(
-    List<PathwaysRecord> pathways,
-  ) async {
-    final lessons = await queryLessonsRecordOnce(
-      queryBuilder: (lessonsRecord) => lessonsRecord.where(
-        'status',
-        isEqualTo: 'published',
-      ),
-      limit: 1000,
-    );
-    final withLessons = lessons.map((l) => l.pathwayId).toSet();
-    return pathways.where((p) => withLessons.contains(p.stableId)).toList()
-      ..sort((a, b) => a.order.compareTo(b.order));
   }
 
   @override
@@ -286,7 +262,7 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.stretch,
                                       children: [
-                                        if (!['es', 'ur'].contains(_model.memberLanguage))
+                                        if (_model.memberLanguage == 'en')
                                           Column(
                                             mainAxisSize: MainAxisSize.min,
                                             mainAxisAlignment:
@@ -295,8 +271,11 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
                                                 CrossAxisAlignment.stretch,
                                             children: [
                                               Text(
-                                                pathwaysListItemItem.title
-                                                    .forLanguage(_model.memberLanguage),
+                                                functions.textOrEnglish(
+                                                    pathwaysListItemItem
+                                                        .title.en,
+                                                    pathwaysListItemItem
+                                                        .title.en)!,
                                                 style: FlutterFlowTheme.of(
                                                         context)
                                                     .titleMedium
@@ -439,7 +418,7 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.stretch,
                                       children: [
-                                        if (!['es', 'ur'].contains(_model.memberLanguage))
+                                        if (_model.memberLanguage == 'en')
                                           Column(
                                             mainAxisSize: MainAxisSize.min,
                                             mainAxisAlignment:
@@ -448,8 +427,11 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
                                                 CrossAxisAlignment.stretch,
                                             children: [
                                               Text(
-                                                pathwaysListItemItem.description
-                                                    .forLanguage(_model.memberLanguage),
+                                                functions.textOrEnglish(
+                                                    pathwaysListItemItem
+                                                        .description.en,
+                                                    pathwaysListItemItem
+                                                        .description.en)!,
                                                 maxLines: 2,
                                                 style: FlutterFlowTheme.of(
                                                         context)

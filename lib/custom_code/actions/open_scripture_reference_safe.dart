@@ -10,7 +10,6 @@ import 'package:flutter/material.dart';
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
 import 'package:url_launcher/url_launcher.dart';
-import '/custom_code/bible_reference.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 Future<String> openScriptureReferenceSafe(
@@ -37,18 +36,10 @@ Future<String> openScriptureReferenceSafe(
     _ => 'NIV',
   };
 
-  // BibleGateway has no Luganda translation, so Luganda readers go to the
-  // Luganda Bible 2003 (LB03) on bible.com when the reference parses.
-  final lugandaRef = lang == 'lg' ? BibleReference.parse(ref) : null;
-  final lugandaUri = lugandaRef == null
-      ? null
-      : Uri.https(
-          'www.bible.com', '/bible/2808/${lugandaRef.bibleComPassage}.LB03');
-  final uri = lugandaUri ??
-      Uri.https('www.biblegateway.com', '/passage/', {
-        'search': ref,
-        'version': version,
-      });
+  final uri = Uri.https('www.biblegateway.com', '/passage/', {
+    'search': ref,
+    'version': version,
+  });
 
   try {
     final can = await canLaunchUrl(uri);

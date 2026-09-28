@@ -17,14 +17,10 @@ class LocaleTextStruct extends FFFirebaseStruct {
 
     /// LocaleText.ur
     String? ur,
-
-    /// LocaleText.lg (Luganda)
-    String? lg,
     FirestoreUtilData firestoreUtilData = const FirestoreUtilData(),
   })  : _en = en,
         _es = es,
         _ur = ur,
-        _lg = lg,
         super(firestoreUtilData);
 
   // "en" field.
@@ -48,31 +44,11 @@ class LocaleTextStruct extends FFFirebaseStruct {
 
   bool hasUr() => _ur != null;
 
-  // "lg" field.
-  String? _lg;
-  String get lg => _lg ?? '';
-  set lg(String? val) => _lg = val;
-
-  bool hasLg() => _lg != null;
-
-  /// The text for [languageCode], falling back to English when that
-  /// translation is missing so the member never sees a blank.
-  String forLanguage(String? languageCode) {
-    final text = switch (languageCode) {
-      'es' => es,
-      'ur' => ur,
-      'lg' => lg,
-      _ => en,
-    };
-    return text.isNotEmpty ? text : en;
-  }
-
   static LocaleTextStruct fromMap(Map<String, dynamic> data) =>
       LocaleTextStruct(
         en: data['en'] as String?,
         es: data['es'] as String?,
         ur: data['ur'] as String?,
-        lg: data['lg'] as String?,
       );
 
   static LocaleTextStruct? maybeFromMap(dynamic data) => data is Map
@@ -83,7 +59,6 @@ class LocaleTextStruct extends FFFirebaseStruct {
         'en': _en,
         'es': _es,
         'ur': _ur,
-        'lg': _lg,
       }.withoutNulls;
 
   @override
@@ -98,10 +73,6 @@ class LocaleTextStruct extends FFFirebaseStruct {
         ),
         'ur': serializeParam(
           _ur,
-          ParamType.String,
-        ),
-        'lg': serializeParam(
-          _lg,
           ParamType.String,
         ),
       }.withoutNulls;
@@ -123,11 +94,6 @@ class LocaleTextStruct extends FFFirebaseStruct {
           ParamType.String,
           false,
         ),
-        lg: deserializeParam(
-          data['lg'],
-          ParamType.String,
-          false,
-        ),
       );
 
   @override
@@ -138,19 +104,17 @@ class LocaleTextStruct extends FFFirebaseStruct {
     return other is LocaleTextStruct &&
         en == other.en &&
         es == other.es &&
-        ur == other.ur &&
-        lg == other.lg;
+        ur == other.ur;
   }
 
   @override
-  int get hashCode => const ListEquality().hash([en, es, ur, lg]);
+  int get hashCode => const ListEquality().hash([en, es, ur]);
 }
 
 LocaleTextStruct createLocaleTextStruct({
   String? en,
   String? es,
   String? ur,
-  String? lg,
   Map<String, dynamic> fieldValues = const {},
   bool clearUnsetFields = true,
   bool create = false,
@@ -160,7 +124,6 @@ LocaleTextStruct createLocaleTextStruct({
       en: en,
       es: es,
       ur: ur,
-      lg: lg,
       firestoreUtilData: FirestoreUtilData(
         clearUnsetFields: clearUnsetFields,
         create: create,

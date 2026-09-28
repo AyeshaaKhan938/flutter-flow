@@ -29,11 +29,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // Today's verse from the CMS (same source as the Today page). Empty until
-  // loaded, in which case the built-in Psalm 23:1 is shown.
-  String _todayScriptureRef = '';
-  String _todayScriptureText = '';
-
   @override
   void initState() {
     super.initState();
@@ -49,18 +44,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
         _model.isOnboardingComplete = UserProfileResponseStruct.maybeFromMap(
                 (_model.profileResult?.jsonBody ?? ''))
             ?.onboardingCompleted;
-        safeSetState(() {});
-      }
-      final today = await GetTodayContentCall.call(
-        authToken: currentJwtToken,
-      );
-      final content =
-          TodayContentResponseStruct.maybeFromMap(today.jsonBody ?? '');
-      if (today.succeeded &&
-          content != null &&
-          content.scriptureText.isNotEmpty) {
-        _todayScriptureRef = content.scriptureRef;
-        _todayScriptureText = content.scriptureText;
         safeSetState(() {});
       }
     });
@@ -280,11 +263,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
-                                _todayScriptureText.isNotEmpty
-                                    ? _todayScriptureRef
-                                    : FFLocalizations.of(context).getText(
-                                        'f95iqp6h' /* Psalm 23:1 */,
-                                      ),
+                                FFLocalizations.of(context).getText(
+                                  'f95iqp6h' /* Psalm 23:1 */,
+                                ),
                                 style: FlutterFlowTheme.of(context)
                                     .labelMedium
                                     .override(
@@ -308,11 +289,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                     ),
                               ),
                               Text(
-                                _todayScriptureText.isNotEmpty
-                                    ? _todayScriptureText
-                                    : FFLocalizations.of(context).getText(
-                                        '81somjju' /* The Lord is my shepherd; I sha... */,
-                                      ),
+                                FFLocalizations.of(context).getText(
+                                  '81somjju' /* The Lord is my shepherd; I sha... */,
+                                ),
                                 style: FlutterFlowTheme.of(context)
                                     .bodyMedium
                                     .override(

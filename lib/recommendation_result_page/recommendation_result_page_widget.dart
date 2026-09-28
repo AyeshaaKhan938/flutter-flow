@@ -1,6 +1,5 @@
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/api_requests/api_calls.dart';
-import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -31,27 +30,6 @@ class _RecommendationResultPageWidgetState
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  /// Published pathways by stableId, so recommendations show the CMS name.
-  Map<String, PathwaysRecord> _pathwaysById = {};
-
-  Future<void> _loadPathwayNames() async {
-    try {
-      final pathways = await queryPathwaysRecordOnce(limit: 100);
-      _pathwaysById = {for (final p in pathways) p.stableId: p};
-      safeSetState(() {});
-    } catch (_) {}
-  }
-
-  /// The pathway's CMS title in the app language, or its id if unknown.
-  String _pathwayName(String? id) {
-    final pathway = _pathwaysById[id ?? ''];
-    if (pathway == null) {
-      return id ?? '';
-    }
-    return pathway.title
-        .forLanguage(FFLocalizations.of(context).languageCode);
-  }
-
   @override
   void initState() {
     super.initState();
@@ -59,7 +37,6 @@ class _RecommendationResultPageWidgetState
 
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
-      await _loadPathwayNames();
       _model.recommendationProfile = await GetUserProfileV4Call.call(
         authToken: currentJwtToken,
       );
@@ -178,23 +155,110 @@ class _RecommendationResultPageWidgetState
                               .fontStyle,
                         ),
                   ),
-                  Text(
-                    _pathwayName(_model.recommendedPathwayId),
-                    style: FlutterFlowTheme.of(context).titleLarge.override(
-                          font: GoogleFonts.inter(
-                            fontWeight: FlutterFlowTheme.of(context)
-                                .titleLarge
-                                .fontWeight,
-                            fontStyle: FlutterFlowTheme.of(context)
-                                .titleLarge
-                                .fontStyle,
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (_model.recommendedPathwayId == 'come-and-see')
+                        Text(
+                          FFLocalizations.of(context).getText(
+                            '36np8wwy' /* Come & See */,
                           ),
-                          letterSpacing: 0.0,
-                          fontWeight:
-                              FlutterFlowTheme.of(context).titleLarge.fontWeight,
-                          fontStyle:
-                              FlutterFlowTheme.of(context).titleLarge.fontStyle,
+                          style:
+                              FlutterFlowTheme.of(context).titleLarge.override(
+                                    font: GoogleFonts.inter(
+                                      fontWeight: FlutterFlowTheme.of(context)
+                                          .titleLarge
+                                          .fontWeight,
+                                      fontStyle: FlutterFlowTheme.of(context)
+                                          .titleLarge
+                                          .fontStyle,
+                                    ),
+                                    letterSpacing: 0.0,
+                                    fontWeight: FlutterFlowTheme.of(context)
+                                        .titleLarge
+                                        .fontWeight,
+                                    fontStyle: FlutterFlowTheme.of(context)
+                                        .titleLarge
+                                        .fontStyle,
+                                  ),
                         ),
+                      if (_model.recommendedPathwayId == 'rooted-in-christ')
+                        Text(
+                          FFLocalizations.of(context).getText(
+                            'qsrevnri' /* Rooted in Christ */,
+                          ),
+                          style:
+                              FlutterFlowTheme.of(context).titleLarge.override(
+                                    font: GoogleFonts.inter(
+                                      fontWeight: FlutterFlowTheme.of(context)
+                                          .titleLarge
+                                          .fontWeight,
+                                      fontStyle: FlutterFlowTheme.of(context)
+                                          .titleLarge
+                                          .fontStyle,
+                                    ),
+                                    letterSpacing: 0.0,
+                                    fontWeight: FlutterFlowTheme.of(context)
+                                        .titleLarge
+                                        .fontWeight,
+                                    fontStyle: FlutterFlowTheme.of(context)
+                                        .titleLarge
+                                        .fontStyle,
+                                  ),
+                        ),
+                      if (_model.recommendedPathwayId ==
+                          'journey-into-discipleship-evangelism')
+                        Text(
+                          FFLocalizations.of(context).getText(
+                            'poumktvn' /* Journey into Discipleship & Ev... */,
+                          ),
+                          style:
+                              FlutterFlowTheme.of(context).titleLarge.override(
+                                    font: GoogleFonts.inter(
+                                      fontWeight: FlutterFlowTheme.of(context)
+                                          .titleLarge
+                                          .fontWeight,
+                                      fontStyle: FlutterFlowTheme.of(context)
+                                          .titleLarge
+                                          .fontStyle,
+                                    ),
+                                    letterSpacing: 0.0,
+                                    fontWeight: FlutterFlowTheme.of(context)
+                                        .titleLarge
+                                        .fontWeight,
+                                    fontStyle: FlutterFlowTheme.of(context)
+                                        .titleLarge
+                                        .fontStyle,
+                                  ),
+                        ),
+                      if (_model.recommendedPathwayId ==
+                          'kingdom-heirs-foundations')
+                        Text(
+                          FFLocalizations.of(context).getText(
+                            '9cjo2wo6' /* Kingdom Heirs Foundations */,
+                          ),
+                          style:
+                              FlutterFlowTheme.of(context).titleLarge.override(
+                                    font: GoogleFonts.inter(
+                                      fontWeight: FlutterFlowTheme.of(context)
+                                          .titleLarge
+                                          .fontWeight,
+                                      fontStyle: FlutterFlowTheme.of(context)
+                                          .titleLarge
+                                          .fontStyle,
+                                    ),
+                                    letterSpacing: 0.0,
+                                    fontWeight: FlutterFlowTheme.of(context)
+                                        .titleLarge
+                                        .fontWeight,
+                                    fontStyle: FlutterFlowTheme.of(context)
+                                        .titleLarge
+                                        .fontStyle,
+                                  ),
+                        ),
+                    ],
                   ),
                   Text(
                     _model.recommendationReason!,
@@ -254,7 +318,7 @@ class _RecommendationResultPageWidgetState
                                   ),
                             ),
                             Text(
-                              _pathwayName(_model.companionPathwayId),
+                              _model.companionPathwayId!,
                               style: FlutterFlowTheme.of(context)
                                   .titleSmall
                                   .override(

@@ -1,45 +1,25 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Content admins. Same roles the app lets into the admin pages
-    // (ProfilePage gate). The role lives on users/{uid}.role.
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isContentAdmin() {
-      return isSignedIn()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-        && get(/databases/$(database)/documents/users/$(request.auth.uid))
-             .data.get('role', '') in ['admin', 'ministry_reviewer'];
-    }
-
-    // Members manage their own profile but can never grant themselves a
-    // role: sign-up writes role '' and only the backend (Admin SDK, which
-    // bypasses these rules) may set 'admin' / 'ministry_reviewer'.
     match /users/{document} {
-      allow create: if request.auth.uid == document
-        && request.resource.data.get('role', '') == '';
+      allow create: if request.auth.uid == document;
       allow read: if request.auth.uid == document;
-      allow update: if request.auth.uid == document
-        && request.resource.data.get('role', '')
-           == resource.data.get('role', '');
+      allow write: if request.auth.uid == document;
       allow delete: if request.auth.uid == document;
     }
 
     match /pathways/{document} {
-      allow create: if isContentAdmin();
+      allow create: if true;
       allow read: if true;
-      allow write: if isContentAdmin();
-      allow delete: if isContentAdmin();
+      allow write: if false;
+      allow delete: if false;
     }
 
     match /pathways/{parent}/lessons/{document} {
-      allow create: if isContentAdmin();
+      allow create: if true;
       allow read: if true;
-      allow write: if isContentAdmin();
-      allow delete: if isContentAdmin();
+      allow write: if false;
+      allow delete: if false;
     }
 
     match /{path=**}/lessons/{document} {
@@ -48,10 +28,10 @@ service cloud.firestore {
 
 
     match /pathways/{parent}/quizzes/{document} {
-      allow create: if isContentAdmin();
+      allow create: if true;
       allow read: if true;
-      allow write: if isContentAdmin();
-      allow delete: if isContentAdmin();
+      allow write: if false;
+      allow delete: if false;
     }
 
     match /{path=**}/quizzes/{document} {
@@ -60,49 +40,45 @@ service cloud.firestore {
 
 
     match /dailyScripture/{document} {
-      allow create: if isContentAdmin();
+      allow create: if true;
       allow read: if true;
-      allow write: if isContentAdmin();
-      allow delete: if isContentAdmin();
+      allow write: if false;
+      allow delete: if false;
     }
 
     match /encouragements/{document} {
-      allow create: if isContentAdmin();
+      allow create: if true;
       allow read: if true;
-      allow write: if isContentAdmin();
-      allow delete: if isContentAdmin();
+      allow write: if false;
+      allow delete: if false;
     }
 
     match /announcements/{document} {
-      allow create: if isContentAdmin();
+      allow create: if true;
       allow read: if true;
-      allow write: if isContentAdmin();
-      allow delete: if isContentAdmin();
+      allow write: if false;
+      allow delete: if false;
     }
 
-    // Private to the member who wrote them. The backend writes with the
-    // Admin SDK, which bypasses these rules.
     match /reflections/{document} {
-      allow create: if request.auth != null
-        && request.resource.data.userId == request.auth.uid;
-      allow read: if request.auth != null
-        && resource.data.userId == request.auth.uid;
+      allow create: if true;
+      allow read: if true;
       allow write: if false;
       allow delete: if false;
     }
 
     match /onboardingQuestions/{document} {
-      allow create: if isContentAdmin();
+      allow create: if true;
       allow read: if true;
-      allow write: if isContentAdmin();
-      allow delete: if isContentAdmin();
+      allow write: if false;
+      allow delete: if false;
     }
 
     match /assessmentQuestions/{document} {
-      allow create: if isContentAdmin();
+      allow create: if true;
       allow read: if true;
-      allow write: if isContentAdmin();
-      allow delete: if isContentAdmin();
+      allow write: if false;
+      allow delete: if false;
     }
   }
 }

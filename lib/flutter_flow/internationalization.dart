@@ -34,12 +34,8 @@ class FFLocalizations {
       ? languages().indexOf(languageCode)
       : 0;
 
-  // Untranslated UI strings fall back to English instead of rendering blank.
-  String getText(String key) {
-    final texts = kTranslationsMap[key] ?? {};
-    final text = texts[locale.toString()] ?? '';
-    return text.isNotEmpty ? text : (texts['en'] ?? '');
-  }
+  String getText(String key) =>
+      (kTranslationsMap[key] ?? {})[locale.toString()] ?? '';
 
   String getVariableText({
     String? enText = '',
@@ -47,10 +43,7 @@ class FFLocalizations {
     String? esText = '',
     String? lgText = '',
   }) =>
-      _orEnglish([enText, urText, esText, lgText][languageIndex], enText);
-
-  static String _orEnglish(String? text, String? english) =>
-      (text ?? '').isNotEmpty ? text! : (english ?? '');
+      [enText, urText, esText, lgText][languageIndex] ?? '';
 
   static const Set<String> _languagesWithShortCode = {
     'ar',
@@ -195,7 +188,7 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
       'ur': 'آج',
     },
     'pymmndk7': {
-      'en': 'Ask Kingdom Heirs',
+      'en': 'Ask Kingdom Heirs (RAG)',
       'es': 'Pregunta a Kingdom Heirs',
       'lg': 'Buuza Kingdom Heirs',
       'ur': 'کنگڈم ہائرز سے پوچھیں',
