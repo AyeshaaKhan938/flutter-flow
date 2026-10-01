@@ -10,7 +10,9 @@ enum AdminContentKind { scripture, encouragement }
 const kContentAdminRoles = ['admin', 'ministry_reviewer'];
 
 /// Status values the CMS can set. Only 'published' is shown to members.
-const kContentStatuses = ['published', 'draft', 'unpublished'];
+/// Workflow: draft -> review (awaiting Kingdom Heirs approval) -> published;
+/// 'unpublished' hides a record again until it is republished.
+const kContentStatuses = ['draft', 'review', 'published', 'unpublished'];
 
 class AdminContentPageModel extends FlutterFlowModel<AdminContentPageWidget> {
   ///  Local state fields for this page.

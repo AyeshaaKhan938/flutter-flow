@@ -8,22 +8,29 @@ FlutterFlow projects are built to run on the Flutter _stable_ release.
 
 ## API keys
 
-Keys are supplied at build time and are never committed (this repo is
-public). Copy `api_keys.example.json` to `api_keys.json`, fill in the
-values, and pass the file to every run/build:
+The API.Bible key is **not** part of the app. It is stored in Google Secret
+Manager and used only by the `getBiblePassage` Cloud Function
+(`firebase/functions/index.js`); the app calls that function. Set or rotate
+it with:
 
 ```sh
-flutter run --dart-define-from-file=api_keys.json
-flutter build apk --release --dart-define-from-file=api_keys.json
-flutter build ipa --release --dart-define-from-file=api_keys.json
+cd firebase
+firebase functions:secrets:set API_BIBLE_KEY --project kingdom-heirs-discipleshipapp
+firebase deploy --only functions:getBiblePassage --project kingdom-heirs-discipleshipapp
 ```
 
-| Key | Used for |
-|---|---|
-| `API_BIBLE_KEY` | Full Scripture passages from [API.Bible](https://scripture.api.bible) in the lesson page |
+Release builds therefore need no keys:
 
-Without `API_BIBLE_KEY` the app still builds: English passages come from
-bible-api.com (KJV) and other languages open the Bible deep link.
+```sh
+flutter build apk --release
+flutter build appbundle --release
+flutter build ipa --release
+```
+
+`api_keys.json` (gitignored, see `api_keys.example.json`) is only a
+transitional fallback for test builds made before `getBiblePassage` is
+deployed: `--dart-define-from-file=api_keys.json` compiles the key into that
+build, so never use it for store builds.
 
 ## Bible integration
 
@@ -37,8 +44,9 @@ member's language, with its translation and copyright notice:
 | Urdu | Biblica Open Urdu Contemporary Version (`eecbca904435fce9-01`) |
 | Luganda | Biblica Open Luganda Contemporary Bible (`f276be3571f516cb-01`) |
 
-Each displayed passage is reported to API.Bible's Fair Use Management
-System (FUMS), as their terms require. Passages are saved on the device
+The app asks the `getBiblePassage` Cloud Function for passages, so the API
+key never ships in the app. Each displayed passage is reported to API.Bible's
+Fair Use Management System (FUMS), as their terms require. Passages are saved on the device
 once opened, so they stay readable offline; a passage never opened before
 cannot be shown offline, and the lesson's stored Scripture text is shown
 instead. If the passage can't be fetched, the reference opens BibleGateway

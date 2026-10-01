@@ -4,6 +4,7 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/backend/schema/structs/index.dart';
+import '/custom_code/actions/index.dart' as actions;
 import '/index.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -56,12 +57,21 @@ class _HomePageWidgetState extends State<HomePageWidget> {
       );
       final content =
           TodayContentResponseStruct.maybeFromMap(today.jsonBody ?? '');
+      // Show the verse itself from API.Bible. The CMS text for the day is
+      // Kingdom Heirs commentary (shown on Today as Daily Truth), so it is
+      // never displayed here as Scripture.
       if (today.succeeded &&
           content != null &&
-          content.scriptureText.isNotEmpty) {
-        _todayScriptureRef = content.scriptureRef;
-        _todayScriptureText = content.scriptureText;
-        safeSetState(() {});
+          content.scriptureRef.isNotEmpty) {
+        final passage = await actions.fetchBiblePassage(
+          content.scriptureRef,
+          content.language,
+        );
+        if (passage != null && passage.text.isNotEmpty) {
+          _todayScriptureRef = '${passage.reference} (${passage.version})';
+          _todayScriptureText = passage.text;
+          safeSetState(() {});
+        }
       }
     });
   }

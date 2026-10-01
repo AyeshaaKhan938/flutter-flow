@@ -11,12 +11,16 @@ import 'package:flutter/material.dart';
 
 import 'dart:convert';
 import 'dart:math';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '/custom_code/bible_reference.dart';
 
-/// API.Bible key, supplied at build time so it never lands in the public
-/// repo: `flutter build apk --dart-define-from-file=api_keys.json`.
+/// Passages normally come from the `getBiblePassage` Cloud Function, which
+/// holds the API.Bible key in Secret Manager so it is never in the app.
+/// A build-time key (`--dart-define-from-file=api_keys.json`) is only a
+/// transitional fallback for builds made before that function is deployed;
+/// release builds should be made without it.
 const _apiBibleKey = String.fromEnvironment('API_BIBLE_KEY');
 
 /// Bible used for each app language (API.Bible ids).
@@ -72,8 +76,8 @@ class BiblePassage {
 
 /// Fetches the full passage for [scriptureRef] in the member's language.
 ///
-/// Uses API.Bible when a key is configured, otherwise bible-api.com (English
-/// KJV only). Every fetched passage is kept on the device, so a passage
+/// Uses API.Bible through the server, otherwise bible-api.com (English KJV
+/// only). Every fetched passage is kept on the device, so a passage
 /// opened once is still readable offline. Returns null when nothing can be
 /// shown; callers then fall back to the Bible deep link.
 Future<BiblePassage?> fetchBiblePassage(
@@ -92,9 +96,13 @@ Future<BiblePassage?> fetchBiblePassage(
 
   BiblePassage? passage;
   try {
-    passage = _apiBibleKey.isNotEmpty
-        ? await _fetchFromApiBible(ref, lang)
-        : (lang == 'en' ? await _fetchFromBibleApiCom(ref) : null);
+    passage = await _fetchFromServer(ref, lang);
+    if (passage == null && _apiBibleKey.isNotEmpty) {
+      passage = await _fetchFromApiBible(ref, lang);
+    }
+    if (passage == null && lang == 'en') {
+      passage = await _fetchFromBibleApiCom(ref);
+    }
   } catch (_) {
     passage = null;
   }
@@ -117,6 +125,44 @@ Future<BiblePassage?> fetchBiblePassage(
     } catch (_) {}
   }
   return null;
+}
+
+String _cleanPassageText(String content) => content
+    .replaceAll(RegExp(r'[ \t]+'), ' ')
+    .replaceAll(RegExp(r'\s*\n\s*'), '\n')
+    .trim();
+
+/// API.Bible through the `getBiblePassage` Cloud Function (key stays on the
+/// server). Returns null when the function is unreachable or not deployed.
+Future<BiblePassage?> _fetchFromServer(String ref, String lang) async {
+  final parsed = BibleReference.parse(ref);
+  if (parsed == null) {
+    return null;
+  }
+  try {
+    final result = await FirebaseFunctions.instance
+        .httpsCallable(
+          'getBiblePassage',
+          options: HttpsCallableOptions(timeout: const Duration(seconds: 15)),
+        )
+        .call({
+      'bibleId': _bibleIds[lang],
+      'passageId': parsed.apiBiblePassageId,
+    });
+    final data = Map<String, dynamic>.from(result.data as Map);
+    final fumsToken = data['fumsToken'] as String? ?? '';
+    if (fumsToken.isNotEmpty) {
+      _reportFums(fumsToken);
+    }
+    return BiblePassage(
+      reference: data['reference'] as String? ?? ref,
+      text: _cleanPassageText(data['content'] as String? ?? ''),
+      version: _versionNames[lang]!,
+      copyright: (data['copyright'] as String? ?? '').trim(),
+    );
+  } catch (_) {
+    return null;
+  }
 }
 
 Future<BiblePassage?> _fetchFromApiBible(String ref, String lang) async {
@@ -146,10 +192,7 @@ Future<BiblePassage?> _fetchFromApiBible(String ref, String lang) async {
   if (fumsToken != null && fumsToken.isNotEmpty) {
     _reportFums(fumsToken);
   }
-  final text = (data['content'] as String? ?? '')
-      .replaceAll(RegExp(r'[ \t]+'), ' ')
-      .replaceAll(RegExp(r'\s*\n\s*'), '\n')
-      .trim();
+  final text = _cleanPassageText(data['content'] as String? ?? '');
   return BiblePassage(
     reference: data['reference'] as String? ?? ref,
     text: text,

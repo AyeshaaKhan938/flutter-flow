@@ -4,6 +4,7 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/custom_code/actions/index.dart' as actions;
 import '/index.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -62,6 +63,16 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                 (_model.todayContentResult?.jsonBody ?? ''))
             ?.language;
         safeSetState(() {});
+        // The verse itself comes from API.Bible; the CMS text for the day is
+        // Kingdom Heirs commentary and is shown separately as Daily Truth.
+        if ((_model.todayScriptureRef ?? '').isNotEmpty) {
+          _todayPassage = await actions.fetchBiblePassage(
+            _model.todayScriptureRef!,
+            _model.memberLanguage,
+          );
+          _todayPassageLoaded = true;
+          safeSetState(() {});
+        }
         _model.loadedAnnouncements = await queryAnnouncementsRecordOnce(
           limit: 20,
         );
@@ -77,6 +88,83 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
     _model.dispose();
 
     super.dispose();
+  }
+
+  static const _englishFallbackNote = {
+    'es': '(Se muestra en inglés: la traducción aún no está disponible.)',
+    'ur': '(انگریزی میں دکھایا گیا ہے: ترجمہ ابھی دستیاب نہیں۔)',
+    'lg': '(Kiragiddwa mu Lungereza: okuvvuunula tekunnabaawo.)',
+  };
+
+  /// Announcement body in the member's language. When the translation is
+  /// missing, the English text is shown with a note saying so, so English
+  /// is never presented under a translated screen without being identified.
+  String _announcementBody(LocaleTextStruct body) {
+    final lang = _model.memberLanguage;
+    final text = body.forLanguage(lang);
+    final note = _englishFallbackNote[lang];
+    final isFallback = note != null && body.en.isNotEmpty && text == body.en;
+    return isFallback ? '$text\n$note' : text;
+  }
+
+  actions.BiblePassage? _todayPassage;
+  bool _todayPassageLoaded = false;
+
+  static const _dailyTruthLabel = {
+    'en': 'Daily Truth',
+    'es': 'Verdad del día',
+    'ur': 'آج کی سچائی',
+    'lg': 'Amazima ga Leero',
+  };
+
+  /// Today's verse (from API.Bible, with its translation and copyright),
+  /// then the Kingdom Heirs commentary under its own Daily Truth heading,
+  /// so commentary is never presented as Scripture.
+  List<Widget> _buildScriptureAndDailyTruth(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+    final passage = _todayPassage;
+    final commentary = _model.todayScriptureText ?? '';
+    return [
+      if (passage != null) ...[
+        Text(
+          passage.text,
+          style: theme.bodyLarge.override(
+            font: GoogleFonts.lora(),
+            letterSpacing: 0.0,
+            lineHeight: 1.5,
+          ),
+        ),
+        Text(
+          [
+            passage.version,
+            if (passage.copyright.isNotEmpty) passage.copyright,
+          ].join(' · '),
+          style: theme.labelSmall.override(
+            font: GoogleFonts.inter(),
+            color: theme.secondaryText,
+            letterSpacing: 0.0,
+          ),
+        ),
+      ] else if (!_todayPassageLoaded)
+        LinearProgressIndicator(color: theme.primary, minHeight: 2.0),
+      if (commentary.isNotEmpty) ...[
+        const SizedBox(height: 8.0),
+        Text(
+          _dailyTruthLabel[_model.memberLanguage] ?? _dailyTruthLabel['en']!,
+          style: theme.titleSmall.override(
+            font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            letterSpacing: 0.0,
+          ),
+        ),
+        Text(
+          commentary,
+          style: theme.bodyMedium.override(
+            font: GoogleFonts.inter(),
+            letterSpacing: 0.0,
+          ),
+        ),
+      ],
+    ];
   }
 
   @override
@@ -320,30 +408,7 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                                             .fontStyle,
                                       ),
                                 ),
-                                Text(
-                                  _model.todayScriptureText!,
-                                  style: FlutterFlowTheme.of(context)
-                                      .bodyMedium
-                                      .override(
-                                        font: GoogleFonts.inter(
-                                          fontWeight:
-                                              FlutterFlowTheme.of(context)
-                                                  .bodyMedium
-                                                  .fontWeight,
-                                          fontStyle:
-                                              FlutterFlowTheme.of(context)
-                                                  .bodyMedium
-                                                  .fontStyle,
-                                        ),
-                                        letterSpacing: 0.0,
-                                        fontWeight: FlutterFlowTheme.of(context)
-                                            .bodyMedium
-                                            .fontWeight,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .bodyMedium
-                                            .fontStyle,
-                                      ),
-                                ),
+                                ..._buildScriptureAndDailyTruth(context),
                               ].divide(SizedBox(height: 6.0)),
                             ),
                         ].divide(SizedBox(height: 6.0)),
@@ -631,7 +696,7 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                                   children: [
                                     if (!['es', 'ur'].contains(_model.memberLanguage))
                                       Text(
-                                        announcementListItemItem.body.forLanguage(_model.memberLanguage),
+                                        _announcementBody(announcementListItemItem.body),
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(
@@ -661,7 +726,7 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                                       ),
                                     if (_model.memberLanguage == 'es')
                                       Text(
-                                        announcementListItemItem.body.forLanguage('es'),
+                                        _announcementBody(announcementListItemItem.body),
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(
@@ -691,7 +756,7 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                                       ),
                                     if (_model.memberLanguage == 'ur')
                                       Text(
-                                        announcementListItemItem.body.forLanguage('ur'),
+                                        _announcementBody(announcementListItemItem.body),
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(

@@ -625,6 +625,60 @@ function getCharForIndex(charIdx) {
     return String.fromCharCode("a".charCodeAt(0) + charIdx - 36);
   }
 }
+// Scripture passages from API.Bible. The API key lives only in Secret
+// Manager (API_BIBLE_KEY), never in the mobile app:
+//   firebase functions:secrets:set API_BIBLE_KEY
+// Only signed-in members can call it, and only for the approved Bibles.
+const kApprovedBibleIds = new Set([
+  "78a9f6124f344018-01", // English: New International Version 2011
+  "592420522e16049f-01", // Spanish: Reina Valera 1909
+  "eecbca904435fce9-01", // Urdu: Biblica Open Urdu Contemporary Version
+  "f276be3571f516cb-01", // Luganda: Biblica Open Luganda Contemporary Bible
+]);
+const kPassageIdPattern = /^[1-3]?[A-Z]{2,3}\.\d{1,3}(\.\d{1,3})?(-[1-3]?[A-Z]{2,3}\.\d{1,3}(\.\d{1,3})?)?$/;
+
+exports.getBiblePassage = functions
+  .runWith({ secrets: ["API_BIBLE_KEY"], timeoutSeconds: 30 })
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "Sign in to read Scripture passages.",
+      );
+    }
+    const bibleId = String((data && data.bibleId) || "");
+    const passageId = String((data && data.passageId) || "");
+    if (!kApprovedBibleIds.has(bibleId) || !kPassageIdPattern.test(passageId)) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Unknown Bible or passage.",
+      );
+    }
+    const url =
+      `https://api.scripture.api.bible/v1/bibles/${bibleId}/passages/` +
+      `${encodeURIComponent(passageId)}?content-type=text&include-notes=false` +
+      "&include-titles=false&include-chapter-numbers=false" +
+      "&include-verse-numbers=true";
+    const response = await fetch(url, {
+      headers: { "api-key": process.env.API_BIBLE_KEY },
+    });
+    if (!response.ok) {
+      throw new functions.https.HttpsError(
+        response.status === 404 ? "not-found" : "unavailable",
+        `Bible service returned ${response.status}.`,
+      );
+    }
+    const body = await response.json();
+    const passage = body.data || {};
+    return {
+      reference: passage.reference || "",
+      content: passage.content || "",
+      copyright: passage.copyright || "",
+      // Token only; the app reports each displayed passage to FUMS.
+      fumsToken: (body.meta && body.meta.fumsToken) || "",
+    };
+  });
+
 exports.onUserDeleted = functions.auth.user().onDelete(async (user) => {
   let firestore = admin.firestore();
   let userRef = firestore.doc("users/" + user.uid);

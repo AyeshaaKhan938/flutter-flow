@@ -768,6 +768,8 @@ class _ProfilePageWidgetState extends State<ProfilePageWidget> {
                   FFButtonWidget(
                     onPressed: () async {
                       GoRouter.of(context).prepareAuthEvent();
+                      // Remove this member's private data from the device.
+                      await actions.clearMemberOfflineData();
                       await authManager.signOut();
                       GoRouter.of(context).clearRedirectLocation();
 
