@@ -34,3 +34,4 @@ export '/daily_lesson_page/daily_lesson_page_widget.dart'
     show DailyLessonPageWidget;
 export '/quiz_page/quiz_page_widget.dart' show QuizPageWidget;
 export '/rag_search_page/rag_search_page_widget.dart' show RagSearchPageWidget;
+export '/bible_page/bible_page_widget.dart' show BiblePageWidget;

@@ -34,6 +34,13 @@ build, so never use it for store builds.
 
 ## Bible integration
 
+The **Bible** tab lets members read any book and chapter (66 books, 1189
+chapters) in their language's approved translation, with book names,
+translation name and copyright from API.Bible; the last chapter read is
+remembered, and chapters already opened stay readable offline. Languages
+added in the CMS use their configured `bibleId`, or the English Bible with
+a notice. Scripture is never machine-translated.
+
 Tapping a lesson's Scripture reference shows the full passage in the
 member's language, with its translation and copyright notice:
 

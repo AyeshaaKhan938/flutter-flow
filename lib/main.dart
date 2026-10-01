@@ -22,6 +22,7 @@ import 'index.dart';
 // Hand edit (keep after FlutterFlow sync): CMS-managed languages.
 import '/custom_code/languages/language_app_support.dart';
 import '/custom_code/languages/language_registry.dart';
+import '/custom_code/languages/translation_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -227,6 +228,7 @@ class _NavBarPageState extends State<NavBarPage> {
     final tabs = {
       'HomePage': HomePageWidget(),
       'PathwayListPage': PathwayListPageWidget(),
+      'BiblePage': BiblePageWidget(),
       'ProfilePage': ProfilePageWidget(),
     };
     final currentIndex = tabs.keys.toList().indexOf(_currentPageName);
@@ -266,6 +268,18 @@ class _NavBarPageState extends State<NavBarPage> {
                 text: FFLocalizations.of(context).getText(
                   '6248jqp7' /* Pathways */,
                 ),
+              ),
+              // Bible tab (hand-added): full Bible in the member's language.
+              GButton(
+                icon: Icons.auto_stories_outlined,
+                text: switch (LanguageRegistry.contentLanguage) {
+                  'es' => 'Biblia',
+                  'ur' => 'بائبل',
+                  'lg' => 'Baibuli',
+                  'en' => 'Bible',
+                  final lang =>
+                    TranslationService.instance.translate('Bible', lang),
+                },
               ),
               GButton(
                 icon: Icons.person,

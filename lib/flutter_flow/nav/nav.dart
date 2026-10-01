@@ -90,6 +90,13 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
               appStateNotifier.loggedIn ? NavBarPage() : SignInPageWidget(),
         ),
         FFRoute(
+          name: BiblePageWidget.routeName,
+          path: BiblePageWidget.routePath,
+          builder: (context, params) => params.isEmpty
+              ? NavBarPage(initialPage: 'BiblePage')
+              : BiblePageWidget(),
+        ),
+        FFRoute(
           name: PathwayListPageWidget.routeName,
           path: PathwayListPageWidget.routePath,
           builder: (context, params) => params.isEmpty
