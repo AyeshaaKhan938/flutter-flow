@@ -13,3 +13,9 @@ android/key.properties
 *.jks
 *.keystore
 firebase/functions/node_modules/
+
+# Client content files (proprietary; repo is public). Never commit.
+content_private/
+assets/*.xlsx
+assets/*Handoff*.zip
+assets/00_Kingdom_Heirs_Content_Upload_Manifest.csv
