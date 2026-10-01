@@ -12,3 +12,4 @@ ios/Flutter/ephemeral/
 android/key.properties
 *.jks
 *.keystore
+firebase/functions/node_modules/
