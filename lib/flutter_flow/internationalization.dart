@@ -2,6 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+// Hand edit (keep after FlutterFlow sync): CMS-added languages.
+import '/custom_code/languages/language_registry.dart';
+import '/custom_code/languages/translation_service.dart';
 
 const _kLocaleStorageKey = '__locale_key__';
 
@@ -37,6 +40,12 @@ class FFLocalizations {
   // Untranslated UI strings fall back to English instead of rendering blank.
   String getText(String key) {
     final texts = kTranslationsMap[key] ?? {};
+    // Hand edit: a language added in the CMS (not compiled in) gets UI
+    // labels as reviewed/machine translations of the English text.
+    final content = LanguageRegistry.contentLanguage;
+    if (!languages().contains(content)) {
+      return TranslationService.instance.translate(texts['en'] ?? '', content);
+    }
     final text = texts[locale.toString()] ?? '';
     return text.isNotEmpty ? text : (texts['en'] ?? '');
   }
@@ -47,7 +56,11 @@ class FFLocalizations {
     String? esText = '',
     String? lgText = '',
   }) =>
-      _orEnglish([enText, urText, esText, lgText][languageIndex], enText);
+      languages().contains(LanguageRegistry.contentLanguage)
+          ? _orEnglish([enText, urText, esText, lgText][languageIndex], enText)
+          // Hand edit: CMS-added language, see getText.
+          : TranslationService.instance
+              .translate(enText ?? '', LanguageRegistry.contentLanguage);
 
   static String _orEnglish(String? text, String? english) =>
       (text ?? '').isNotEmpty ? text! : (english ?? '');

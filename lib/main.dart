@@ -19,6 +19,9 @@ import 'flutter_flow/internationalization.dart';
 import '/backend/mock/mock_debug_overlay.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'index.dart';
+// Hand edit (keep after FlutterFlow sync): CMS-managed languages.
+import '/custom_code/languages/language_app_support.dart';
+import '/custom_code/languages/language_registry.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,6 +32,7 @@ void main() async {
 
   // Start initial custom actions code
   await actions.ensureFirestoreOfflinePersistence();
+  await initializeLanguageSupport();
   // End initial custom actions code
 
   await FFLocalizations.initialize();
@@ -52,7 +56,12 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  Locale? _locale = FFLocalizations.getStoredLocale();
+  // Hand edit: the stored code is the member's content language, which may
+  // be a CMS-added language; Flutter gets the nearest compiled locale.
+  Locale? _locale = FFLocalizations.getStoredLocale() == null
+      ? null
+      : createLocale(
+          LanguageRegistry.frameworkLocaleFor(LanguageRegistry.contentLanguage));
 
   ThemeMode _themeMode = ThemeMode.system;
 
@@ -89,6 +98,8 @@ class _MyAppState extends State<MyApp> {
     super.initState();
 
     _appStateNotifier = AppStateNotifier.instance;
+    // Hand edit: rebuild screens when translations or languages change.
+    languageDataListenable.addListener(_onLanguageDataChanged);
     _router = createRouter(_appStateNotifier);
     userStream = kingdomHeirsDiscipleshipAppFirebaseUserStream()
       ..listen((user) {
@@ -120,8 +131,14 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
+  void _onLanguageDataChanged() {
+    bumpLanguageDataVersion();
+    safeSetState(() {});
+  }
+
   @override
   void dispose() {
+    languageDataListenable.removeListener(_onLanguageDataChanged);
     authUserSub.cancel();
     fcmTokenSub.cancel();
     _connectivitySub?.cancel();
@@ -129,7 +146,10 @@ class _MyAppState extends State<MyApp> {
   }
 
   void setLocale(String language) {
-    safeSetState(() => _locale = createLocale(language));
+    // Hand edit: any CMS language; see _locale.
+    LanguageRegistry.instance.setContentLanguage(language);
+    safeSetState(() => _locale =
+        createLocale(LanguageRegistry.frameworkLocaleFor(language)));
     FFLocalizations.storeLocale(language);
   }
 
@@ -149,6 +169,7 @@ class _MyAppState extends State<MyApp> {
         GlobalCupertinoLocalizations.delegate,
         FallbackMaterialLocalizationDelegate(),
         FallbackCupertinoLocalizationDelegate(),
+        ContentLanguageRefreshDelegate(languageDataVersion), // Hand edit
       ],
       locale: _locale,
       supportedLocales: const [
@@ -165,8 +186,10 @@ class _MyAppState extends State<MyApp> {
       routerConfig: _router,
       // The mock-data debug panel is for development only; hide it from
       // members in release builds.
-      builder: (_, child) =>
-          kReleaseMode ? child! : MockDebugOverlay(child: child!),
+      // Hand edit: RTL for CMS-added right-to-left languages.
+      builder: (_, child) => kReleaseMode
+          ? withContentDirectionality(child!)
+          : MockDebugOverlay(child: withContentDirectionality(child!)),
     );
   }
 }

@@ -14,6 +14,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'pathway_overview_page_model.dart';
+import '/custom_code/languages/language_registry.dart';
 export 'pathway_overview_page_model.dart';
 
 /// Shows a pathway's lessons and progress; entry point into the Daily Lesson
@@ -56,6 +57,9 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
         _model.memberLanguage = PathwayProgressResponseStruct.maybeFromMap(
                 (_model.progressResult?.jsonBody ?? ''))
             ?.preferredLanguage;
+        // CMS-added languages: the device choice wins (backend reports English).
+        _model.memberLanguage =
+            LanguageRegistry.resolveMemberLanguage(_model.memberLanguage);
         safeSetState(() {});
         _model.completedCount = PathwayProgressResponseStruct.maybeFromMap(
                 (_model.progressResult?.jsonBody ?? ''))

@@ -12,6 +12,8 @@ import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'assessment_questions_page_model.dart';
+import '/custom_code/languages/language_registry.dart';
+import '/custom_code/languages/translation_service.dart';
 export 'assessment_questions_page_model.dart';
 
 /// Spec M10 scaffold: capture bible confidence/needs/habits/goals.
@@ -54,11 +56,18 @@ class _AssessmentQuestionsPageWidgetState
         _model.memberLanguage = UserProfileFullResponseStruct.maybeFromMap(
                 (_model.assessmentLangProfile?.jsonBody ?? ''))
             ?.preferredLanguage;
+        // CMS-added languages: the device choice wins (backend reports English).
+        _model.memberLanguage =
+            LanguageRegistry.resolveMemberLanguage(_model.memberLanguage);
         safeSetState(() {});
         _model.loadedAssessmentCopy = await GetAssessmentQuestionsCall.call(
           authToken: currentJwtToken,
           locale: _model.memberLanguage,
         );
+        // Languages the backend doesn't serve come back in English;
+        // translate the question text on the device (never answer keys).
+        _model.loadedAssessmentCopy = await TranslationService.instance.translateApiResponse(
+            _model.loadedAssessmentCopy, _model.memberLanguage, kAssessmentTextKeys);
 
         if ((_model.loadedAssessmentCopy?.succeeded ?? true)) {
           _model.currentStep = 1;
@@ -274,6 +283,8 @@ class _AssessmentQuestionsPageWidgetState
             locale: 'en',
             authToken: currentJwtToken,
           );
+          _model.loadedAssessmentCopyRetry = await TranslationService.instance.translateApiResponse(
+              _model.loadedAssessmentCopyRetry, _model.memberLanguage, kAssessmentTextKeys);
 
           if ((_model.loadedAssessmentCopyRetry?.succeeded ?? true)) {
             _model.currentStep = 1;
@@ -502,6 +513,8 @@ class _AssessmentQuestionsPageWidgetState
           locale: 'en',
           authToken: currentJwtToken,
         );
+        _model.loadedAssessmentCopyFallback = await TranslationService.instance.translateApiResponse(
+            _model.loadedAssessmentCopyFallback, _model.memberLanguage, kAssessmentTextKeys);
 
         if ((_model.loadedAssessmentCopyFallback?.succeeded ?? true)) {
           _model.currentStep = 1;

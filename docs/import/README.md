@@ -77,12 +77,63 @@ Handoff v2). Prepared 2026-10-01.
   - Kingdom Heirs Foundations: 120
   - The pathway records currently say 14 days; they will be updated with the import.
 
+## Importing a file
+
+Imports run on the `importContentCsv` Cloud Function
+(`firebase/functions/content_import.js`) from the **Import Content** page
+(`/admin/import`; open **Daily Content** and tap the upload icon). Only users whose
+`users/{uid}.role` is `admin` or `ministry_reviewer` can use it.
+
+1. Choose the content type and the CSV file (saved as **CSV UTF-8**).
+2. **Preview** checks the file and shows the report. Nothing is written.
+3. **Import as Draft** writes the file, but only if every row is valid. If any row fails,
+   nothing is written. Fix the rows listed in the report and import the corrected file again.
+4. Re-importing the same file is safe. Rows are matched by `stableId` (for quizzes
+   `quizStableId`, for assessment questions `questionId`):
+   - existing records are updated in place, including older records created with automatic
+     IDs;
+   - rows identical to what is stored are reported as skipped (unchanged);
+   - a second record is never created for the same ID.
+
+What the importer checks and does:
+
+- **Validation:**
+  - required columns and values; the English text is required;
+  - whole numbers (`order`, `dayNumber`, `questionNumber`, `passingScore`, `points`,
+    `sequence`);
+  - real `MM-dd` dates, unique within the file and not used by another record;
+  - `pathwayId` and `lessonId` must already exist;
+  - `correctAnswer` must be A–D and that option must have English text;
+  - `status` must be draft, review, published or unpublished;
+  - duplicate IDs in the file are rejected;
+  - unknown columns are reported as warnings and ignored.
+- **Language columns:** any `<field>_<code>` column with a 2–3 letter language code (for
+  example `title_fr`) is accepted. Empty cells never erase a stored translation; only the
+  languages given in the file are updated.
+- **Status:** new records are always created as `draft`. Existing records keep their
+  current status unless the row's `status` column is filled in.
+- **Quizzes:** rows are grouped by `quizStableId` into `quizzes/{quizStableId}.questions`
+  (matched by `questionNumber`). A quiz with any invalid row is rejected as a whole.
+- **Assessment questions:** stored in a new `assessmentItems/{questionId}` collection
+  (`question`, `options.{A..}.answer` / `points` / `triggerCode`). The legacy
+  `assessmentQuestions` documents are not changed until the app is switched over.
+  `question_en` is needed on at least one row per question.
+- **Report:** every run, both preview and import, is saved to `importJobs` and listed under
+  **Recent imports**. Each report shows:
+  - the source file name and the date imported;
+  - inserted, updated, skipped and failed counts;
+  - the duplicate check;
+  - the publication status of the affected records;
+  - the translation status for each language;
+  - every error and warning, with its row and column.
+
+  **Copy report** puts the report on the clipboard as text or JSON.
+
+Apart from `pathways.csv`, the example rows in `templates/` contain IDs only, as in the
+package. They fail validation until the English text is filled in.
+
 ## Still to confirm
 
-- **The importer.** Imports run on the backend `importCurriculum` function, whose source is not
-  in this repository. Before production, each template must be checked with **Preview Import**
-  on the admin page. That preview shows inserted, updated, skipped and failed rows, and any
-  differences in the accepted headers will be corrected here.
 - **Quiz answer keys.** Quiz answer keys (`correctAnswer`) are currently stored inside the quiz
   documents, which members can read. Moving them to a server-only collection requires a
   backend change to `getQuiz` and `submitQuizAttempt`.

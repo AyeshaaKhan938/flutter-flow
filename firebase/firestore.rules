@@ -104,5 +104,31 @@ service cloud.firestore {
       allow write: if isContentAdmin();
       allow delete: if isContentAdmin();
     }
+
+    // Languages offered in the app (CMS-managed; see docs/languages.md).
+    match /languages/{document} {
+      allow read: if true;
+      allow write: if isContentAdmin();
+    }
+
+    // Shared translation cache. Members read it; the translateTexts
+    // function writes it with the Admin SDK; admins review/approve here.
+    match /machineTranslations/{document} {
+      allow read: if true;
+      allow write: if isContentAdmin();
+    }
+
+    // Assessment questions imported from CSV (importContentCsv).
+    match /assessmentItems/{document} {
+      allow read: if true;
+      allow write: if isContentAdmin();
+    }
+
+    // CSV import reports. Written only by the importContentCsv function
+    // (Admin SDK); content admins can read them on the Import page.
+    match /importJobs/{document} {
+      allow read: if isContentAdmin();
+      allow write: if false;
+    }
   }
 }

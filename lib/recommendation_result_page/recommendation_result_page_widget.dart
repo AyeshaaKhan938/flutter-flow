@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'recommendation_result_page_model.dart';
+import '/custom_code/languages/language_registry.dart';
 export 'recommendation_result_page_model.dart';
 
 /// Spec M11: show recommended starting pathway + allow browse/retake.
@@ -48,8 +49,8 @@ class _RecommendationResultPageWidgetState
     if (pathway == null) {
       return id ?? '';
     }
-    return pathway.title
-        .forLanguage(FFLocalizations.of(context).languageCode);
+    // Content language (may be a CMS-added language).
+    return pathway.title.forLanguage(LanguageRegistry.contentLanguage);
   }
 
   @override

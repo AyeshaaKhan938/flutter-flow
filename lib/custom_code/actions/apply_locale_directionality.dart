@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter/material.dart';
 import '/main.dart';
+import '/custom_code/languages/language_registry.dart';
 
 Future<String> applyLocaleDirectionality(
   BuildContext context,
@@ -22,5 +23,5 @@ Future<String> applyLocaleDirectionality(
     await FFLocalizations.storeLocale(appLocale);
     MyApp.of(context).setLocale(appLocale);
   } catch (_) {}
-  return appLocale == 'ur' ? 'rtl' : 'ltr';
+  return LanguageRegistry.instance.isRtl(appLocale) ? 'rtl' : 'ltr';
 }

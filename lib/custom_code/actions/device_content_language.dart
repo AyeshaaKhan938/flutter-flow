@@ -9,8 +9,11 @@ import 'package:flutter/material.dart';
 // Begin custom action code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import '/custom_code/languages/language_registry.dart';
+
 Future<String> deviceContentLanguage() async {
-  final code = FFLocalizations.getStoredLocale()?.languageCode ?? '';
-  // Pages fall back to English per field when a translation is missing.
-  return (code == 'es' || code == 'ur' || code == 'lg') ? code : 'en';
+  // Any language from the CMS registry. Pages fall back per field to the
+  // reviewed/machine translation of the English text, then to English.
+  final code = LanguageRegistry.contentLanguage;
+  return code.isNotEmpty ? code : 'en';
 }

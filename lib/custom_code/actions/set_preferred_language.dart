@@ -14,6 +14,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '/custom_code/languages/translation_service.dart';
 
 Future<String> setPreferredLanguage(
   BuildContext context,
@@ -22,11 +23,15 @@ Future<String> setPreferredLanguage(
 ) async {
   var code = languageCode.trim().toLowerCase();
   if (code.isEmpty) code = 'en';
+  // Any active CMS language. setLocale keeps a compiled Flutter locale for
+  // framework widgets and records [code] as the content language.
   final appLocale = code;
   try {
     await FFLocalizations.storeLocale(appLocale);
     MyApp.of(context).setLocale(appLocale);
   } catch (_) {}
+  // Device copy of this language's translations (offline use).
+  await TranslationService.instance.loadLanguage(code);
 
   // Assume the server update fails until it succeeds, so a change made
   // offline is retried by refreshConnectivityAndSync on reconnect.
@@ -54,5 +59,9 @@ Future<String> setPreferredLanguage(
       await prefs.setString(kPendingLanguageSyncKey, code);
     }
   } catch (_) {}
+  if (synced) {
+    // Download translations for the new language in the background.
+    prefetchOfflineContent(force: true);
+  }
   return code;
 }

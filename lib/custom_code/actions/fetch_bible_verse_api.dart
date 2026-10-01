@@ -15,6 +15,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '/custom_code/bible_reference.dart';
+import '/custom_code/languages/language_registry.dart';
 
 /// Passages normally come from the `getBiblePassage` Cloud Function, which
 /// holds the API.Bible key in Secret Manager so it is never in the app.
@@ -23,7 +24,10 @@ import '/custom_code/bible_reference.dart';
 /// release builds should be made without it.
 const _apiBibleKey = String.fromEnvironment('API_BIBLE_KEY');
 
-/// Bible used for each app language (API.Bible ids).
+/// Default Bible per built-in language (API.Bible ids). A language's
+/// `bibleId` in the CMS `languages` collection takes precedence; a language
+/// with neither shows the English Bible with a note. Scripture is never
+/// machine-translated.
 const _bibleIds = {
   'en': '78a9f6124f344018-01', // New International Version 2011
   'es': '592420522e16049f-01', // Reina Valera 1909
@@ -38,6 +42,23 @@ const _versionNames = {
   'lg': 'EEEE',
 };
 
+/// The Bible to use for [languageCode]: (language key, bibleId, version).
+/// Falls back to English when the language has no approved Bible.
+({String lang, String bibleId, String version}) _bibleFor(String languageCode) {
+  final lang = LanguageRegistry.instance.byCode(languageCode);
+  if (lang != null && lang.bibleId.isNotEmpty) {
+    return (
+      lang: lang.code,
+      bibleId: lang.bibleId,
+      version: lang.bibleName.isNotEmpty
+          ? lang.bibleName
+          : (_versionNames[lang.code] ?? ''),
+    );
+  }
+  final code = _bibleIds.containsKey(languageCode) ? languageCode : 'en';
+  return (lang: code, bibleId: _bibleIds[code]!, version: _versionNames[code]!);
+}
+
 /// A Scripture passage with the attribution API.Bible requires us to show.
 class BiblePassage {
   const BiblePassage({
@@ -46,7 +67,21 @@ class BiblePassage {
     required this.version,
     required this.copyright,
     this.fromCache = false,
+    this.englishFallback = false,
   });
+
+  /// True when the member's language has no approved Bible, so the English
+  /// Bible is shown (the reader must say so).
+  final bool englishFallback;
+
+  BiblePassage withEnglishFallback(bool value) => BiblePassage(
+        reference: reference,
+        text: text,
+        version: version,
+        copyright: copyright,
+        fromCache: fromCache,
+        englishFallback: value,
+      );
 
   final String reference;
   final String text;
@@ -88,17 +123,17 @@ Future<BiblePassage?> fetchBiblePassage(
   if (ref.isEmpty) {
     return null;
   }
-  var lang = (languageCode ?? 'en').trim().toLowerCase();
-  if (!_bibleIds.containsKey(lang)) {
-    lang = 'en';
-  }
+  final requested = (languageCode ?? 'en').trim().toLowerCase();
+  final bible = _bibleFor(requested.isEmpty ? 'en' : requested);
+  final lang = bible.lang;
+  final englishFallback = lang == 'en' && requested.isNotEmpty && requested != 'en';
   final cacheKey = 'bible_passage_${lang}_$ref';
 
   BiblePassage? passage;
   try {
-    passage = await _fetchFromServer(ref, lang);
+    passage = await _fetchFromServer(ref, bible.bibleId, bible.version);
     if (passage == null && _apiBibleKey.isNotEmpty) {
-      passage = await _fetchFromApiBible(ref, lang);
+      passage = await _fetchFromApiBible(ref, bible.bibleId, bible.version);
     }
     if (passage == null && lang == 'en') {
       passage = await _fetchFromBibleApiCom(ref);
@@ -112,7 +147,7 @@ Future<BiblePassage?> fetchBiblePassage(
     try {
       await prefs.setString(cacheKey, jsonEncode(passage.toMap()));
     } catch (_) {}
-    return passage;
+    return passage.withEnglishFallback(englishFallback);
   }
 
   final cached = prefs.getString(cacheKey);
@@ -121,7 +156,7 @@ Future<BiblePassage?> fetchBiblePassage(
       return BiblePassage.fromMap(
         Map<String, dynamic>.from(jsonDecode(cached) as Map),
         fromCache: true,
-      );
+      ).withEnglishFallback(englishFallback);
     } catch (_) {}
   }
   return null;
@@ -134,7 +169,8 @@ String _cleanPassageText(String content) => content
 
 /// API.Bible through the `getBiblePassage` Cloud Function (key stays on the
 /// server). Returns null when the function is unreachable or not deployed.
-Future<BiblePassage?> _fetchFromServer(String ref, String lang) async {
+Future<BiblePassage?> _fetchFromServer(
+    String ref, String bibleId, String version) async {
   final parsed = BibleReference.parse(ref);
   if (parsed == null) {
     return null;
@@ -146,7 +182,7 @@ Future<BiblePassage?> _fetchFromServer(String ref, String lang) async {
           options: HttpsCallableOptions(timeout: const Duration(seconds: 15)),
         )
         .call({
-      'bibleId': _bibleIds[lang],
+      'bibleId': bibleId,
       'passageId': parsed.apiBiblePassageId,
     });
     final data = Map<String, dynamic>.from(result.data as Map);
@@ -157,7 +193,7 @@ Future<BiblePassage?> _fetchFromServer(String ref, String lang) async {
     return BiblePassage(
       reference: data['reference'] as String? ?? ref,
       text: _cleanPassageText(data['content'] as String? ?? ''),
-      version: _versionNames[lang]!,
+      version: version,
       copyright: (data['copyright'] as String? ?? '').trim(),
     );
   } catch (_) {
@@ -165,14 +201,15 @@ Future<BiblePassage?> _fetchFromServer(String ref, String lang) async {
   }
 }
 
-Future<BiblePassage?> _fetchFromApiBible(String ref, String lang) async {
+Future<BiblePassage?> _fetchFromApiBible(
+    String ref, String bibleId, String version) async {
   final parsed = BibleReference.parse(ref);
   if (parsed == null) {
     return null;
   }
   final uri = Uri.https(
     'api.scripture.api.bible',
-    '/v1/bibles/${_bibleIds[lang]}/passages/${parsed.apiBiblePassageId}',
+    '/v1/bibles/$bibleId/passages/${parsed.apiBiblePassageId}',
     {
       'content-type': 'text',
       'include-notes': 'false',
@@ -196,7 +233,7 @@ Future<BiblePassage?> _fetchFromApiBible(String ref, String lang) async {
   return BiblePassage(
     reference: data['reference'] as String? ?? ref,
     text: text,
-    version: _versionNames[lang]!,
+    version: version,
     copyright: (data['copyright'] as String? ?? '').trim(),
   );
 }

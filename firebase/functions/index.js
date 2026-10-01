@@ -635,6 +635,34 @@ const kApprovedBibleIds = new Set([
   "eecbca904435fce9-01", // Urdu: Biblica Open Urdu Contemporary Version
   "f276be3571f516cb-01", // Luganda: Biblica Open Luganda Contemporary Bible
 ]);
+
+// Plus any Bible named by an active language in the CMS `languages`
+// collection (admins add a language's API.Bible id there), cached 5 min.
+let cmsBibleIds = new Set();
+let cmsBibleIdsAt = 0;
+async function isApprovedBibleId(bibleId) {
+  if (kApprovedBibleIds.has(bibleId)) {
+    return true;
+  }
+  if (Date.now() - cmsBibleIdsAt > 5 * 60 * 1000) {
+    try {
+      const snap = await admin.firestore().collection("languages")
+        .where("active", "==", true).get();
+      const ids = new Set();
+      snap.forEach((doc) => {
+        const id = String((doc.data() || {}).bibleId || "").trim();
+        if (id) {
+          ids.add(id);
+        }
+      });
+      cmsBibleIds = ids;
+      cmsBibleIdsAt = Date.now();
+    } catch (err) {
+      console.error("Could not load languages", err);
+    }
+  }
+  return cmsBibleIds.has(bibleId);
+}
 const kPassageIdPattern = /^[1-3]?[A-Z]{2,3}\.\d{1,3}(\.\d{1,3})?(-[1-3]?[A-Z]{2,3}\.\d{1,3}(\.\d{1,3})?)?$/;
 
 exports.getBiblePassage = functions
@@ -648,7 +676,9 @@ exports.getBiblePassage = functions
     }
     const bibleId = String((data && data.bibleId) || "");
     const passageId = String((data && data.passageId) || "");
-    if (!kApprovedBibleIds.has(bibleId) || !kPassageIdPattern.test(passageId)) {
+    if (!/^[A-Za-z0-9-]{1,64}$/.test(bibleId) ||
+        !kPassageIdPattern.test(passageId) ||
+        !(await isApprovedBibleId(bibleId))) {
       throw new functions.https.HttpsError(
         "invalid-argument",
         "Unknown Bible or passage.",
@@ -684,3 +714,9 @@ exports.onUserDeleted = functions.auth.user().onDelete(async (user) => {
   let userRef = firestore.doc("users/" + user.uid);
   await firestore.collection("users").doc(user.uid).delete();
 });
+
+// CMS CSV importer (Admin > Import page). Source: content_import.js
+exports.importContentCsv = require("./content_import").importContentCsv;
+
+// Machine translation for CMS-managed languages (see translation.js).
+Object.assign(exports, require("./translation"));

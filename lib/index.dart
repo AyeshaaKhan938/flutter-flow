@@ -10,6 +10,10 @@ export '/admin_pathways_page/admin_pathways_page_widget.dart'
     show AdminPathwaysPageWidget;
 export '/admin_content_page/admin_content_page_widget.dart'
     show AdminContentPageWidget;
+export '/admin_languages_page/admin_languages_page_widget.dart'
+    show AdminLanguagesPageWidget;
+export '/admin_import_page/admin_import_page_widget.dart'
+    show AdminImportPageWidget;
 export '/profile_page/profile_page_widget.dart' show ProfilePageWidget;
 export '/home_page/home_page_widget.dart' show HomePageWidget;
 export '/recommendation_result_page/recommendation_result_page_widget.dart'

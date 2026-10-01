@@ -12,6 +12,9 @@ import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'today_page_model.dart';
+import '/custom_code/languages/language_registry.dart';
+import '/custom_code/languages/translation_service.dart';
+import '/custom_code/widgets/index.dart' as custom_widgets;
 export 'today_page_model.dart';
 
 /// Member home: daily scripture, daily encouragement, announcements, and
@@ -62,6 +65,9 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
         _model.memberLanguage = TodayContentResponseStruct.maybeFromMap(
                 (_model.todayContentResult?.jsonBody ?? ''))
             ?.language;
+        // CMS-added languages: the device choice wins (backend reports English).
+        _model.memberLanguage =
+            LanguageRegistry.resolveMemberLanguage(_model.memberLanguage);
         safeSetState(() {});
         // The verse itself comes from API.Bible; the CMS text for the day is
         // Kingdom Heirs commentary and is shown separately as Daily Truth.
@@ -107,6 +113,21 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
     return isFallback ? '$text\n$note' : text;
   }
 
+  /// Backend text for today (Daily Truth commentary, encouragement). The
+  /// backend answers CMS-added languages in English, so those are
+  /// translated on the device (never the Bible passage).
+  String _backendText(String? text) {
+    final value = text ?? '';
+    return LanguageRegistry.needsClientTranslation(_model.memberLanguage)
+        ? TranslationService.instance.translate(value, _model.memberLanguage)
+        : value;
+  }
+
+  bool _backendTextIsMachine(String? text) =>
+      LanguageRegistry.needsClientTranslation(_model.memberLanguage) &&
+      TranslationService.instance
+          .isMachine(text ?? '', _model.memberLanguage);
+
   actions.BiblePassage? _todayPassage;
   bool _todayPassageLoaded = false;
 
@@ -123,7 +144,7 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
   List<Widget> _buildScriptureAndDailyTruth(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
     final passage = _todayPassage;
-    final commentary = _model.todayScriptureText ?? '';
+    final commentary = _backendText(_model.todayScriptureText);
     return [
       if (passage != null) ...[
         Text(
@@ -145,12 +166,21 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
             letterSpacing: 0.0,
           ),
         ),
+        if (passage.englishFallback)
+          custom_widgets.MachineTranslationNotice(
+            language: _model.memberLanguage,
+            message: kEnglishBibleNotice,
+            icon: Icons.menu_book_outlined,
+            compact: true,
+          ),
       ] else if (!_todayPassageLoaded)
         LinearProgressIndicator(color: theme.primary, minHeight: 2.0),
       if (commentary.isNotEmpty) ...[
         const SizedBox(height: 8.0),
         Text(
-          _dailyTruthLabel[_model.memberLanguage] ?? _dailyTruthLabel['en']!,
+          _dailyTruthLabel[_model.memberLanguage] ??
+              TranslationService.instance
+                  .translate(_dailyTruthLabel['en']!, _model.memberLanguage),
           style: theme.titleSmall.override(
             font: GoogleFonts.inter(fontWeight: FontWeight.w600),
             letterSpacing: 0.0,
@@ -163,6 +193,11 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
             letterSpacing: 0.0,
           ),
         ),
+        if (_backendTextIsMachine(_model.todayScriptureText))
+          custom_widgets.MachineTranslationNotice(
+            language: _model.memberLanguage,
+            compact: true,
+          ),
       ],
     ];
   }
@@ -524,8 +559,14 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                                             .fontStyle,
                                       ),
                                 ),
+                                if (_backendTextIsMachine(
+                                    _model.todayEncouragementText))
+                                  custom_widgets.MachineTranslationNotice(
+                                    language: _model.memberLanguage,
+                                    compact: true,
+                                  ),
                                 Text(
-                                  _model.todayEncouragementText!,
+                                  _backendText(_model.todayEncouragementText),
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
@@ -554,6 +595,12 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                       ),
                     ),
                   ),
+                  if (_model.announcementList.any((a) =>
+                          a.title.isMachineTranslated(_model.memberLanguage) ||
+                          a.body.isMachineTranslated(_model.memberLanguage)))
+                    custom_widgets.MachineTranslationNotice(
+                      language: _model.memberLanguage,
+                    ),
                   Text(
                     FFLocalizations.of(context).getText(
                       'c3m7uoy7' /* Announcements */,

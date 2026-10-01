@@ -12,6 +12,8 @@ import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'quiz_page_model.dart';
+import '/custom_code/languages/language_registry.dart';
+import '/custom_code/languages/translation_service.dart';
 export 'quiz_page_model.dart';
 
 /// Renders a 10-question multiple-choice quiz and submits it for server-side
@@ -53,12 +55,19 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
         _model.memberLanguage = UserProfileResponseStruct.maybeFromMap(
                 (_model.quizLangProfileResult?.jsonBody ?? ''))
             ?.preferredLanguage;
+        // CMS-added languages: the device choice wins (backend reports English).
+        _model.memberLanguage =
+            LanguageRegistry.resolveMemberLanguage(_model.memberLanguage);
         safeSetState(() {});
         _model.quizResult = await GetQuizV2Call.call(
           authToken: currentJwtToken,
           quizId: widget.quizId,
           locale: _model.memberLanguage,
         );
+        // Languages the backend doesn't serve come back in English;
+        // translate the question text on the device (never answer keys).
+        _model.quizResult = await TranslationService.instance.translateApiResponse(
+            _model.quizResult, _model.memberLanguage, kQuizTextKeys);
 
         if ((_model.quizResult?.succeeded ?? true)) {
           _model.quizTitle = QuizResponseStruct.maybeFromMap(

@@ -1,3 +1,7 @@
+import '/admin_import_page/admin_import_page_widget.dart'
+    show AdminImportPageWidget;
+import '/admin_languages_page/admin_languages_page_widget.dart'
+    show AdminLanguagesPageWidget;
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -214,6 +218,20 @@ class _AdminContentPageWidgetState extends State<AdminContentPageWidget> {
               fontStyle: theme.titleLarge.fontStyle,
             ),
           ),
+          actions: [
+            IconButton(
+              tooltip: 'Import CSV',
+              icon: Icon(Icons.upload_file_rounded, color: theme.primaryText),
+              onPressed: () =>
+                  context.pushNamed(AdminImportPageWidget.routeName),
+            ),
+            IconButton(
+              tooltip: 'Languages & translations',
+              icon: Icon(Icons.translate, color: theme.primaryText),
+              onPressed: () =>
+                  context.pushNamed(AdminLanguagesPageWidget.routeName),
+            ),
+          ],
           centerTitle: true,
           elevation: 0.0,
         ),

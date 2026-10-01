@@ -5,6 +5,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '/backend/schema/util/firestore_util.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
+// Hand edit (keep after FlutterFlow sync): machine translation fallback.
+import '/custom_code/languages/translation_service.dart';
+import 'package:collection/collection.dart' show MapEquality;
 
 /// DSL struct LocaleText
 class LocaleTextStruct extends FFFirebaseStruct {
@@ -53,17 +56,71 @@ class LocaleTextStruct extends FFFirebaseStruct {
 
   bool hasLg() => _lg != null;
 
-  /// The text for [languageCode], falling back to English when that
-  /// translation is missing so the member never sees a blank.
+  // ---- Hand edits (keep after FlutterFlow sync) -------------------------
+  // Languages added in the CMS (e.g. 'fr') are kept from the Firestore map
+  // in [_extra], so new languages need no regenerated struct.
+  Map<String, String> _extra = {};
+  Map<String, String> get extraLanguages => Map.unmodifiable(_extra);
+  void setLanguage(String code, String? text) {
+    switch (code) {
+      case 'en':
+        _en = text;
+      case 'es':
+        _es = text;
+      case 'ur':
+        _ur = text;
+      case 'lg':
+        _lg = text;
+      default:
+        if (text == null || text.isEmpty) {
+          _extra.remove(code);
+        } else {
+          _extra[code] = text;
+        }
+    }
+  }
+
+  static final _languageKey = RegExp(r'^[a-z]{2,3}([_-][A-Za-z]{2,4})?$');
+
+  /// Text stored for [languageCode] in the content itself ('' if none).
+  String storedText(String? languageCode) => switch (languageCode) {
+        null || '' || 'en' => en,
+        'es' => es,
+        'ur' => ur,
+        'lg' => lg,
+        _ => _extra[languageCode] ?? '',
+      };
+
+  /// The text for [languageCode]: stored translation, else the cached
+  /// (reviewed or machine) translation of the English text, else English,
+  /// so the member never sees a blank. Kingdom Heirs-authored text only;
+  /// use [scriptureForLanguage] for Scripture.
   String forLanguage(String? languageCode) {
-    final text = switch (languageCode) {
-      'es' => es,
-      'ur' => ur,
-      'lg' => lg,
-      _ => en,
-    };
+    final text = storedText(languageCode);
+    if (text.isNotEmpty) {
+      return text;
+    }
+    return TranslationService.instance.translate(en, languageCode);
+  }
+
+  /// Scripture text: stored translation or English, never machine-translated.
+  String scriptureForLanguage(String? languageCode) {
+    final text = storedText(languageCode);
     return text.isNotEmpty ? text : en;
   }
+
+  /// True when [forLanguage] shows unreviewed machine translation.
+  bool isMachineTranslated(String? languageCode) =>
+      storedText(languageCode).isEmpty &&
+      en.isNotEmpty &&
+      TranslationService.instance.isMachine(en, languageCode);
+
+  /// True when [forLanguage] shows the English text for another language.
+  bool isEnglishFallback(String? languageCode) =>
+      (languageCode ?? 'en') != 'en' &&
+      en.isNotEmpty &&
+      forLanguage(languageCode) == en;
+  // ---- End hand edits ---------------------------------------------------
 
   static LocaleTextStruct fromMap(Map<String, dynamic> data) =>
       LocaleTextStruct(
@@ -71,7 +128,17 @@ class LocaleTextStruct extends FFFirebaseStruct {
         es: data['es'] as String?,
         ur: data['ur'] as String?,
         lg: data['lg'] as String?,
-      );
+      ).._extra = _extraFrom(data);
+
+  // Hand edit: keep every other language key from the map.
+  static Map<String, String> _extraFrom(Map<String, dynamic> data) => {
+        for (final e in data.entries)
+          if (!const {'en', 'es', 'ur', 'lg'}.contains(e.key) &&
+              _languageKey.hasMatch(e.key) &&
+              e.value is String &&
+              (e.value as String).isNotEmpty)
+            e.key: e.value as String,
+      };
 
   static LocaleTextStruct? maybeFromMap(dynamic data) => data is Map
       ? LocaleTextStruct.fromMap(data.cast<String, dynamic>())
@@ -82,6 +149,7 @@ class LocaleTextStruct extends FFFirebaseStruct {
         'es': _es,
         'ur': _ur,
         'lg': _lg,
+        ..._extra, // Hand edit: CMS-added languages.
       }.withoutNulls;
 
   @override
@@ -102,6 +170,7 @@ class LocaleTextStruct extends FFFirebaseStruct {
           _lg,
           ParamType.String,
         ),
+        ..._extra, // Hand edit: CMS-added languages.
       }.withoutNulls;
 
   static LocaleTextStruct fromSerializableMap(Map<String, dynamic> data) =>
@@ -126,7 +195,7 @@ class LocaleTextStruct extends FFFirebaseStruct {
           ParamType.String,
           false,
         ),
-      );
+      ).._extra = _extraFrom(data); // Hand edit: CMS-added languages.
 
   @override
   String toString() => 'LocaleTextStruct(${toMap()})';
@@ -137,11 +206,13 @@ class LocaleTextStruct extends FFFirebaseStruct {
         en == other.en &&
         es == other.es &&
         ur == other.ur &&
-        lg == other.lg;
+        lg == other.lg &&
+        const MapEquality().equals(_extra, other._extra);
   }
 
   @override
-  int get hashCode => const ListEquality().hash([en, es, ur, lg]);
+  int get hashCode =>
+      const ListEquality().hash([en, es, ur, lg, const MapEquality().hash(_extra)]);
 }
 
 LocaleTextStruct createLocaleTextStruct({

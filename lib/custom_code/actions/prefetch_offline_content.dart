@@ -12,6 +12,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/backend/api_requests/api_calls.dart';
+import '/backend/api_requests/api_manager.dart';
+import '/custom_code/languages/language_registry.dart';
+import '/custom_code/languages/translation_service.dart';
+import '/flutter_flow/internationalization.dart' show kTranslationsMap;
 
 const _kLastPrefetchKey = 'offline_prefetch_last';
 const _kPrefetchInterval = Duration(minutes: 30);
@@ -49,11 +53,14 @@ Future prefetchOfflineContent({bool force = false}) async {
     if (!profile.succeeded) {
       return; // Offline or server down: try again later.
     }
-    final language =
+    // Pick up languages added or changed in the CMS.
+    await LanguageRegistry.instance.refresh();
+    // Same resolution the pages use, so cached calls match theirs.
+    final language = LanguageRegistry.resolveMemberLanguage(
         (profile.jsonBody is Map ? profile.jsonBody['preferredLanguage'] : null)
                 as String? ??
-            '';
-    await Future.wait([
+            '');
+    final backendCalls = await Future.wait([
       GetUserProfileV2Call.call(authToken: token),
       GetUserProfileV3Call.call(authToken: token),
       GetUserProfileV5Call.call(authToken: token),
@@ -64,7 +71,7 @@ Future prefetchOfflineContent({bool force = false}) async {
 
     // Content for the Firestore offline cache.
     final pathways = await queryPathwaysRecordOnce(limit: 100);
-    await queryLessonsRecordOnce(
+    final lessons = await queryLessonsRecordOnce(
       queryBuilder: (q) => q.where('status', isEqualTo: 'published'),
       limit: 1000,
     );
@@ -91,14 +98,25 @@ Future prefetchOfflineContent({bool force = false}) async {
       'come-and-see-quiz-2',
       'rooted-in-christ-quiz-1',
     };
+    final quizResponses = <ApiCallResponse>[];
     for (final quizId in quizIds) {
-      await GetQuizV2Call.call(
+      quizResponses.add(await GetQuizV2Call.call(
         authToken: token,
         quizId: quizId,
         locale: language,
-      );
+      ));
       await GetQuizAttemptCall.call(authToken: token, quizId: quizId);
     }
+
+    await _prefetchTranslations(
+      language,
+      force: force,
+      pathways: pathways,
+      lessons: lessons,
+      today: backendCalls[3],
+      assessment: backendCalls[4],
+      quizzes: quizResponses,
+    );
 
     await prefs.setString(_kLastPrefetchKey, DateTime.now().toIso8601String());
   } catch (_) {
@@ -106,4 +124,94 @@ Future prefetchOfflineContent({bool force = false}) async {
   } finally {
     _prefetchRunning = false;
   }
+}
+
+/// Downloads machine/reviewed translations of everything the member may
+/// read in [language], so CMS-added languages also work offline. Best
+/// effort. Scripture (lesson scriptureText, Bible passages) is never sent.
+Future<void> _prefetchTranslations(
+  String language, {
+  required bool force,
+  required List<PathwaysRecord> pathways,
+  required List<LessonsRecord> lessons,
+  required ApiCallResponse today,
+  required ApiCallResponse assessment,
+  required List<ApiCallResponse> quizzes,
+}) async {
+  if (!LanguageRegistry.instance.allowsMachineTranslation(language)) {
+    return;
+  }
+  try {
+    final texts = <String>{
+      kMachineTranslationNotice,
+      kEnglishBibleNotice,
+    };
+    void add(LocaleTextStruct t) {
+      if (t.storedText(language).isEmpty && t.en.isNotEmpty) {
+        texts.add(t.en);
+      }
+    }
+
+    for (final p in pathways.where((p) => p.status == 'published')) {
+      add(p.title);
+      add(p.description);
+    }
+    for (final l in lessons) {
+      add(l.title);
+      add(l.reflectionPrompt);
+      add(l.application);
+      add(l.prayer);
+    }
+    final announcements = await queryAnnouncementsRecordOnce(limit: 20);
+    for (final a in announcements) {
+      add(a.title);
+      add(a.body);
+    }
+    // Daily Truth commentary and encouragements for the coming week.
+    final now = DateTime.now();
+    final dates = {
+      for (var i = 0; i < 7; i++)
+        DateFormat('MM-dd').format(now.add(Duration(days: i))),
+    };
+    final daily = await queryDailyScriptureRecordOnce(
+      queryBuilder: (q) => q.where('date', whereIn: dates.toList()),
+    );
+    for (final d in daily.where((d) => d.status == 'published')) {
+      add(d.text);
+    }
+    final encouragements = await queryEncouragementsRecordOnce(
+      queryBuilder: (q) => q.where('date', whereIn: dates.toList()),
+    );
+    for (final e in encouragements.where((e) => e.status == 'published')) {
+      add(e.quote);
+    }
+
+    if (LanguageRegistry.needsClientTranslation(language)) {
+      // The backend answers these languages in English.
+      void addJson(ApiCallResponse r, RegExp keys) {
+        final body = r.jsonBody;
+        if (r.succeeded && body is Map) {
+          body.forEach((k, v) {
+            if (v is String && v.isNotEmpty && keys.hasMatch('$k')) {
+              texts.add(v);
+            }
+          });
+        }
+      }
+
+      addJson(today, RegExp(r'^(scriptureText|encouragementText)$'));
+      addJson(assessment, kAssessmentTextKeys);
+      for (final q in quizzes) {
+        addJson(q, kQuizTextKeys);
+      }
+      // UI labels (compiled languages have their own).
+      for (final entry in kTranslationsMap.values) {
+        final en = entry['en'] ?? '';
+        if (en.isNotEmpty) {
+          texts.add(en);
+        }
+      }
+    }
+    await TranslationService.instance.prefetch(texts, language, refresh: force);
+  } catch (_) {}
 }

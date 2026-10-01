@@ -11,6 +11,8 @@ import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'pathway_list_page_model.dart';
+import '/custom_code/languages/language_registry.dart';
+import '/custom_code/widgets/index.dart' as custom_widgets;
 export 'pathway_list_page_model.dart';
 
 /// Browse available discipleship pathways.
@@ -48,6 +50,9 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
         _model.memberLanguage = UserProfileFullResponseStruct.maybeFromMap(
                 (_model.pathwayLangProfile?.jsonBody ?? ''))
             ?.preferredLanguage;
+        // CMS-added languages: the device choice wins (backend reports English).
+        _model.memberLanguage =
+            LanguageRegistry.resolveMemberLanguage(_model.memberLanguage);
       } else {
         // Offline with no saved profile: don't leave the list loading forever.
         _model.memberLanguage = await actions.deviceContentLanguage();
@@ -223,6 +228,13 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
                               ),
                         ),
                       ].divide(SizedBox(width: 10.0)),
+                    ),
+                  // Unreviewed machine translation must be identified.
+                  if (_model.pathwaysList.any((p) =>
+                      p.title.isMachineTranslated(_model.memberLanguage) ||
+                      p.description.isMachineTranslated(_model.memberLanguage)))
+                    custom_widgets.MachineTranslationNotice(
+                      language: _model.memberLanguage,
                     ),
                   Builder(
                     builder: (context) {
