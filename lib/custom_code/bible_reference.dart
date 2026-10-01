@@ -12,7 +12,8 @@ class BibleReference {
   static BibleReference? parse(String ref) {
     final match =
         RegExp(r'^([1-3]?\s*[A-Za-z ]+?)\s+(\d+)(?::(\d+)(?:\s*-\s*(\d+))?)?')
-            .firstMatch(ref.trim());
+            // Accept en/em dashes ("Matthew 4:12–17") as range separators.
+            .firstMatch(ref.trim().replaceAll(RegExp('[\u2013\u2014]'), '-'));
     if (match == null) {
       return null;
     }

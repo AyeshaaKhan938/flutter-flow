@@ -98,8 +98,13 @@ const kTypes = {
       "verseRef",
       "status",
       "readInContext",
+      "translation",
+      "bibleGatewayUrl",
+      "journeyStage",
     ],
-    localized: ["theme", "text"],
+    // theme = encounter title, text = Today's Truth (Kingdom Heirs
+    // commentary), versePreview = short licensed preview of the verse.
+    localized: ["theme", "text", "versePreview"],
     requiredHeaders: ["stableId", "date", "verseRef", "text_en"],
     requiredValues: ["stableId", "date", "verseRef", "text_en"],
     ints: ["dayNumber"],
@@ -117,12 +122,17 @@ const kTypes = {
       "rightsCleared",
       "status",
       "collectionTheme",
+      "scriptureLink",
+      "theme",
+      "contentType",
+      "active",
+      "randomWeight",
     ],
     localized: ["title", "quote"],
     requiredHeaders: ["stableId", "date", "quote_en"],
     requiredValues: ["stableId", "date", "quote_en"],
-    ints: ["dayNumber"],
-    bools: ["rightsCleared"],
+    ints: ["dayNumber", "randomWeight"],
+    bools: ["rightsCleared", "active"],
   },
   assessment_questions: {
     label: "Assessment questions",
@@ -651,6 +661,9 @@ function validateRows(type, parsed, refs) {
         setRecordValue("verseRef", v("verseRef"), "verseRef");
         setRecordValue("reference", v("verseRef"), "verseRef");
         setRecordValue("readInContext", v("readInContext"), "readInContext");
+        setRecordValue("translation", v("translation"), "translation");
+        setRecordValue("bibleGatewayUrl", v("bibleGatewayUrl"), "bibleGatewayUrl");
+        setRecordValue("journeyStage", v("journeyStage"), "journeyStage");
         break;
       case "encouragements":
         setRecordValue("date", date, "date");
@@ -659,6 +672,11 @@ function validateRows(type, parsed, refs) {
         setRecordValue("attribution", v("attribution"), "attribution");
         setRecordValue("rightsCleared", bools.rightsCleared, "rightsCleared");
         setRecordValue("collectionTheme", v("collectionTheme"), "collectionTheme");
+        setRecordValue("scriptureLink", v("scriptureLink"), "scriptureLink");
+        setRecordValue("theme", v("theme"), "theme");
+        setRecordValue("contentType", v("contentType"), "contentType");
+        setRecordValue("active", bools.active, "active");
+        setRecordValue("randomWeight", ints.randomWeight, "randomWeight");
         break;
       case "assessment_questions":
         setRecordValue("sequence", ints.sequence, "sequence");
@@ -806,6 +824,16 @@ function mergeQuizQuestions(existingQuestions, questionMap) {
 }
 
 /** Field-path -> value map for one record (without status / stableId). */
+/** Case, spacing and quote style don't change a text's meaning. */
+function normalizeForCompare(text) {
+  return String(text)
+    .toLowerCase()
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function recordFieldPaths(type, record, existingData) {
   const paths = {};
   Object.entries(record.fields).forEach(([k, val]) => {
@@ -815,6 +843,23 @@ function recordFieldPaths(type, record, existingData) {
     Object.entries(langs).forEach(([lang, text]) => {
       paths[`${field}.${lang}`] = text;
     });
+    // When the English source changes, translations of the old English
+    // that the file does not replace are flagged, so an outdated
+    // translation is never left looking current.
+    const oldLangs = existingData && existingData[field];
+    if (
+      langs.en !== undefined &&
+      oldLangs && typeof oldLangs === "object" &&
+      typeof oldLangs.en === "string" &&
+      normalizeForCompare(oldLangs.en) !== normalizeForCompare(langs.en)
+    ) {
+      Object.entries(oldLangs).forEach(([lang, oldText]) => {
+        if (lang !== "en" && langs[lang] === undefined &&
+            typeof oldText === "string" && oldText.trim() !== "") {
+          paths[`translationStatus.${lang}`] = "needs_update_source_changed";
+        }
+      });
+    }
   });
   if (type === "quiz_questions") {
     paths.questions = mergeQuizQuestions(

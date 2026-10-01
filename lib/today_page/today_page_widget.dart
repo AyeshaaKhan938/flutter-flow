@@ -5,6 +5,7 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/custom_code/actions/index.dart' as actions;
+import '/custom_code/encouragement_rotation.dart';
 import '/index.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -86,6 +87,7 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
             _model.loadedAnnouncements!.toList().cast<AnnouncementsRecord>();
         safeSetState(() {});
       }
+      await _loadDailyExperience();
     });
   }
 
@@ -125,15 +127,161 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
 
   bool _backendTextIsMachine(String? text) =>
       LanguageRegistry.needsClientTranslation(_model.memberLanguage) &&
-      TranslationService.instance
-          .isMachine(text ?? '', _model.memberLanguage);
+      TranslationService.instance.isMachine(text ?? '', _model.memberLanguage);
 
   actions.BiblePassage? _todayPassage;
   bool _todayPassageLoaded = false;
 
+  /// Today's Scripture Encounter (title, verse preview, Read in Context,
+  /// Bible Gateway link) from the CMS record for this day of the year, and
+  /// today's encouragement from the random rotation. Read from Firestore
+  /// (cached), so this also works offline. Only published records show.
+  DailyScriptureRecord? _encounter;
+
+  Future<void> _loadDailyExperience() async {
+    _model.memberLanguage =
+        LanguageRegistry.resolveMemberLanguage(_model.memberLanguage);
+    final lang = _model.memberLanguage;
+    // Backend text for CMS-added languages is translated on display, so it
+    // is stored in English here; compiled languages use stored text.
+    String pick(LocaleTextStruct t) =>
+        LanguageRegistry.needsClientTranslation(lang)
+            ? t.en
+            : t.forLanguage(lang);
+    try {
+      final now = DateTime.now();
+      // The library has 365 days; 29 February shows 28 February.
+      final day = now.month == 2 && now.day == 29 ? 28 : now.day;
+      final date = '${now.month.toString().padLeft(2, '0')}-'
+          '${day.toString().padLeft(2, '0')}';
+      final records = await queryDailyScriptureRecordOnce(
+        queryBuilder: (q) => q.where('date', isEqualTo: date),
+      );
+      _encounter = records.where((r) => r.status == 'published').firstOrNull;
+      final encounter = _encounter;
+      if (encounter != null) {
+        if ((_model.todayScriptureRef ?? '').isEmpty) {
+          _model.todayScriptureRef = encounter.verseRef;
+        }
+        if ((_model.todayScriptureText ?? '').isEmpty) {
+          _model.todayScriptureText = pick(encounter.text);
+        }
+        if (_todayPassage == null && encounter.verseRef.isNotEmpty) {
+          _todayPassage = await actions.fetchBiblePassage(
+            encounter.verseRef,
+            lang,
+          );
+        }
+      }
+      _todayPassageLoaded = true;
+      safeSetState(() {});
+    } catch (_) {}
+    try {
+      final encouragement = await EncouragementRotation.today();
+      if (encouragement != null) {
+        _model.todayEncouragementText = pick(encouragement.quote);
+        _model.todayEncouragementRef = [
+          pick(LocaleTextStruct.maybeFromMap(
+                  encouragement.snapshotData['title']) ??
+              LocaleTextStruct()),
+          if (encouragement.snapshotData['scriptureRef'] is String)
+            encouragement.snapshotData['scriptureRef'] as String,
+        ].where((s) => s.trim().isNotEmpty).join(' · ');
+        safeSetState(() {});
+      }
+    } catch (_) {}
+  }
+
+  String _localizedField(String field) {
+    final raw = _encounter?.snapshotData[field];
+    final t = LocaleTextStruct.maybeFromMap(raw);
+    if (t == null) {
+      return '';
+    }
+    return LanguageRegistry.needsClientTranslation(_model.memberLanguage)
+        ? TranslationService.instance.translate(t.en, _model.memberLanguage)
+        : t.forLanguage(_model.memberLanguage);
+  }
+
+  static const _dailyLabels = {
+    'Read in context': {
+      'es': 'Leer en contexto',
+      'ur': 'سیاق و سباق میں پڑھیں',
+      'lg': 'Soma mu mbeera yaakyo',
+    },
+    'Open in Bible Gateway': {
+      'es': 'Abrir en Bible Gateway',
+      'ur': 'Bible Gateway میں کھولیں',
+      'lg': 'Ggulawo mu Bible Gateway',
+    },
+  };
+
+  String _dailyLabel(String english) =>
+      _dailyLabels[english]?[_model.memberLanguage] ??
+      (_model.memberLanguage == 'en'
+          ? english
+          : TranslationService.instance
+              .translate(english, _model.memberLanguage));
+
+  Future<void> _openReadInContext(String ref) async {
+    final passage = await actions.fetchBiblePassage(ref, _model.memberLanguage);
+    if (!mounted) {
+      return;
+    }
+    if (passage == null) {
+      final url = _encounter?.snapshotData['bibleGatewayUrl'] as String?;
+      if (url != null && url.isNotEmpty) {
+        await launchURL(url);
+      }
+      return;
+    }
+    final theme = FlutterFlowTheme.of(context);
+    await showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('${passage.reference} (${passage.version})'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                passage.text,
+                style: theme.bodyLarge.override(
+                  font: GoogleFonts.lora(),
+                  letterSpacing: 0.0,
+                  lineHeight: 1.5,
+                ),
+              ),
+              if (passage.copyright.isNotEmpty) ...[
+                const Divider(height: 24.0),
+                Text(
+                  passage.copyright,
+                  style: theme.labelSmall.override(
+                    font: GoogleFonts.inter(),
+                    color: theme.secondaryText,
+                    letterSpacing: 0.0,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(
+              MaterialLocalizations.of(dialogContext).closeButtonLabel,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   static const _dailyTruthLabel = {
-    'en': 'Daily Truth',
-    'es': 'Verdad del día',
+    'en': 'Today’s Truth',
+    'es': 'La verdad de hoy',
     'ur': 'آج کی سچائی',
     'lg': 'Amazima ga Leero',
   };
@@ -145,7 +293,41 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
     final theme = FlutterFlowTheme.of(context);
     final passage = _todayPassage;
     final commentary = _backendText(_model.todayScriptureText);
+    final title = _localizedField('theme');
+    final preview = _localizedField('versePreview');
+    final readInContext =
+        (_encounter?.snapshotData['readInContext'] as String?) ?? '';
+    final gatewayUrl =
+        (_encounter?.snapshotData['bibleGatewayUrl'] as String?) ?? '';
     return [
+      if (title.isNotEmpty)
+        Text(
+          title,
+          style: theme.titleMedium.override(
+            font: GoogleFonts.inter(fontWeight: FontWeight.w700),
+            letterSpacing: 0.0,
+          ),
+        ),
+      // Licensed NIV preview from the CMS, shown only if the full passage
+      // could not be loaded (e.g. offline before it was ever opened).
+      if (passage == null && _todayPassageLoaded && preview.isNotEmpty) ...[
+        Text(
+          preview,
+          style: theme.bodyLarge.override(
+            font: GoogleFonts.lora(),
+            letterSpacing: 0.0,
+            lineHeight: 1.5,
+          ),
+        ),
+        Text(
+          (_encounter?.snapshotData['translation'] as String?) ?? 'NIV',
+          style: theme.labelSmall.override(
+            font: GoogleFonts.inter(),
+            color: theme.secondaryText,
+            letterSpacing: 0.0,
+          ),
+        ),
+      ],
       if (passage != null) ...[
         Text(
           passage.text,
@@ -199,6 +381,25 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
             compact: true,
           ),
       ],
+      if (readInContext.isNotEmpty || gatewayUrl.isNotEmpty)
+        Wrap(
+          spacing: 8.0,
+          children: [
+            if (readInContext.isNotEmpty)
+              TextButton.icon(
+                onPressed: () => _openReadInContext(readInContext),
+                icon: const Icon(Icons.menu_book_outlined, size: 18.0),
+                label:
+                    Text('${_dailyLabel('Read in context')}: $readInContext'),
+              ),
+            if (gatewayUrl.isNotEmpty)
+              TextButton.icon(
+                onPressed: () => launchURL(gatewayUrl),
+                icon: const Icon(Icons.open_in_new, size: 18.0),
+                label: Text(_dailyLabel('Open in Bible Gateway')),
+              ),
+          ],
+        ),
     ];
   }
 
@@ -596,8 +797,8 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                     ),
                   ),
                   if (_model.announcementList.any((a) =>
-                          a.title.isMachineTranslated(_model.memberLanguage) ||
-                          a.body.isMachineTranslated(_model.memberLanguage)))
+                      a.title.isMachineTranslated(_model.memberLanguage) ||
+                      a.body.isMachineTranslated(_model.memberLanguage)))
                     custom_widgets.MachineTranslationNotice(
                       language: _model.memberLanguage,
                     ),
@@ -653,9 +854,11 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (!['es', 'ur'].contains(_model.memberLanguage))
+                                    if (!['es', 'ur']
+                                        .contains(_model.memberLanguage))
                                       Text(
-                                        announcementListItemItem.title.forLanguage(_model.memberLanguage),
+                                        announcementListItemItem.title
+                                            .forLanguage(_model.memberLanguage),
                                         style: FlutterFlowTheme.of(context)
                                             .titleMedium
                                             .override(
@@ -682,7 +885,8 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                                       ),
                                     if (_model.memberLanguage == 'es')
                                       Text(
-                                        announcementListItemItem.title.forLanguage('es'),
+                                        announcementListItemItem.title
+                                            .forLanguage('es'),
                                         style: FlutterFlowTheme.of(context)
                                             .titleMedium
                                             .override(
@@ -709,7 +913,8 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                                       ),
                                     if (_model.memberLanguage == 'ur')
                                       Text(
-                                        announcementListItemItem.title.forLanguage('ur'),
+                                        announcementListItemItem.title
+                                            .forLanguage('ur'),
                                         style: FlutterFlowTheme.of(context)
                                             .titleMedium
                                             .override(
@@ -741,9 +946,11 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (!['es', 'ur'].contains(_model.memberLanguage))
+                                    if (!['es', 'ur']
+                                        .contains(_model.memberLanguage))
                                       Text(
-                                        _announcementBody(announcementListItemItem.body),
+                                        _announcementBody(
+                                            announcementListItemItem.body),
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(
@@ -773,7 +980,8 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                                       ),
                                     if (_model.memberLanguage == 'es')
                                       Text(
-                                        _announcementBody(announcementListItemItem.body),
+                                        _announcementBody(
+                                            announcementListItemItem.body),
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(
@@ -803,7 +1011,8 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                                       ),
                                     if (_model.memberLanguage == 'ur')
                                       Text(
-                                        _announcementBody(announcementListItemItem.body),
+                                        _announcementBody(
+                                            announcementListItemItem.body),
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(
