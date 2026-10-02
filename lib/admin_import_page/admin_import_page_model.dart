@@ -24,6 +24,9 @@ class AdminImportPageModel extends FlutterFlowModel<AdminImportPageWidget> {
   /// The chosen file.
   String? fileName;
   String? csvText;
+  // Kingdom Heirs original files (.xlsx masters, the .zip package) are sent
+  // as base64 and read on the server.
+  String? fileBase64;
 
   /// 'preview' or 'commit' while a call is in flight, else null.
   String? runningMode;

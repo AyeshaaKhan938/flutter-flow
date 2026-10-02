@@ -54,6 +54,7 @@ const kTypes = {
       "status",
       "scriptureRef",
       "quizId",
+      "titleIsWorking",
     ],
     localized: [
       "title",
@@ -393,6 +394,199 @@ function splitLocalizedHeader(header, def) {
  * Each record is grouped by its id ({id, rows, fields, localized, status,
  * pathwayId, questions?, options?}).
  */
+
+// ---------------------------------------------------------------------------
+// Kingdom Heirs original files (Excel masters, the CSV handoff package and
+// its zip) are accepted as they are: the right sheet / file is picked and
+// their column names are mapped to the importer's fields.
+
+const kSheetPreference = {
+  encouragements: ["App Upload"],
+  daily_scripture: ["365 Daily Encounters"],
+};
+const kZipEntryPattern = {
+  pathways: /(^|\/)01_Pathways\.csv$/i,
+  lessons: /(^|\/)02_Lessons\.csv$/i,
+  quiz_questions: /(^|\/)03_Quizzes\.csv$/i,
+  assessment_questions: /(^|\/)04_Assessment_Questions[^/]*\.csv$/i,
+  daily_scripture: /(^|\/)06_Daily_Content\.csv$/i,
+  encouragements: /(^|\/)06_Daily_Content\.csv$/i,
+};
+// Header cells that identify the header row of a sheet.
+const kHeaderMarkers = ["stableId", "Day Number", "Day #", "Content ID",
+  "Pathway ID", "Lesson ID", "Quiz ID", "Question ID", "quizStableId",
+  "questionId", "Daily ID"];
+
+const norm = (h) => String(h || "").replace(/[‘’]/g, "'").trim();
+
+function tableFromRows(rows, sourceLabel) {
+  const headerIdx = rows.findIndex((r, i) => i < 20 &&
+    r.some((c) => kHeaderMarkers.includes(norm(c))));
+  if (headerIdx < 0) {
+    return { headers: [], records: [], errors: [{ row: 1, column: "", message: `No header row found in ${sourceLabel}.` }] };
+  }
+  const headers = rows[headerIdx].map(norm);
+  const records = [];
+  for (let i = headerIdx + 1; i < rows.length; i++) {
+    const cells = rows[i] || [];
+    if (cells.every((c) => String(c || "").trim() === "")) continue;
+    const values = {};
+    headers.forEach((h, idx) => { if (h) values[h] = String(cells[idx] ?? ""); });
+    records.push({ row: i + 1, values, extra: [] });
+  }
+  return { headers, records, errors: [] };
+}
+
+/** Reads the uploaded file (CSV text, .xlsx or .zip) into a table. */
+async function loadSourceTable(type, data) {
+  const fileName = String((data && data.fileName) || "");
+  if (data && typeof data.fileBase64 === "string" && data.fileBase64) {
+    const buffer = Buffer.from(data.fileBase64, "base64");
+    if (/\.zip$/i.test(fileName)) {
+      const JSZip = require("jszip");
+      const zip = await JSZip.loadAsync(buffer);
+      const entry = Object.keys(zip.files).find((n) =>
+        kZipEntryPattern[type] && kZipEntryPattern[type].test(n) && !zip.files[n].dir);
+      if (!entry) {
+        return { table: { headers: [], records: [], errors: [{ row: 1, column: "", message: `The zip has no file for "${kTypes[type].label}".` }] }, source: fileName };
+      }
+      const text = await zip.file(entry).async("string");
+      return { table: parseCsv(text), source: `${fileName} > ${entry.split("/").pop()}` };
+    }
+    const { readXlsx } = require("./xlsx_reader");
+    const sheets = await readXlsx(buffer);
+    const preferred = (kSheetPreference[type] || [])
+      .map((n) => sheets.find((s) => s.name === n)).find(Boolean);
+    const sheet = preferred || sheets.find((s) =>
+      s.rows.slice(0, 20).some((r) => r.some((c) => kHeaderMarkers.includes(norm(c)))));
+    if (!sheet) {
+      return { table: { headers: [], records: [], errors: [{ row: 1, column: "", message: "No importable sheet found in the workbook." }] }, source: fileName };
+    }
+    return { table: tableFromRows(sheet.rows, `sheet "${sheet.name}"`), source: `${fileName} > ${sheet.name}` };
+  }
+  return { table: parseCsv((data && data.csvText) || ""), source: fileName };
+}
+
+function monthDay(dayOfYear) {
+  const d = new Date(Date.UTC(2025, 0, 1) + (dayOfYear - 1) * 86400000);
+  return `${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+}
+
+/**
+ * Maps Kingdom Heirs column names to importer columns in place. Returns a
+ * short description of the format detected (or "" for template files).
+ */
+function adaptClientColumns(type, table) {
+  const has = (h) => table.headers.includes(h);
+  const map = (rec, fn) => { rec.values = fn(rec.values); };
+  const yn = (v) => /^(y|yes|true|1)$/i.test(String(v || "").trim()) ? "true" : "false";
+  const num = (v) => { const m = String(v || "").match(/\d+/); return m ? Number(m[0]) : NaN; };
+  let format = "";
+
+  if ((type === "daily_scripture") && (has("Day Number") || has("Day #"))) {
+    format = has("Day Number") ? "365 Daily Scripture Encounters master" : "06_Daily_Content package";
+    table.records.forEach((rec) => map(rec, (v) => {
+      const day = num(v["Day Number"] || v["Day #"]);
+      const md = day >= 1 && day <= 366 ? monthDay(day) : "";
+      return {
+        stableId: md ? `scripture-${md}` : "",
+        date: md,
+        dayNumber: Number.isFinite(day) ? String(day) : "",
+        verseRef: v["Scripture Reference"] || v["Reference"] || "",
+        theme_en: v["Encounter Title"] || "",
+        text_en: v["Today's Truth"] || "",
+        versePreview_en: v["NIV Scripture Preview"] || v["Verse Text EN"] || "",
+        readInContext: v["Read in Context"] || "",
+        translation: v["Translation"] || "",
+        bibleGatewayUrl: v["Bible Gateway NIV URL"] || "",
+        journeyStage: v["Journey Stage"] || "",
+        status: "draft",
+      };
+    }));
+  } else if (type === "encouragements" && (has("Content ID") || has("Daily ID"))) {
+    format = has("Content ID") ? "365 Daily Encouragements master (App Upload)" : "06_Daily_Content package";
+    table.records.forEach((rec) => map(rec, (v) => {
+      const n = num(v["Content ID"] || v["Day #"]);
+      const id = v["Content ID"] || (Number.isFinite(n) ? `KH-ENC-${String(n).padStart(3, "0")}` : "");
+      return {
+        stableId: id,
+        date: Number.isFinite(n) && n >= 1 && n <= 366 ? monthDay(n) : "",
+        dayNumber: Number.isFinite(n) ? String(n) : "",
+        title_en: v["Title"] || "",
+        quote_en: v["Message"] || v["Encouragement Text EN"] || "",
+        attribution: v["Attribution"] || v["Encouragement Author"] || "",
+        scriptureRef: v["Scripture Reference"] || "",
+        scriptureLink: v["Scripture Link"] || "",
+        theme: v["Theme"] || "",
+        collectionTheme: [v["Pathway / Collection"], v["Theme"]].filter(Boolean).join(" • "),
+        contentType: v["Content Type"] || "",
+        active: v["Active"] !== undefined ? yn(v["Active"]) : "",
+        randomWeight: v["Random Weight"] || "",
+        rightsCleared: v["Message"] ? "true" : "",
+        status: "draft",
+      };
+    }));
+  } else if (type === "pathways" && has("Pathway ID") && has("Title")) {
+    format = "01_Pathways package";
+    table.records.forEach((rec) => map(rec, (v) => ({
+      stableId: v["Pathway ID"] || "",
+      order: v["Sequence"] || "",
+      durationDays: /^\d+$/.test(String(v["Lesson Count"] || "").trim()) ? v["Lesson Count"].trim() : "",
+      title_en: v["Title"] || "",
+      description_en: v["Purpose"] || "",
+    })));
+  } else if (type === "lessons" && has("Lesson ID")) {
+    format = "02_Lessons package";
+    table.records.forEach((rec) => map(rec, (v) => {
+      const title = v["Title EN"] || "";
+      return {
+        stableId: v["Lesson ID"] || "",
+        pathwayId: v["Pathway ID"] || "",
+        dayNumber: v["Sequence"] || "",
+        title_en: title || v["Working Title"] || "",
+        titleIsWorking: title ? "" : "true",
+        body_en: v["Body EN"] || "",
+        scriptureRef: v["Scripture Reference"] || "",
+        scriptureText_en: v["Scripture Text EN"] || "",
+        reflectionPrompt_en: v["Reflection EN"] || "",
+        prayer_en: v["Prayer EN"] || "",
+        application_en: v["Action Step EN"] || "",
+      };
+    }));
+  } else if (type === "quiz_questions" && has("Quiz ID") && !has("questionNumber")) {
+    format = "03_Quizzes package (definitions only)";
+    table.errors.push({
+      row: 1, column: "",
+      message: `This file defines ${table.records.length} quizzes but contains no questions, answer choices or correct answers, so there is nothing to import. Use the quiz template (one row per question).`,
+    });
+    table.records = [];
+  } else if (type === "assessment_questions" && has("Question ID") && has("Option ID")) {
+    format = "04_Assessment_Questions_and_Answers package";
+    table.records.forEach((rec) => map(rec, (v) => ({
+      questionId: v["Question ID"] || "",
+      sequence: v["Sequence"] || "",
+      optionId: v["Option ID"] || "",
+      points: v["Points"] || "",
+      triggerCode: v["Trigger Code"] || "",
+      active: v["Active"] !== undefined ? yn(v["Active"]) : "",
+      question_en: v["Question EN"] || "", answer_en: v["Answer EN"] || "",
+      question_es: v["Question ES"] || "", answer_es: v["Answer ES"] || "",
+      question_ur: v["Question UR"] || "", answer_ur: v["Answer UR"] || "",
+      question_lg: v["Question LG"] || "", answer_lg: v["Answer LG"] || "",
+    })));
+  }
+  if (format) {
+    const keys = new Set();
+    table.records.forEach((rec) => Object.keys(rec.values).forEach((k) => keys.add(k)));
+    table.headers = Array.from(keys);
+    // Empty cells are "not provided", so they never blank existing data.
+    table.records.forEach((rec) => Object.keys(rec.values).forEach((k) => {
+      if (rec.values[k] === "") delete rec.values[k];
+    }));
+  }
+  return format;
+}
+
 // Kingdom Heirs IDs (from the content package) for records that already
 // existed in production under earlier IDs. Files may use either; the
 // importer maps them so a record is never duplicated.
@@ -731,6 +925,7 @@ function validateRows(type, parsed, refs) {
         setRecordValue("module", v("module"), "module");
         setRecordValue("moduleOrder", ints.moduleOrder, "moduleOrder");
         setRecordValue("quizId", v("quizId"), "quizId");
+        setRecordValue("titleIsWorking", v("titleIsWorking") === "true" ? true : undefined, "titleIsWorking");
         break;
       case "quiz_questions":
         setRecordValue("pathwayId", pathwayId, "pathwayId");
@@ -935,9 +1130,14 @@ function normalizeForCompare(text) {
 function recordFieldPaths(type, record, existingData) {
   const paths = {};
   Object.entries(record.fields).forEach(([k, val]) => {
-    if (val !== undefined && val !== "") paths[k] = val;
+    if (val !== undefined && val !== "" && k !== "titleIsWorking") paths[k] = val;
   });
+  // A package "Working Title" only names a new lesson shell; it never
+  // replaces the real title of an existing lesson.
+  const keepTitle = record.fields.titleIsWorking &&
+    existingData && existingData.title && existingData.title.en;
   Object.entries(record.localized).forEach(([field, langs]) => {
+    if (field === "title" && keepTitle) return;
     Object.entries(langs).forEach(([lang, text]) => {
       paths[`${field}.${lang}`] = text;
     });
@@ -1339,6 +1539,31 @@ async function draftRevisedTranslations(db, admin, plan) {
   return result;
 }
 
+/**
+ * Pathways without any published lesson are never published: their
+ * import is set to Draft (new) or switched to Draft (existing).
+ */
+async function keepEmptyPathwaysDraft(db, plan) {
+  const snap = await db.collectionGroup("lessons").where("status", "==", "published").get();
+  const withLessons = new Set(snap.docs.map((d) => d.get("pathwayId")));
+  const changed = [];
+  for (const op of plan.ops) {
+    if (withLessons.has(op.id)) continue;
+    if (op.action === "create") {
+      op.set.status = "draft";
+      changed.push(op.id);
+    } else if (op.action === "update" || op.action === "unchanged") {
+      const current = await db.doc(op.path).get();
+      if (current.get("status") !== "draft") {
+        op.update = Object.assign({}, op.update, { status: "draft" });
+        op.action = "update";
+        changed.push(op.id);
+      }
+    }
+  }
+  return changed;
+}
+
 async function runImport({ db, admin, functions, data, context }) {
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "Sign in to import content.");
@@ -1352,25 +1577,29 @@ async function runImport({ db, admin, functions, data, context }) {
   const type = data && data.type;
   const fileName = String((data && data.fileName) || "").slice(0, 300);
   const csvText = data && data.csvText;
+  const fileBase64 = data && data.fileBase64;
   const mode = data && data.mode === "commit" ? "commit" : "preview";
   if (!kTypes[type]) {
     throw new functions.https.HttpsError("invalid-argument", `Unknown content type "${type}". Use one of: ${Object.keys(kTypes).join(", ")}.`);
   }
-  if (typeof csvText !== "string" || csvText.length === 0) {
-    throw new functions.https.HttpsError("invalid-argument", "csvText is empty.");
+  if ((typeof csvText !== "string" || csvText.length === 0) &&
+      (typeof fileBase64 !== "string" || fileBase64.length === 0)) {
+    throw new functions.https.HttpsError("invalid-argument", "The file is empty.");
   }
-  if (csvText.length > kMaxCsvChars) {
+  if ((csvText || "").length > kMaxCsvChars || (fileBase64 || "").length > kMaxCsvChars) {
     throw new functions.https.HttpsError("invalid-argument", "The CSV file is too large (max 8 MB).");
   }
 
   const jobRef = db.collection("importJobs").doc();
   const importedAt = new Date().toISOString();
 
-  const parsed = parseCsv(csvText);
+  const { table: parsed, source } = await loadSourceTable(type, data);
+  const sourceFormat = adaptClientColumns(type, parsed);
   const refs = await loadRefs(db, type, parsed);
   const validation = validateRows(type, parsed, refs);
   const existing = await loadExisting(db, type, validation.records, refs);
   const plan = buildPlan(type, validation.records, existing);
+  const keptDraft = type === "pathways" ? await keepEmptyPathwaysDraft(db, plan) : [];
   let report = buildReport({ type, fileName, mode, importedAt, validation, plan, committed: false });
 
   let writes = 0;
@@ -1383,7 +1612,15 @@ async function runImport({ db, admin, functions, data, context }) {
 
   report.jobId = jobRef.id;
   report.documentsWritten = writes;
+  report.source = source;
+  report.sourceFormat = sourceFormat || "Import template";
   report.notes = [];
+  if (keptDraft.length > 0) {
+    report.notes.push(`${keptDraft.length} pathway(s) have no published lessons and are set to / kept as Draft so no empty pathway is published: ${keptDraft.join(", ")}.`);
+  }
+  if (sourceFormat) {
+    report.notes.push(`Read as the Kingdom Heirs ${sourceFormat} (${source}); its columns were mapped to the CMS fields.`);
+  }
   if (type === "assessment_questions") {
     report.notes.push("Assessment questions are stored in the new assessmentItems collection; the legacy assessmentQuestions documents are not changed.");
   }
@@ -1412,6 +1649,8 @@ async function runImport({ db, admin, functions, data, context }) {
 }
 
 module.exports = {
+  loadSourceTable,
+  adaptClientColumns,
   parseCsv,
   validateRows,
   buildPlan,

@@ -91,7 +91,7 @@ class _AdminImportPageWidgetState extends State<AdminImportPageWidget> {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['csv'],
+        allowedExtensions: ['csv', 'xlsx', 'zip'],
         withData: true,
       );
       final file = result?.files.single;
@@ -99,16 +99,30 @@ class _AdminImportPageWidgetState extends State<AdminImportPageWidget> {
       if (file == null || bytes == null) {
         return;
       }
-      String text;
-      try {
-        text = utf8.decode(bytes);
-      } on FormatException {
-        _snack('${file.name} is not UTF-8. Save it as "CSV UTF-8" and try '
-            'again.');
-        return;
+      final lower = file.name.toLowerCase();
+      if (lower.endsWith('.xlsx') || lower.endsWith('.zip')) {
+        // Original Excel master or the CSV handoff zip: read on the server.
+        _model.csvText = null;
+        _model.fileBase64 = base64Encode(bytes);
+        // Pick the content type from the master's name when it is clear.
+        if (lower.contains('encouragement')) {
+          _model.contentType = 'encouragements';
+        } else if (lower.contains('scripture')) {
+          _model.contentType = 'daily_scripture';
+        }
+      } else {
+        String text;
+        try {
+          text = utf8.decode(bytes);
+        } on FormatException {
+          _snack('${file.name} is not UTF-8. Save it as "CSV UTF-8" and try '
+              'again.');
+          return;
+        }
+        _model.csvText = text;
+        _model.fileBase64 = null;
       }
       _model.fileName = file.name;
-      _model.csvText = text;
       _model.report = null;
       _model.callError = null;
       safeSetState(() {});
@@ -119,7 +133,9 @@ class _AdminImportPageWidgetState extends State<AdminImportPageWidget> {
 
   Future<void> _run(String mode) async {
     final csvText = _model.csvText;
-    if (csvText == null || _model.runningMode != null) {
+    final fileBase64 = _model.fileBase64;
+    if ((csvText == null && fileBase64 == null) ||
+        _model.runningMode != null) {
       return;
     }
     if (mode == 'commit') {
@@ -163,7 +179,8 @@ class _AdminImportPageWidgetState extends State<AdminImportPageWidget> {
           .call({
         'type': _model.contentType,
         'fileName': _model.fileName ?? '',
-        'csvText': csvText,
+        if (csvText != null) 'csvText': csvText,
+        if (fileBase64 != null) 'fileBase64': fileBase64,
         'mode': mode,
       });
       _model.report = _jsonMap(result.data);
@@ -404,7 +421,7 @@ class _AdminImportPageWidgetState extends State<AdminImportPageWidget> {
       borderRadius: BorderRadius.circular(8.0),
     );
     final running = _model.runningMode;
-    final hasFile = _model.csvText != null;
+    final hasFile = _model.csvText != null || _model.fileBase64 != null;
     Widget spinner() => const SizedBox(
           width: 16.0,
           height: 16.0,
@@ -458,7 +475,7 @@ class _AdminImportPageWidgetState extends State<AdminImportPageWidget> {
               OutlinedButton.icon(
                 onPressed: running != null ? null : _pickFile,
                 icon: const Icon(Icons.attach_file_rounded, size: 18.0),
-                label: const Text('Choose CSV file'),
+                label: const Text('Choose file (CSV, Excel or ZIP)'),
               ),
             ],
           ),
@@ -561,6 +578,9 @@ class _AdminImportPageWidgetState extends State<AdminImportPageWidget> {
           ),
           const SizedBox(height: 6.0),
           _kv(context, 'File', '${r['fileName'] ?? ''}'),
+          if ((r['source'] ?? '') != '')
+            _kv(context, 'Read from',
+                '${r['source']} (${r['sourceFormat'] ?? ''})'),
           _kv(context, 'Content type', '${r['typeLabel'] ?? r['type'] ?? ''}'),
           _kv(context, 'Date imported', _formatDate(r['importedAt'])),
           _kv(
