@@ -1587,6 +1587,19 @@ async function keepEmptyPathwaysDraft(db, plan) {
   return changed;
 }
 
+/** Content type a file clearly belongs to, from its header row. */
+function detectContentType(table) {
+  const h = new Set((table.headers || []).map(norm));
+  const has = (...cols) => cols.every((c) => h.has(c));
+  if (has("Lesson ID") || has("stableId", "pathwayId", "dayNumber")) return "lessons";
+  if (has("Quiz ID") || has("quizStableId")) return "quiz_questions";
+  if (has("Question ID", "Option ID") || has("questionId", "optionId")) return "assessment_questions";
+  if (has("Content ID") || has("stableId", "quote_en")) return "encouragements";
+  if (has("Day Number") || has("stableId", "verseRef")) return "daily_scripture";
+  if (has("Pathway ID", "Title", "Sequence") || has("stableId", "order", "title_en")) return "pathways";
+  return "";
+}
+
 async function runImport({ db, admin, functions, data, context }) {
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "Sign in to import content.");
@@ -1597,7 +1610,7 @@ async function runImport({ db, admin, functions, data, context }) {
     throw new functions.https.HttpsError("permission-denied", "Only content admins can import content.");
   }
 
-  const type = data && data.type;
+  let type = data && data.type;
   const fileName = String((data && data.fileName) || "").slice(0, 300);
   const csvText = data && data.csvText;
   const fileBase64 = data && data.fileBase64;
@@ -1616,7 +1629,15 @@ async function runImport({ db, admin, functions, data, context }) {
   const jobRef = db.collection("importJobs").doc();
   const importedAt = new Date().toISOString();
 
-  const { table: parsed, source } = await loadSourceTable(type, data);
+  let { table: parsed, source } = await loadSourceTable(type, data);
+  // The file decides its type when it clearly belongs to another one
+  // (e.g. 02_Lessons.csv uploaded with "Pathways" selected).
+  const selectedType = type;
+  const detectedType = detectContentType(parsed);
+  if (detectedType && detectedType !== type) {
+    type = detectedType;
+    ({ table: parsed, source } = await loadSourceTable(type, data));
+  }
   const sourceFormat = adaptClientColumns(type, parsed);
   const refs = await loadRefs(db, type, parsed);
   const validation = validateRows(type, parsed, refs);
@@ -1638,6 +1659,9 @@ async function runImport({ db, admin, functions, data, context }) {
   report.source = source;
   report.sourceFormat = sourceFormat || "Import template";
   report.notes = [];
+  if (type !== selectedType) {
+    report.notes.push(`Content type set to "${kTypes[type].label}" (detected from the file; "${kTypes[selectedType].label}" was selected).`);
+  }
   if (keptDraft.length > 0) {
     report.notes.push(`${keptDraft.length} pathway(s) have no published lessons and are set to / kept as Draft so no empty pathway is published: ${keptDraft.join(", ")}.`);
   }
@@ -1672,6 +1696,7 @@ async function runImport({ db, admin, functions, data, context }) {
 }
 
 module.exports = {
+  detectContentType,
   loadSourceTable,
   adaptClientColumns,
   parseCsv,
