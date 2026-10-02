@@ -662,7 +662,7 @@ function applyIdAliases(type, parsed) {
 }
 
 function validateRows(type, parsed, refs) {
-  const aliasedIds = applyIdAliases(type, parsed);
+  const aliasedIds = applyIdAliases(type, parsed) + (parsed.aliasedIds || 0);
   const def = kTypes[type];
   const errors = [];
   const warnings = [];
@@ -1639,6 +1639,8 @@ async function runImport({ db, admin, functions, data, context }) {
     ({ table: parsed, source } = await loadSourceTable(type, data));
   }
   const sourceFormat = adaptClientColumns(type, parsed);
+  // Map package IDs to production IDs before looking up references.
+  parsed.aliasedIds = applyIdAliases(type, parsed);
   const refs = await loadRefs(db, type, parsed);
   const validation = validateRows(type, parsed, refs);
   const existing = await loadExisting(db, type, validation.records, refs);
