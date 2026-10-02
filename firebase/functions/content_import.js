@@ -1551,12 +1551,14 @@ async function keepEmptyPathwaysDraft(db, plan) {
     if (withLessons.has(op.id)) continue;
     if (op.action === "create") {
       op.set.status = "draft";
+      op.finalStatus = "draft";
       changed.push(op.id);
     } else if (op.action === "update" || op.action === "unchanged") {
       const current = await db.doc(op.path).get();
       if (current.get("status") !== "draft") {
         op.update = Object.assign({}, op.update, { status: "draft" });
         op.action = "update";
+        op.finalStatus = "draft";
         changed.push(op.id);
       }
     }
