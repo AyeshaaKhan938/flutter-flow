@@ -575,6 +575,27 @@ function adaptClientColumns(type, table) {
       question_lg: v["Question LG"] || "", answer_lg: v["Answer LG"] || "",
     })));
   }
+  if (!format) {
+    // A Kingdom Heirs file uploaded under the wrong content type.
+    const looksLike =
+      has("Lesson ID") ? "Lessons" :
+      has("Quiz ID") || has("quizStableId") ? "Quiz questions" :
+      has("Question ID") ? "Assessment questions" :
+      has("Content ID") ? "Encouragements" :
+      has("Day Number") ? "Daily Scripture" :
+      has("Pathway ID") && has("Title") ? "Pathways" : "";
+    if (looksLike && looksLike !== kTypes[type].label) {
+      table.errors.unshift({
+        row: 1, column: "",
+        message: `This looks like a ${looksLike} file. Choose "${looksLike}" as the content type and preview again.`,
+      });
+    } else if (has("Inventory ID")) {
+      table.errors.unshift({
+        row: 1, column: "",
+        message: "This is the content manifest (an inventory list), not an import file. Nothing to import.",
+      });
+    }
+  }
   if (format) {
     const keys = new Set();
     table.records.forEach((rec) => Object.keys(rec.values).forEach((k) => keys.add(k)));
