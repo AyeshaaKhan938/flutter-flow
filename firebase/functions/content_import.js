@@ -24,6 +24,12 @@ const kMaxStoredRowResults = 1000;
 // localized: field prefixes accepted as `<field>_<lang>`.
 // requiredHeaders: headers that must be present.
 // requiredValues: columns that must be non-empty on every row.
+// Languages that get a fresh translation (machine draft for review) when
+// the English source of a record changes.
+const kAdditionalLanguages = ["es", "ur", "lg"];
+// Scripture fields: approved Bible text only, never machine-translated.
+const kScriptureFields = new Set(["scriptureText", "versePreview"]);
+
 const kTypes = {
   pathways: {
     label: "Pathways",
@@ -39,17 +45,28 @@ const kTypes = {
     label: "Lessons",
     collection: "lessons",
     idColumn: "stableId",
-    columns: ["stableId", "pathwayId", "dayNumber", "status", "scriptureRef"],
+    columns: [
+      "stableId",
+      "pathwayId",
+      "module",
+      "moduleOrder",
+      "dayNumber",
+      "status",
+      "scriptureRef",
+      "quizId",
+    ],
     localized: [
       "title",
+      "body",
       "scriptureText",
       "reflectionPrompt",
       "application",
       "prayer",
+      "translationStatus",
     ],
     requiredHeaders: ["stableId", "pathwayId", "dayNumber", "title_en"],
     requiredValues: ["stableId", "pathwayId", "dayNumber", "title_en"],
-    ints: ["dayNumber"],
+    ints: ["dayNumber", "moduleOrder"],
   },
   quiz_questions: {
     label: "Quiz questions",
@@ -63,8 +80,19 @@ const kTypes = {
       "status",
       "questionNumber",
       "correctAnswer",
+      "quizNumber",
+      "retakeAllowed",
+      "maxAttempts",
     ],
-    localized: ["title", "question", "optionA", "optionB", "optionC", "optionD"],
+    localized: [
+      "title",
+      "question",
+      "optionA",
+      "optionB",
+      "optionC",
+      "optionD",
+      "explanation",
+    ],
     requiredHeaders: [
       "quizStableId",
       "pathwayId",
@@ -85,7 +113,8 @@ const kTypes = {
       "optionB_en",
       "correctAnswer",
     ],
-    ints: ["passingScore", "questionNumber"],
+    ints: ["passingScore", "questionNumber", "quizNumber", "maxAttempts"],
+    bools: ["retakeAllowed"],
   },
   daily_scripture: {
     label: "Daily Scripture",
@@ -104,7 +133,7 @@ const kTypes = {
     ],
     // theme = encounter title, text = Today's Truth (Kingdom Heirs
     // commentary), versePreview = short licensed preview of the verse.
-    localized: ["theme", "text", "versePreview"],
+    localized: ["theme", "text", "versePreview", "translationStatus"],
     requiredHeaders: ["stableId", "date", "verseRef", "text_en"],
     requiredValues: ["stableId", "date", "verseRef", "text_en"],
     ints: ["dayNumber"],
@@ -128,7 +157,7 @@ const kTypes = {
       "active",
       "randomWeight",
     ],
-    localized: ["title", "quote"],
+    localized: ["title", "quote", "translationStatus"],
     requiredHeaders: ["stableId", "date", "quote_en"],
     requiredValues: ["stableId", "date", "quote_en"],
     ints: ["dayNumber", "randomWeight"],
@@ -364,10 +393,71 @@ function splitLocalizedHeader(header, def) {
  * Each record is grouped by its id ({id, rows, fields, localized, status,
  * pathwayId, questions?, options?}).
  */
+// Kingdom Heirs IDs (from the content package) for records that already
+// existed in production under earlier IDs. Files may use either; the
+// importer maps them so a record is never duplicated.
+const kIdAliases = (() => {
+  const pathways = {
+    "KH-PATH-CS": "come-and-see",
+    "KH-PATH-RC": "rooted-in-christ",
+    "KH-PATH-JDE": "journey-into-discipleship-evangelism",
+    "KH-PATH-NM": "the-new-man",
+    "KH-PATH-KHF": "kingdom-heirs-foundations",
+    "KH-PATH-CG": "counterfeit-gospels",
+  };
+  const lessons = {};
+  for (let n = 1; n <= 14; n++) {
+    lessons[`KH-CS-L${String(n).padStart(3, "0")}`] = `LESSON-COME-${String(n).padStart(3, "0")}`;
+  }
+  for (let n = 1; n <= 5; n++) {
+    lessons[`KH-RC-L${String(n).padStart(3, "0")}`] = `LESSON-ROOTED-${String(n).padStart(3, "0")}`;
+  }
+  const quizzes = {
+    "KH-CS-QZ01": "come-and-see-quiz-1",
+    "KH-CS-QZ02": "come-and-see-quiz-2",
+    "KH-RC-QZ01": "rooted-in-christ-quiz-1",
+  };
+  return { pathways, lessons, quizzes };
+})();
+
+/** Maps package IDs to production IDs in place; returns how many changed. */
+function applyIdAliases(type, parsed) {
+  const columnMaps = {
+    pathwayId: kIdAliases.pathways,
+    lessonId: kIdAliases.lessons,
+    quizId: kIdAliases.quizzes,
+    quizStableId: kIdAliases.quizzes,
+    stableId: type === "pathways"
+      ? kIdAliases.pathways
+      : type === "lessons" ? kIdAliases.lessons : null,
+  };
+  let changed = 0;
+  (parsed.records || []).forEach((rec) => {
+    Object.entries(columnMaps).forEach(([col, map]) => {
+      if (!map) return;
+      const raw = rec.values[col];
+      const mapped = raw !== undefined ? map[String(raw).trim()] : undefined;
+      if (mapped) {
+        rec.values[col] = mapped;
+        changed++;
+      }
+    });
+  });
+  return changed;
+}
+
 function validateRows(type, parsed, refs) {
+  const aliasedIds = applyIdAliases(type, parsed);
   const def = kTypes[type];
   const errors = [];
   const warnings = [];
+  if (aliasedIds > 0) {
+    warnings.push({
+      row: 0,
+      column: "",
+      message: `${aliasedIds} Kingdom Heirs package ID(s) were matched to existing production IDs (e.g. KH-CS-L001 -> LESSON-COME-001), so those records are updated, not duplicated.`,
+    });
+  }
   const failedRows = new Set();
   const duplicatesInFile = [];
   const translationStatus = {};
@@ -583,7 +673,7 @@ function validateRows(type, parsed, refs) {
       if (text === "") return;
       localized[field] = localized[field] || {};
       localized[field][lang] = text;
-      rowLangs.add(lang);
+      if (field !== "translationStatus") rowLangs.add(lang);
     });
     rowLangs.forEach((l) => (translationStatus[l] = (translationStatus[l] || 0) + 1));
 
@@ -638,14 +728,21 @@ function validateRows(type, parsed, refs) {
         setRecordValue("pathwayId", pathwayId, "pathwayId");
         setRecordValue("dayNumber", ints.dayNumber, "dayNumber");
         setRecordValue("scriptureRef", v("scriptureRef"), "scriptureRef");
+        setRecordValue("module", v("module"), "module");
+        setRecordValue("moduleOrder", ints.moduleOrder, "moduleOrder");
+        setRecordValue("quizId", v("quizId"), "quizId");
         break;
       case "quiz_questions":
         setRecordValue("pathwayId", pathwayId, "pathwayId");
         setRecordValue("lessonId", lessonId, "lessonId");
         setRecordValue("passingScore", ints.passingScore, "passingScore");
+        setRecordValue("quizNumber", ints.quizNumber, "quizNumber");
+        setRecordValue("retakeAllowed", bools.retakeAllowed, "retakeAllowed");
+        setRecordValue("maxAttempts", ints.maxAttempts, "maxAttempts");
         record.questions.set(ints.questionNumber, {
           row,
           text: localized.question || {},
+          explanation: localized.explanation || {},
           options: {
             A: localized.optionA || {},
             B: localized.optionB || {},
@@ -816,6 +913,7 @@ function mergeQuizQuestions(existingQuestions, questionMap) {
     });
     out[idx] = Object.assign({}, prev, {
       text: mergeLocale(prev.text, q.text),
+      explanation: mergeLocale(prev.explanation, q.explanation || {}),
       options,
       correctAnswer: q.correctAnswer || prev.correctAnswer || "",
     });
@@ -843,9 +941,12 @@ function recordFieldPaths(type, record, existingData) {
     Object.entries(langs).forEach(([lang, text]) => {
       paths[`${field}.${lang}`] = text;
     });
-    // When the English source changes, translations of the old English
-    // that the file does not replace are flagged, so an outdated
-    // translation is never left looking current.
+    // When the English source changes, translations of the old English are
+    // moved to previousTranslations and cleared (so members never see an
+    // outdated translation), and every additional language is flagged for
+    // a new translation and review. Translation status columns themselves
+    // are not translatable text.
+    if (field === "translationStatus") return;
     const oldLangs = existingData && existingData[field];
     if (
       langs.en !== undefined &&
@@ -853,12 +954,18 @@ function recordFieldPaths(type, record, existingData) {
       typeof oldLangs.en === "string" &&
       normalizeForCompare(oldLangs.en) !== normalizeForCompare(langs.en)
     ) {
-      Object.entries(oldLangs).forEach(([lang, oldText]) => {
-        if (lang !== "en" && langs[lang] === undefined &&
-            typeof oldText === "string" && oldText.trim() !== "") {
-          paths[`translationStatus.${lang}`] = "needs_update_source_changed";
+      const others = new Set(kAdditionalLanguages);
+      Object.keys(oldLangs).forEach((l) => l !== "en" && others.add(l));
+      others.forEach((lang) => {
+        if (langs[lang] !== undefined) return;
+        const oldText = oldLangs[lang];
+        if (typeof oldText === "string" && oldText.trim() !== "") {
+          paths[`previousTranslations.${field}.${lang}`] = oldText;
+          paths[`${field}.${lang}`] = "";
         }
+        paths[`translationStatus.${lang}`] = "needs_review_source_changed";
       });
+      paths[`revisedEnglish.${field}`] = true;
     }
   });
   if (type === "quiz_questions") {
@@ -1197,6 +1304,41 @@ function capForStorage(report) {
   return stored;
 }
 
+/** English texts of non-Scripture fields whose English changed in this plan. */
+function revisedEnglishTexts(plan) {
+  const texts = [];
+  let records = 0;
+  plan.ops.forEach((op) => {
+    if (op.action !== "update" || !op.update) return;
+    const fields = Object.keys(op.update)
+      .filter((k) => k.startsWith("revisedEnglish."))
+      .map((k) => k.slice("revisedEnglish.".length));
+    if (fields.length === 0) return;
+    records++;
+    fields.forEach((field) => {
+      const en = op.update[`${field}.en`];
+      if (!kScriptureFields.has(field) && typeof en === "string") texts.push(en);
+    });
+  });
+  return { texts, records };
+}
+
+/** Machine drafts (for review) of revised English in every extra language. */
+async function draftRevisedTranslations(db, admin, plan) {
+  const { texts } = revisedEnglishTexts(plan);
+  if (texts.length === 0) return null;
+  const { ensureMachineDrafts } = require("./translation_core");
+  const result = {};
+  for (const lang of kAdditionalLanguages) {
+    try {
+      result[lang] = await ensureMachineDrafts(db, admin, texts, lang);
+    } catch (err) {
+      result[lang] = `failed: ${err.message}`;
+    }
+  }
+  return result;
+}
+
 async function runImport({ db, admin, functions, data, context }) {
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "Sign in to import content.");
@@ -1232,9 +1374,11 @@ async function runImport({ db, admin, functions, data, context }) {
   let report = buildReport({ type, fileName, mode, importedAt, validation, plan, committed: false });
 
   let writes = 0;
+  let translationDrafts = null;
   if (mode === "commit" && report.valid) {
     writes = await commitPlan(db, admin, plan, jobRef.id);
     report = buildReport({ type, fileName, mode, importedAt, validation, plan, committed: true });
+    translationDrafts = await draftRevisedTranslations(db, admin, plan);
   }
 
   report.jobId = jobRef.id;
@@ -1248,6 +1392,15 @@ async function runImport({ db, admin, functions, data, context }) {
   }
   if (mode === "preview") {
     report.notes.push("Preview only: nothing was written.");
+  }
+  const revised = revisedEnglishTexts(plan);
+  report.revisedEnglishRecords = revised.records;
+  if (revised.records > 0) {
+    report.notes.push(
+      `${revised.records} record(s) have revised English. Their previous Spanish, Urdu and Luganda text was moved to previousTranslations and marked "needs_review_source_changed".` +
+      (translationDrafts
+        ? ` New machine drafts for review: ${JSON.stringify(translationDrafts)} (Admin > Languages > Translation review).`
+        : mode === "commit" ? "" : " On import, machine drafts in each language are generated for review."));
   }
 
   await jobRef.set(Object.assign(capForStorage(report), {

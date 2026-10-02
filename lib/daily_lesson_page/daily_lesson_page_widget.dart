@@ -118,7 +118,6 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
     super.dispose();
   }
 
-
   /// Quizzes linked before quizzes carried a lessonId; kept as a fallback.
   static const _legacyQuizIds = {
     'LESSON-COME-007': 'come-and-see-quiz-1',
@@ -130,8 +129,19 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
   /// loaded and filtered here because a filtered collection-group query
   /// would need an extra Firestore index.
   Future<String?> _quizIdForLesson() async {
+    // A quiz named on the lesson itself (CMS quizId column) comes first.
+    final lesson = _model.lessonsList
+        .where((l) => l.stableId == widget.lessonId)
+        .firstOrNull;
+    final lessonQuizId = (lesson?.snapshotData['quizId'] as String?) ?? '';
     try {
       final quizzes = await queryQuizzesRecordOnce();
+      if (lessonQuizId.isNotEmpty &&
+          quizzes.any((q) =>
+              (q.stableId == lessonQuizId || q.reference.id == lessonQuizId) &&
+              q.status == 'published')) {
+        return lessonQuizId;
+      }
       for (final quiz in quizzes) {
         if (quiz.lessonId == widget.lessonId && quiz.status == 'published') {
           return quiz.stableId.isNotEmpty ? quiz.stableId : quiz.reference.id;
@@ -148,6 +158,18 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
       'ur': 'عملی اطلاق',
       'lg': 'Okukikozesa',
     },
+    'teaching': {
+      'en': 'Teaching',
+      'es': 'Enseñanza',
+      'ur': 'تعلیم',
+      'lg': 'Okuyigiriza',
+    },
+    'module': {
+      'en': 'Module',
+      'es': 'Módulo',
+      'ur': 'ماڈیول',
+      'lg': 'Ekitundu',
+    },
     'prayer': {
       'en': 'Prayer',
       'es': 'Oración',
@@ -158,7 +180,8 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
       'en': '',
       'es':
           'Parte de esta lección se muestra en inglés porque la traducción aún no está disponible.',
-      'ur': 'اس سبق کا کچھ حصہ انگریزی میں دکھایا گیا ہے کیونکہ ترجمہ ابھی دستیاب نہیں۔',
+      'ur':
+          'اس سبق کا کچھ حصہ انگریزی میں دکھایا گیا ہے کیونکہ ترجمہ ابھی دستیاب نہیں۔',
       'lg':
           'Ebimu ku ssomo lino biri mu Lungereza kubanga okuvvuunula tekunnaba kubaawo.',
     },
@@ -179,15 +202,17 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
   /// Kingdom Heirs-authored lesson text (machine translation allowed).
   List<LocaleTextStruct> _commentaryFields(LessonsRecord lesson) => [
         lesson.title,
+        LocaleTextStruct.maybeFromMap(lesson.snapshotData['body']) ??
+            LocaleTextStruct(),
         lesson.reflectionPrompt,
         lesson.application,
         lesson.prayer,
       ];
 
   /// True when some lesson text is unreviewed machine translation.
-  bool _usesMachineTranslation(LessonsRecord lesson) => _commentaryFields(
-          lesson)
-      .any((t) => t.isMachineTranslated(_model.memberLanguage));
+  bool _usesMachineTranslation(LessonsRecord lesson) =>
+      _commentaryFields(lesson)
+          .any((t) => t.isMachineTranslated(_model.memberLanguage));
 
   /// True when the member reads a non-English language and at least one
   /// lesson field has no translation, so English is shown in its place.
@@ -237,6 +262,50 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
   }
 
   /// Application and prayer sections, shown only when the lesson has them.
+  /// The lesson's teaching (body) and module, when the lesson has them.
+  /// Read from the document so lessons imported with these fields show them
+  /// without a schema change.
+  List<Widget> _buildTeaching(LessonsRecord lesson) {
+    final theme = FlutterFlowTheme.of(context);
+    final body = LocaleTextStruct.maybeFromMap(lesson.snapshotData['body']) ??
+        LocaleTextStruct();
+    final module = (lesson.snapshotData['module'] as String?)?.trim() ?? '';
+    return [
+      if (module.isNotEmpty)
+        Text(
+          '${_label('module')}: $module',
+          style: theme.labelMedium.override(
+            font: GoogleFonts.inter(),
+            color: theme.secondaryText,
+            letterSpacing: 0.0,
+          ),
+        ),
+      if (body.en.isNotEmpty)
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _label('teaching'),
+              style: theme.titleMedium.override(
+                font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                letterSpacing: 0.0,
+              ),
+            ),
+            const SizedBox(height: 6.0),
+            Text(
+              body.forLanguage(_model.memberLanguage),
+              style: theme.bodyMedium.override(
+                font: GoogleFonts.inter(),
+                letterSpacing: 0.0,
+                lineHeight: 1.5,
+              ),
+            ),
+          ],
+        ),
+    ];
+  }
+
   List<Widget> _buildApplicationAndPrayer(LessonsRecord lesson) {
     final theme = FlutterFlowTheme.of(context);
     Widget section(String labelKey, LocaleTextStruct text) => Column(
@@ -519,6 +588,7 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                       ),
                                   ],
                                 ),
+                                ..._buildTeaching(lessonsListItemItem),
                                 InkWell(
                                   splashColor: Colors.transparent,
                                   focusColor: Colors.transparent,
@@ -557,7 +627,8 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                             .forLanguage(_model.memberLanguage),
                                         lessonsListItemItem.scriptureRef,
                                         lessonsListItemItem.scriptureText
-                                            .scriptureForLanguage(_model.memberLanguage),
+                                            .scriptureForLanguage(
+                                                _model.memberLanguage),
                                         lessonsListItemItem.reflectionPrompt
                                             .forLanguage(_model.memberLanguage),
                                       );
@@ -580,7 +651,8 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                             .forLanguage(_model.memberLanguage),
                                         lessonsListItemItem.scriptureRef,
                                         lessonsListItemItem.scriptureText
-                                            .scriptureForLanguage(_model.memberLanguage),
+                                            .scriptureForLanguage(
+                                                _model.memberLanguage),
                                         lessonsListItemItem.reflectionPrompt
                                             .forLanguage(_model.memberLanguage),
                                       );
@@ -603,7 +675,8 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                             .forLanguage(_model.memberLanguage),
                                         lessonsListItemItem.scriptureRef,
                                         lessonsListItemItem.scriptureText
-                                            .scriptureForLanguage(_model.memberLanguage),
+                                            .scriptureForLanguage(
+                                                _model.memberLanguage),
                                         lessonsListItemItem.reflectionPrompt
                                             .forLanguage(_model.memberLanguage),
                                       );
@@ -625,7 +698,8 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                             .forLanguage(_model.memberLanguage),
                                         lessonsListItemItem.scriptureRef,
                                         lessonsListItemItem.scriptureText
-                                            .scriptureForLanguage(_model.memberLanguage),
+                                            .scriptureForLanguage(
+                                                _model.memberLanguage),
                                         lessonsListItemItem.reflectionPrompt
                                             .forLanguage(_model.memberLanguage),
                                       );
@@ -730,8 +804,9 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                                 Text(
                                                   lessonsListItemItem
                                                       .scriptureText
-                                                      .scriptureForLanguage(_model
-                                                          .memberLanguage),
+                                                      .scriptureForLanguage(
+                                                          _model
+                                                              .memberLanguage),
                                                   style: FlutterFlowTheme.of(
                                                           context)
                                                       .bodyLarge
@@ -765,7 +840,8 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                                 Text(
                                                   lessonsListItemItem
                                                       .scriptureText
-                                                      .scriptureForLanguage('es'),
+                                                      .scriptureForLanguage(
+                                                          'es'),
                                                   style: FlutterFlowTheme.of(
                                                           context)
                                                       .bodyLarge
@@ -799,7 +875,8 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                                 Text(
                                                   lessonsListItemItem
                                                       .scriptureText
-                                                      .scriptureForLanguage('ur'),
+                                                      .scriptureForLanguage(
+                                                          'ur'),
                                                   style: FlutterFlowTheme.of(
                                                           context)
                                                       .bodyLarge

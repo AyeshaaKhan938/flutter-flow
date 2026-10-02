@@ -1,5 +1,6 @@
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/api_requests/api_calls.dart';
+import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -66,8 +67,9 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
         );
         // Languages the backend doesn't serve come back in English;
         // translate the question text on the device (never answer keys).
-        _model.quizResult = await TranslationService.instance.translateApiResponse(
-            _model.quizResult, _model.memberLanguage, kQuizTextKeys);
+        _model.quizResult = await TranslationService.instance
+            .translateApiResponse(
+                _model.quizResult, _model.memberLanguage, kQuizTextKeys);
 
         if ((_model.quizResult?.succeeded ?? true)) {
           _model.quizTitle = QuizResponseStruct.maybeFromMap(
@@ -311,6 +313,7 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
                 widget.quizId,
               );
               _setAnswers(storedAnswers);
+              await _loadExplanations();
               safeSetState(() {});
             } else {
               _model.submitted = false;
@@ -341,7 +344,6 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
     super.dispose();
   }
 
-
   String _offlineMessage() => switch (_model.memberLanguage) {
         'es' =>
           'Sin conexión: tus respuestas se guardaron y se calificarán cuando vuelvas a conectarte.',
@@ -352,6 +354,40 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
         _ =>
           "You're offline. Your answers are saved and will be scored when you're back online.",
       };
+
+  /// Per-question explanations from the CMS quiz document (shown in the
+  /// review after a quiz is submitted). Read from Firestore, cached offline.
+  List<LocaleTextStruct> _explanations = [];
+
+  // Retake settings from the CMS quiz (retakeAllowed, maxAttempts; blank
+  // = unlimited). Attempts so far come from the quiz attempt record.
+  bool _retakeAllowed = true;
+  int? _maxAttempts;
+  bool get _canRetake =>
+      _retakeAllowed &&
+      (_maxAttempts == null || (_model.attemptCount ?? 0) < _maxAttempts!);
+
+  Future<void> _loadExplanations() async {
+    try {
+      final quizzes = await queryQuizzesRecordOnce();
+      final quiz = quizzes
+          .where((q) =>
+              q.stableId == widget.quizId || q.reference.id == widget.quizId)
+          .firstOrNull;
+      _retakeAllowed = quiz?.snapshotData['retakeAllowed'] != false;
+      _maxAttempts = (quiz?.snapshotData['maxAttempts'] as num?)?.toInt();
+      final questions = quiz?.snapshotData['questions'];
+      if (questions is List) {
+        _explanations = questions
+            .map((q) => q is Map
+                ? LocaleTextStruct.maybeFromMap(q['explanation']) ??
+                    LocaleTextStruct()
+                : LocaleTextStruct())
+            .toList();
+        safeSetState(() {});
+      }
+    } catch (_) {}
+  }
 
   List<String> _answers() => [
         _model.q1Answer ?? '',
@@ -480,6 +516,17 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
                         letterSpacing: 0.0,
                       ),
                     ),
+                    if (i < _explanations.length &&
+                        _explanations[i].en.isNotEmpty) ...[
+                      const SizedBox(height: 4.0),
+                      Text(
+                        _explanations[i].forLanguage(_model.memberLanguage),
+                        style: theme.bodySmall.override(
+                          font: GoogleFonts.inter(fontStyle: FontStyle.italic),
+                          letterSpacing: 0.0,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -8475,6 +8522,9 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
                                 );
                                 _model.submitted = true;
                                 _model.showAnswerReview = false;
+                                _model.attemptCount =
+                                    (_model.attemptCount ?? 0) + 1;
+                                await _loadExplanations();
                                 safeSetState(() {});
                                 _model.percentage =
                                     SubmitQuizResponseStruct.maybeFromMap(
@@ -8737,68 +8787,72 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
                               mainAxisAlignment: MainAxisAlignment.start,
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                FFButtonWidget(
-                                  onPressed: () async {
-                                    _model.submitted = false;
-                                    _model.showAnswerReview = false;
-                                    safeSetState(() {});
-                                    _model.passed = false;
-                                    safeSetState(() {});
-                                    _model.percentage = 0;
-                                    safeSetState(() {});
-                                    _model.q1Answer = '';
-                                    safeSetState(() {});
-                                    _model.q2Answer = '';
-                                    safeSetState(() {});
-                                    _model.q3Answer = '';
-                                    safeSetState(() {});
-                                    _model.q4Answer = '';
-                                    safeSetState(() {});
-                                    _model.q5Answer = '';
-                                    safeSetState(() {});
-                                    _model.q6Answer = '';
-                                    safeSetState(() {});
-                                    _model.q7Answer = '';
-                                    safeSetState(() {});
-                                    _model.q8Answer = '';
-                                    safeSetState(() {});
-                                    _model.q9Answer = '';
-                                    safeSetState(() {});
-                                    _model.q10Answer = '';
-                                    safeSetState(() {});
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Answers cleared. Retake when ready.',
-                                          style: TextStyle(),
+                                if (_canRetake)
+                                  FFButtonWidget(
+                                    onPressed: () async {
+                                      _model.submitted = false;
+                                      _model.showAnswerReview = false;
+                                      safeSetState(() {});
+                                      _model.passed = false;
+                                      safeSetState(() {});
+                                      _model.percentage = 0;
+                                      safeSetState(() {});
+                                      _model.q1Answer = '';
+                                      safeSetState(() {});
+                                      _model.q2Answer = '';
+                                      safeSetState(() {});
+                                      _model.q3Answer = '';
+                                      safeSetState(() {});
+                                      _model.q4Answer = '';
+                                      safeSetState(() {});
+                                      _model.q5Answer = '';
+                                      safeSetState(() {});
+                                      _model.q6Answer = '';
+                                      safeSetState(() {});
+                                      _model.q7Answer = '';
+                                      safeSetState(() {});
+                                      _model.q8Answer = '';
+                                      safeSetState(() {});
+                                      _model.q9Answer = '';
+                                      safeSetState(() {});
+                                      _model.q10Answer = '';
+                                      safeSetState(() {});
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Answers cleared. Retake when ready.',
+                                            style: TextStyle(),
+                                          ),
+                                          duration:
+                                              Duration(milliseconds: 4000),
                                         ),
-                                        duration: Duration(milliseconds: 4000),
+                                      );
+                                    },
+                                    text: FFLocalizations.of(context).getText(
+                                      '9u8uaqcz' /* Retake Quiz */,
+                                    ),
+                                    options: FFButtonOptions(
+                                      width: double.infinity,
+                                      padding: EdgeInsetsDirectional.fromSTEB(
+                                          0.0, 0.0, 0.0, 0.0),
+                                      iconPadding:
+                                          EdgeInsetsDirectional.fromSTEB(
+                                              0.0, 0.0, 0.0, 0.0),
+                                      color: Colors.transparent,
+                                      textStyle: TextStyle(
+                                        color: FlutterFlowTheme.of(context)
+                                            .primaryText,
                                       ),
-                                    );
-                                  },
-                                  text: FFLocalizations.of(context).getText(
-                                    '9u8uaqcz' /* Retake Quiz */,
-                                  ),
-                                  options: FFButtonOptions(
-                                    width: double.infinity,
-                                    padding: EdgeInsetsDirectional.fromSTEB(
-                                        0.0, 0.0, 0.0, 0.0),
-                                    iconPadding: EdgeInsetsDirectional.fromSTEB(
-                                        0.0, 0.0, 0.0, 0.0),
-                                    color: Colors.transparent,
-                                    textStyle: TextStyle(
-                                      color: FlutterFlowTheme.of(context)
-                                          .primaryText,
+                                      elevation: 0.0,
+                                      borderSide: BorderSide(
+                                        color: FlutterFlowTheme.of(context)
+                                            .tertiary,
+                                        width: 1.0,
+                                      ),
+                                      borderRadius: BorderRadius.circular(16.0),
                                     ),
-                                    elevation: 0.0,
-                                    borderSide: BorderSide(
-                                      color:
-                                          FlutterFlowTheme.of(context).tertiary,
-                                      width: 1.0,
-                                    ),
-                                    borderRadius: BorderRadius.circular(16.0),
                                   ),
-                                ),
                                 FFButtonWidget(
                                   onPressed: () async {
                                     context.pushNamed(
