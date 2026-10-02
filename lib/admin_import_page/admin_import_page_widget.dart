@@ -90,8 +90,9 @@ class _AdminImportPageWidgetState extends State<AdminImportPageWidget> {
   Future<void> _pickFile() async {
     try {
       final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['csv', 'xlsx', 'zip'],
+        // Any file: some Android file managers hide .zip/.xlsx under a
+        // custom-extension filter. The extension is checked after picking.
+        type: FileType.any,
         withData: true,
       );
       final file = result?.files.single;
@@ -100,6 +101,12 @@ class _AdminImportPageWidgetState extends State<AdminImportPageWidget> {
         return;
       }
       final lower = file.name.toLowerCase();
+      if (!(lower.endsWith('.csv') ||
+          lower.endsWith('.xlsx') ||
+          lower.endsWith('.zip'))) {
+        _snack('Choose a .csv, .xlsx or .zip file (got ${file.name}).');
+        return;
+      }
       if (lower.endsWith('.xlsx') || lower.endsWith('.zip')) {
         // Original Excel master or the CSV handoff zip: read on the server.
         _model.csvText = null;
