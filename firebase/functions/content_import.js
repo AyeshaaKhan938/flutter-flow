@@ -35,7 +35,9 @@ const kTypes = {
     label: "Pathways",
     collection: "pathways",
     idColumn: "stableId",
-    columns: ["stableId", "order", "durationDays", "status"],
+    // track: "core" (sequential progression) or "additional" (Continue
+    // Growing studies outside the core order).
+    columns: ["stableId", "order", "durationDays", "status", "track"],
     localized: ["title", "description"],
     requiredHeaders: ["stableId", "order", "title_en"],
     requiredValues: ["stableId", "order", "title_en"],
@@ -938,6 +940,13 @@ function validateRows(type, parsed, refs) {
       case "pathways":
         setRecordValue("order", ints.order, "order");
         setRecordValue("durationDays", ints.durationDays, "durationDays");
+        {
+          const track = v("track").toLowerCase();
+          if (track && track !== "core" && track !== "additional") {
+            fail(row, "track", `track must be "core" or "additional" (got "${v("track")}").`);
+          }
+          setRecordValue("track", track, "track");
+        }
         break;
       case "lessons":
         setRecordValue("pathwayId", pathwayId, "pathwayId");
