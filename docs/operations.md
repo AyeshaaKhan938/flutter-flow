@@ -74,7 +74,7 @@ reference them only by name.
 
 | Credential | Where it lives | Rotation / notes |
 |---|---|---|
-| `API_BIBLE_KEY` | `api_keys.json` on build machines (gitignored); keep a master copy in the password manager | Create a new key in the API.Bible dashboard, update `api_keys.json`, rebuild and release **both apps**, then revoke the old key after the old app versions have aged out. The key is compiled into the app, so treat it as semi-public and rely on API.Bible usage limits |
+| `API_BIBLE_KEY` | Google Secret Manager, project kingdom-heirs-discipleshipapp, secret `API_BIBLE_KEY`; read only by the `getBiblePassage` function (runs as kingdom-heirs-discipleshipapp@appspot.gserviceaccount.com, which needs Secret Manager Secret Accessor on the secret) | Create a new key in the API.Bible dashboard, add it as a new version of `API_BIBLE_KEY`, test a passage in the app, then revoke the old key. No app rebuild is needed |
 | Firebase client config (`google-services.json`, `GoogleService-Info.plist`) | Committed | Not secret. In the Google Cloud console → Credentials, **restrict the API keys** to the Android package + SHA-1 and the iOS bundle id |
 | Firebase project access | IAM, Firebase console | Give owners Kingdom Heirs accounts (at least 2). Remove personal and contractor accounts at handoff |
 | Service accounts | GCP IAM | Audit keys under IAM → Service accounts. Delete unused user-managed keys, and prefer keyless (default) credentials for functions |

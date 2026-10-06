@@ -7,7 +7,7 @@ Functions, is marked **Needs input from backend owner**. Nothing in these docs i
 about what that code does.
 
 Start with the repository [README](../README.md). It covers the build-time API keys
-(`api_keys.json`) and the Bible integration.
+(none in the app; API.Bible key in Secret Manager) and the Bible integration.
 
 | Doc | Audience | What it covers |
 |---|---|---|

@@ -9,12 +9,12 @@
 | iOS | macOS + Xcode (current), CocoaPods; deployment target **iOS 14.0** |
 | Firebase CLI | `npm i -g firebase-tools` (only needed to deploy rules or functions) |
 | Accounts | Google Play Console (Kingdom Heirs org), Apple Developer Program (Kingdom Heirs org), Firebase project access |
-| Secrets | `api_keys.json` in the repo root (copy `api_keys.example.json`; see the [README](../README.md#api-keys)). Never commit it. |
+| Secrets | None in the app. The API.Bible key is in Secret Manager (`API_BIBLE_KEY`), read only by the `getBiblePassage` Cloud Function. |
 
 ```sh
 flutter pub get
 cd ios && pod install && cd ..        # iOS only
-flutter run --dart-define-from-file=api_keys.json
+flutter run
 ```
 
 ## Build commands
@@ -23,9 +23,9 @@ Always pass the key file, or the Bible integration falls back
 (see the [README](../README.md#api-keys)):
 
 ```sh
-flutter build apk        --release --dart-define-from-file=api_keys.json   # sideload / testing
-flutter build appbundle  --release --dart-define-from-file=api_keys.json   # Google Play (.aab)
-flutter build ipa        --release --dart-define-from-file=api_keys.json   # App Store / TestFlight
+flutter build apk        --release   # sideload / testing
+flutter build appbundle  --release   # Google Play (.aab)
+flutter build ipa        --release   # App Store / TestFlight
 ```
 
 Outputs: `build/app/outputs/flutter-apk/app-release.apk`,
@@ -109,7 +109,7 @@ Steps:
    first.
 5. App Store Connect → **My Apps → +**. Create the app with bundle id
    `com.kingdomheirs.discipleship`, name "Kingdom Heirs", and primary language English.
-6. Build and upload: run `flutter build ipa --release --dart-define-from-file=api_keys.json`,
+6. Build and upload: run `flutter build ipa --release`,
    then upload `build/ios/ipa/*.ipa` with **Transporter** or `xcrun altool`. You can also
    archive in Xcode (Product → Archive → Distribute App → App Store Connect).
 7. TestFlight: when processing finishes, answer the export-compliance question. The app

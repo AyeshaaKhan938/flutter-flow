@@ -1,5 +1,6 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const {GoogleAuth} = require("google-auth-library");
 admin.initializeApp();
 
 const kFcmTokensCollection = "fcm_tokens";
@@ -626,8 +627,9 @@ function getCharForIndex(charIdx) {
   }
 }
 // Scripture passages from API.Bible. The API key lives only in Secret
-// Manager (API_BIBLE_KEY), never in the mobile app:
-//   firebase functions:secrets:set API_BIBLE_KEY
+// Manager (API_BIBLE_KEY), never in the mobile app. The runtime service
+// account reads the secret at call time (James grants Secret Accessor on
+// the secret); deploy does not need secretmanager.secrets.setIamPolicy.
 // Only signed-in members can call it, and only for the approved Bibles.
 const kApprovedBibleIds = new Set([
   "78a9f6124f344018-01", // English: New International Version 2011
@@ -665,8 +667,35 @@ async function isApprovedBibleId(bibleId) {
 }
 const kPassageIdPattern = /^[1-3]?[A-Z]{2,3}\.\d{1,3}(\.\d{1,3})?(-[1-3]?[A-Z]{2,3}\.\d{1,3}(\.\d{1,3})?)?$/;
 
+let apiBibleKeyCache = null;
+async function getApiBibleKey() {
+  if (process.env.API_BIBLE_KEY) {
+    return process.env.API_BIBLE_KEY;
+  }
+  if (apiBibleKeyCache) {
+    return apiBibleKeyCache;
+  }
+  const auth = new GoogleAuth({
+    scopes: ["https://www.googleapis.com/auth/cloud-platform"],
+  });
+  const client = await auth.getClient();
+  const projectId =
+    process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || admin.app().options.projectId;
+  const url =
+    "https://secretmanager.googleapis.com/v1/projects/" +
+    `${projectId}/secrets/API_BIBLE_KEY/versions/latest:access`;
+  const res = await client.request({url, method: "GET"});
+  apiBibleKeyCache = Buffer.from(res.data.payload.data, "base64").toString("utf8");
+  return apiBibleKeyCache;
+}
+
 exports.getBiblePassage = functions
-  .runWith({ secrets: ["API_BIBLE_KEY"], timeoutSeconds: 30 })
+  // Runs as the App Engine default service account, which Kingdom Heirs
+  // granted Secret Manager Secret Accessor on API_BIBLE_KEY.
+  .runWith({
+    timeoutSeconds: 30,
+    serviceAccount: "kingdom-heirs-discipleshipapp@appspot.gserviceaccount.com",
+  })
   .https.onCall(async (data, context) => {
     if (!context.auth) {
       throw new functions.https.HttpsError(
@@ -689,8 +718,26 @@ exports.getBiblePassage = functions
       `${encodeURIComponent(passageId)}?content-type=text&include-notes=false` +
       "&include-titles=false&include-chapter-numbers=false" +
       "&include-verse-numbers=true";
+    let apiKey;
+    try {
+      apiKey = await getApiBibleKey();
+    } catch (err) {
+      // Most likely the runtime service account cannot read the secret.
+      const status = err && err.response ? err.response.status : "";
+      console.error("API_BIBLE_KEY access failed", status, err && err.message);
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        `Bible key unavailable (Secret Manager ${status || "error"}).`,
+      );
+    }
+    if (!apiKey) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "Bible service is not configured.",
+      );
+    }
     const response = await fetch(url, {
-      headers: { "api-key": process.env.API_BIBLE_KEY },
+      headers: {"api-key": apiKey.trim()},
     });
     if (!response.ok) {
       throw new functions.https.HttpsError(

@@ -27,10 +27,8 @@ flutter build appbundle --release
 flutter build ipa --release
 ```
 
-`api_keys.json` (gitignored, see `api_keys.example.json`) is only a
-transitional fallback for test builds made before `getBiblePassage` is
-deployed: `--dart-define-from-file=api_keys.json` compiles the key into that
-build, so never use it for store builds.
+The app has no build-time keys: Bible passages come only from the
+`getBiblePassage` Cloud Function.
 
 ## Bible integration
 

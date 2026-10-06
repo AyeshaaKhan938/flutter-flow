@@ -17,12 +17,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '/custom_code/bible_reference.dart';
 import '/custom_code/languages/language_registry.dart';
 
-/// Passages normally come from the `getBiblePassage` Cloud Function, which
-/// holds the API.Bible key in Secret Manager so it is never in the app.
-/// A build-time key (`--dart-define-from-file=api_keys.json`) is only a
-/// transitional fallback for builds made before that function is deployed;
-/// release builds should be made without it.
-const _apiBibleKey = String.fromEnvironment('API_BIBLE_KEY');
+/// Passages come only from the `getBiblePassage` Cloud Function, which
+/// reads the API.Bible key from Secret Manager. The key is never in the app.
 
 /// Default Bible per built-in language (API.Bible ids). A language's
 /// `bibleId` in the CMS `languages` collection takes precedence; a language
@@ -132,9 +128,6 @@ Future<BiblePassage?> fetchBiblePassage(
   BiblePassage? passage;
   try {
     passage = await _fetchFromServer(ref, bible.bibleId, bible.version);
-    if (passage == null && _apiBibleKey.isNotEmpty) {
-      passage = await _fetchFromApiBible(ref, bible.bibleId, bible.version);
-    }
     if (passage == null && lang == 'en') {
       passage = await _fetchFromBibleApiCom(ref);
     }
@@ -199,43 +192,6 @@ Future<BiblePassage?> _fetchFromServer(
   } catch (_) {
     return null;
   }
-}
-
-Future<BiblePassage?> _fetchFromApiBible(
-    String ref, String bibleId, String version) async {
-  final parsed = BibleReference.parse(ref);
-  if (parsed == null) {
-    return null;
-  }
-  final uri = Uri.https(
-    'api.scripture.api.bible',
-    '/v1/bibles/$bibleId/passages/${parsed.apiBiblePassageId}',
-    {
-      'content-type': 'text',
-      'include-notes': 'false',
-      'include-titles': 'false',
-      'include-chapter-numbers': 'false',
-      'include-verse-numbers': 'true',
-    },
-  );
-  final response = await http.get(uri,
-      headers: {'api-key': _apiBibleKey}).timeout(const Duration(seconds: 10));
-  if (response.statusCode != 200) {
-    return null;
-  }
-  final body = jsonDecode(utf8.decode(response.bodyBytes)) as Map;
-  final data = Map<String, dynamic>.from(body['data'] as Map? ?? const {});
-  final fumsToken = (body['meta'] as Map?)?['fumsToken'] as String?;
-  if (fumsToken != null && fumsToken.isNotEmpty) {
-    _reportFums(fumsToken);
-  }
-  final text = _cleanPassageText(data['content'] as String? ?? '');
-  return BiblePassage(
-    reference: data['reference'] as String? ?? ref,
-    text: text,
-    version: version,
-    copyright: (data['copyright'] as String? ?? '').trim(),
-  );
 }
 
 Future<BiblePassage?> _fetchFromBibleApiCom(String ref) async {
