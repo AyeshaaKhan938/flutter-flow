@@ -263,6 +263,27 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
                   ),
                 )),
         FFRoute(
+            name: CertificatePageWidget.routeName,
+            path: CertificatePageWidget.routePath,
+            requireAuth: true,
+            builder: (context, params) => NavBarPage(
+                  initialPage: '',
+                  page: CertificatePageWidget(
+                    pathwayId: params.getParam(
+                      'pathwayId',
+                      ParamType.String,
+                    ),
+                  ),
+                )),
+        FFRoute(
+            name: MyCertificatesPageWidget.routeName,
+            path: MyCertificatesPageWidget.routePath,
+            requireAuth: true,
+            builder: (context, params) => NavBarPage(
+                  initialPage: '',
+                  page: MyCertificatesPageWidget(),
+                )),
+        FFRoute(
             name: RagSearchPageWidget.routeName,
             path: RagSearchPageWidget.routePath,
             builder: (context, params) => NavBarPage(

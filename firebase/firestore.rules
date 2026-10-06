@@ -28,6 +28,12 @@ service cloud.firestore {
       allow delete: if request.auth.uid == document;
     }
 
+    // Pathway completion certificates: issued once by the app, never edited.
+    match /users/{uid}/certificates/{certId} {
+      allow read, create: if request.auth != null && request.auth.uid == uid;
+      allow update, delete: if false;
+    }
+
     match /pathways/{document} {
       allow create: if isContentAdmin();
       allow read: if true;

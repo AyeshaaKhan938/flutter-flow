@@ -37,11 +37,15 @@ const kTypes = {
     idColumn: "stableId",
     // track: "core" (sequential progression) or "additional" (Continue
     // Growing studies outside the core order).
-    columns: ["stableId", "order", "durationDays", "status", "track"],
+    // previewApproved: a Draft pathway may show a "Coming soon" card
+    // (name, description, cover) without being opened.
+    columns: ["stableId", "order", "durationDays", "status", "track",
+      "previewApproved", "coverImageUrl"],
     localized: ["title", "description"],
     requiredHeaders: ["stableId", "order", "title_en"],
     requiredValues: ["stableId", "order", "title_en"],
     ints: ["order", "durationDays"],
+    bools: ["previewApproved"],
   },
   lessons: {
     label: "Lessons",
@@ -947,6 +951,8 @@ function validateRows(type, parsed, refs) {
           }
           setRecordValue("track", track, "track");
         }
+        setRecordValue("previewApproved", bools.previewApproved, "previewApproved");
+        setRecordValue("coverImageUrl", v("coverImageUrl"), "coverImageUrl");
         break;
       case "lessons":
         setRecordValue("pathwayId", pathwayId, "pathwayId");

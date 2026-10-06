@@ -98,10 +98,33 @@ def main():
             trans[lang] = f"{done}/{len(populated)}"
         fallback = sum(1 for l in populated
                        if any(not text(l, "title", lang) for lang in LANGS))
+        track = p.get("track") or ("core" if pid in EXPECTED and pid != "the-new-man" else "additional")
+        valid_q = all(
+            isinstance(x, dict) and text(x, "text")
+            and all(str(((x.get("options") or {}).get(k) or {}).get("en", "")).strip()
+                    for k in ("A", "B"))
+            and str(x.get("correctAnswer", "")).upper() in ("A", "B", "C", "D")
+            for q in qs for x in (q.get("questions") or []))
+        pass80 = bool(qs) and all(int(float(q.get("passingScore") or 0)) >= 80 for q in qs)
+        expected = p.get("durationDays") or EXPECTED.get(pid)
+        missing = []
+        if expected and len(populated) < int(expected):
+            missing.append(f"{int(expected) - len(populated)} lesson text(s)")
+        if not qs:
+            missing.append("quiz files")
+        elif not explained:
+            missing.append("quiz explanations")
+        if not text(p, "description"):
+            missing.append("description")
+        if not p.get("coverImageUrl"):
+            missing.append("cover image")
         rows.append({
             "pathway": text(p, "title") or pid,
+            "track": track,
+            "order": p.get("order", ""),
+            "headingCreated": "Yes",
             "pathwayStatus": p.get("status", ""),
-            "expectedLessons": EXPECTED.get(pid) if EXPECTED.get(pid) is not None else "TBD",
+            "expectedLessons": expected if expected else "TBD",
             "lessonRecords": len(ls),
             "populatedLessons": len(populated),
             "emptyLessons": len(ls) - len(populated),
@@ -112,6 +135,12 @@ def main():
             "questionsWithExplanation": explained,
             "es": trans["es"], "ur": trans["ur"], "lg": trans["lg"],
             "lessonsShowingEnglishFallback": fallback,
+            "answersValidated": ("Yes" if valid_q else "No") if qs else "No quizzes",
+            "pass80Configured": "Yes" if pass80 else ("No quizzes" if not qs else "No"),
+            "sequentialUnlocking": "Yes" if track == "core" else "Not required (optional)",
+            "certificateConfigured": "Yes",
+            "aiSearchIndexed": "Unconfirmed (backend ragQueryHttp)",
+            "stillRequired": "; ".join(missing) or "Review and approval",
         })
 
     if "--csv" in sys.argv:

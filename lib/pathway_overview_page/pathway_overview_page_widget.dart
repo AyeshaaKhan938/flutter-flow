@@ -15,6 +15,7 @@ import 'package:percent_indicator/percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'pathway_overview_page_model.dart';
 import '/custom_code/languages/language_registry.dart';
+import '/custom_code/pathway_progression.dart';
 export 'pathway_overview_page_model.dart';
 
 /// Shows a pathway's lessons and progress; entry point into the Daily Lesson
@@ -48,6 +49,18 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       await actions.ensureFirestoreOfflinePersistence();
+      // Core journey lock / completion (lessons + quizzes at 80%+), loaded
+      // alongside the pathway so locked deep links never show lessons.
+      PathwayProgressionService.instance.refresh().then((progression) {
+        _progression = progression;
+        _progressionLoaded = true;
+        safeSetState(() {});
+        PathwayProgressionService.instance
+            .issueEarnedCertificates(progression);
+      }, onError: (_) {
+        _progressionLoaded = true;
+        safeSetState(() {});
+      });
       _model.progressResult = await GetPathwayProgressCall.call(
         authToken: currentJwtToken,
         pathwayId: widget.pathwayId,
@@ -145,38 +158,139 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
     super.dispose();
   }
 
-  static const _completionText = {
-    'en': (
-      'Pathway complete!',
-      'Well done. Take the assessment again to find your next pathway, or explore the others.',
-      'Find my next pathway',
-      'Explore pathways',
-    ),
-    'es': (
-      '¡Camino completado!',
-      'Bien hecho. Vuelve a hacer la evaluación para encontrar tu próximo camino, o explora los demás.',
-      'Encontrar mi próximo camino',
-      'Explorar caminos',
-    ),
-    'ur': (
-      'راستہ مکمل ہو گیا!',
-      'شاباش۔ اپنا اگلا راستہ جاننے کے لیے دوبارہ جائزہ دیں، یا دوسرے راستے دیکھیں۔',
-      'میرا اگلا راستہ',
-      'راستے دیکھیں',
-    ),
-    'lg': (
-      'Omukutu guwedde!',
-      'Weebale nnyo. Ddamu okukebera okuzuula omukutu gwo oguddako, oba noonya emirala.',
-      'Zuula omukutu gwange oguddako',
-      'Laba emikutu',
-    ),
-  };
+  PathwayProgression? _progression;
+  bool _progressionLoaded = false;
 
-  /// Shown once every lesson in the pathway is complete: a clear next step.
+  PathwayStatus? get _status => _progression?.statusFor(widget.pathwayId);
+
+  /// A core pathway whose previous core pathway is not completed yet.
+
+  /// The first earlier lesson of this pathway that is not yet completed,
+  /// or null when [lesson] may be opened. Members may finish several
+  /// lessons a day, but always in order.
+  LessonsRecord? _firstIncompleteBefore(LessonsRecord lesson) {
+    final earlier = _model.lessonsList
+        .where((l) =>
+            l.pathwayId == widget.pathwayId &&
+            l.status == 'published' &&
+            l.dayNumber < lesson.dayNumber)
+        .toList()
+      ..sort((a, b) => a.dayNumber.compareTo(b.dayNumber));
+    for (final l in earlier) {
+      final done = functions.isLessonComplete(
+              _model.completedLessonsCsv, l.stableId) ??
+          false;
+      if (!done) {
+        return l;
+      }
+    }
+    return null;
+  }
+
+  bool get _isLocked =>
+      (_status?.isCore ?? false) && !(_status?.unlocked ?? true);
+
+  String _t(String english, [Map<String, String> args = const {}]) =>
+      progressionText(english, _model.memberLanguage, args);
+
+  void _openPathway(String pathwayId) {
+    context.pushNamed(
+      PathwayOverviewPageWidget.routeName,
+      queryParameters: {
+        'pathwayId': serializeParam(pathwayId, ParamType.String),
+      }.withoutNulls,
+    );
+  }
+
+  void _openCertificate(String certificateId) {
+    context.pushNamed(
+      CertificatePageWidget.routeName,
+      queryParameters: {
+        'pathwayId': serializeParam(certificateId, ParamType.String),
+      }.withoutNulls,
+    );
+  }
+
+  /// Shown instead of the lessons when this core pathway is still locked.
+  Widget _buildLockedCard() {
+    final theme = FlutterFlowTheme.of(context);
+    final blocking = _status?.lockedBy;
+    final blockingTitle =
+        blocking?.title.forLanguage(_model.memberLanguage) ?? '';
+    return Container(
+      padding: const EdgeInsets.all(20.0),
+      decoration: BoxDecoration(
+        color: theme.secondaryBackground,
+        borderRadius: BorderRadius.circular(16.0),
+        border: Border.all(color: theme.alternate, width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Icon(Icons.lock_outline, color: theme.secondaryText, size: 36.0),
+          const SizedBox(height: 8.0),
+          Text(
+            _t('This pathway is locked'),
+            textAlign: TextAlign.center,
+            style: theme.titleLarge.override(
+              font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+              letterSpacing: 0.0,
+            ),
+          ),
+          const SizedBox(height: 8.0),
+          Text(
+            _t('Complete {title}, including all its lessons and quizzes (80% or higher), to unlock this pathway.',
+                {'title': blockingTitle}),
+            textAlign: TextAlign.center,
+            style: theme.bodyMedium.override(
+              font: GoogleFonts.inter(),
+              color: theme.secondaryText,
+              letterSpacing: 0.0,
+            ),
+          ),
+          const SizedBox(height: 16.0),
+          if (blocking != null)
+            FFButtonWidget(
+              onPressed: () => _openPathway(blocking.stableId),
+              text: _t('Go to {title}', {'title': blockingTitle}),
+              options: FFButtonOptions(
+                width: double.infinity,
+                height: 48.0,
+                color: theme.secondary,
+                textStyle: TextStyle(color: theme.primaryText),
+                borderRadius: BorderRadius.circular(16.0),
+              ),
+            ),
+          const SizedBox(height: 8.0),
+          FFButtonWidget(
+            onPressed: () => context.pushNamed(PathwayListPageWidget.routeName),
+            text: _t('Explore pathways'),
+            options: FFButtonOptions(
+              width: double.infinity,
+              height: 48.0,
+              color: Colors.transparent,
+              textStyle: TextStyle(color: theme.primaryText),
+              elevation: 0.0,
+              borderSide: BorderSide(color: theme.tertiary, width: 1.0),
+              borderRadius: BorderRadius.circular(16.0),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Shown once every lesson is complete and every quiz passed at 80%+.
   Widget _buildCompletionCard() {
     final theme = FlutterFlowTheme.of(context);
-    final text =
-        _completionText[_model.memberLanguage] ?? _completionText['en']!;
+    final status = _status;
+    final progression = _progression;
+    final next = (status?.isCore ?? false)
+        ? progression?.nextCoreAfter(widget.pathwayId)
+        : null;
+    final showCoreCertificate = (status?.isCore ?? false) &&
+        next == null &&
+        (progression?.coreJourneyCompleted ?? false);
     return Container(
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
@@ -190,7 +304,7 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
           Icon(Icons.emoji_events_outlined, color: theme.secondary, size: 36.0),
           const SizedBox(height: 8.0),
           Text(
-            text.$1,
+            _t('Pathway complete!'),
             textAlign: TextAlign.center,
             style: theme.titleLarge.override(
               font: GoogleFonts.inter(fontWeight: FontWeight.w600),
@@ -199,7 +313,7 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
           ),
           const SizedBox(height: 8.0),
           Text(
-            text.$2,
+            _t('Well done. You finished every lesson and passed every quiz.'),
             textAlign: TextAlign.center,
             style: theme.bodyMedium.override(
               font: GoogleFonts.inter(),
@@ -209,21 +323,52 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
           ),
           const SizedBox(height: 16.0),
           FFButtonWidget(
-            onPressed: () =>
-                context.pushNamed(AssessmentIntroPageWidget.routeName),
-            text: text.$3,
+            onPressed: () => _openCertificate(widget.pathwayId ?? ''),
+            text: _t('View certificate'),
+            icon: const Icon(Icons.workspace_premium_outlined, size: 18.0),
             options: FFButtonOptions(
               width: double.infinity,
               height: 48.0,
               color: theme.secondary,
               textStyle: TextStyle(color: theme.primaryText),
+              iconColor: theme.primaryText,
               borderRadius: BorderRadius.circular(16.0),
             ),
           ),
+          if (next != null) ...[
+            const SizedBox(height: 8.0),
+            FFButtonWidget(
+              onPressed: () => _openPathway(next.stableId),
+              text: _t('Continue to {title}', {
+                'title': next.pathway.title.forLanguage(_model.memberLanguage),
+              }),
+              options: FFButtonOptions(
+                width: double.infinity,
+                height: 48.0,
+                color: theme.primary,
+                textStyle: const TextStyle(color: Colors.white),
+                borderRadius: BorderRadius.circular(16.0),
+              ),
+            ),
+          ],
+          if (showCoreCertificate) ...[
+            const SizedBox(height: 8.0),
+            FFButtonWidget(
+              onPressed: () => _openCertificate(kCoreCertificateId),
+              text: _t('View Core Discipleship Certificate'),
+              options: FFButtonOptions(
+                width: double.infinity,
+                height: 48.0,
+                color: theme.primary,
+                textStyle: const TextStyle(color: Colors.white),
+                borderRadius: BorderRadius.circular(16.0),
+              ),
+            ),
+          ],
           const SizedBox(height: 8.0),
           FFButtonWidget(
             onPressed: () => context.pushNamed(PathwayListPageWidget.routeName),
-            text: text.$4,
+            text: _t('Explore pathways'),
             options: FFButtonOptions(
               width: double.infinity,
               height: 48.0,
@@ -295,8 +440,8 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
                       fit: BoxFit.cover,
                     ),
                   ),
-                  if ((_model.totalLessons ?? 0) > 0 &&
-                      (_model.completedCount ?? 0) >= _model.totalLessons!)
+                  if (_isLocked) _buildLockedCard(),
+                  if (!_isLocked && (_status?.completed ?? false))
                     _buildCompletionCard(),
                   if (_model.pathwayTitle == 'Pathway')
                     Row(
@@ -484,6 +629,22 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
                       ),
                     ].divide(SizedBox(width: 4.0)),
                   ),
+                  if (!_progressionLoaded)
+                    Center(
+                      child: SizedBox(
+                        width: 24.0,
+                        height: 24.0,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: FlutterFlowTheme.of(context).primary,
+                        ),
+                      ),
+                    ),
+                  // The Come & See quiz shortcuts belong to that pathway only;
+                  // other pathways open their quizzes after the gating lesson.
+                  if (_progressionLoaded &&
+                      !_isLocked &&
+                      widget.pathwayId == 'come-and-see')
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -604,9 +765,11 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
                       ),
                     ].divide(SizedBox(height: 8.0)),
                   ),
+                  if (_progressionLoaded && !_isLocked)
                   Builder(
                     builder: (context) {
-                      final lessonsListItem = _model.lessonsList.toList();
+                      final lessonsListItem = _model.lessonsList.toList()
+                        ..sort((a, b) => a.dayNumber.compareTo(b.dayNumber));
 
                       return ListView.separated(
                         padding: EdgeInsets.zero,
@@ -627,6 +790,20 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
                               hoverColor: Colors.transparent,
                               highlightColor: Colors.transparent,
                               onTap: () async {
+                                // Lessons are taken in order (any number per
+                                // day): earlier lessons must be completed.
+                                final blocking = _firstIncompleteBefore(
+                                    lessonsListItemItem);
+                                if (blocking != null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(_t(
+                                          'Complete lesson {n} first.',
+                                          {'n': '${blocking.dayNumber}'})),
+                                    ),
+                                  );
+                                  return;
+                                }
                                 context.pushNamed(
                                   DailyLessonPageWidget.routeName,
                                   queryParameters: {

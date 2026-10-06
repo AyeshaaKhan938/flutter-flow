@@ -12,6 +12,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'recommendation_result_page_model.dart';
 import '/custom_code/languages/language_registry.dart';
+import '/custom_code/pathway_progression.dart';
 export 'recommendation_result_page_model.dart';
 
 /// Spec M11: show recommended starting pathway + allow browse/retake.
@@ -52,6 +53,20 @@ class _RecommendationResultPageWidgetState
     // Content language (may be a CMS-added language).
     return pathway.title.forLanguage(LanguageRegistry.contentLanguage);
   }
+
+  /// Kingdom Heirs: every new member begins the core journey with Come & See,
+  /// whatever the assessment recommends.
+  static const _kStartingPathwayId = 'come-and-see';
+
+  String _startingReason() => progressionText(
+        'Every member begins the Kingdom Heirs core journey with {title}.',
+        LanguageRegistry.contentLanguage,
+        {
+          'title': _pathwaysById.containsKey(_kStartingPathwayId)
+              ? _pathwayName(_kStartingPathwayId)
+              : 'Come & See',
+        },
+      );
 
   @override
   void initState() {
@@ -180,7 +195,7 @@ class _RecommendationResultPageWidgetState
                         ),
                   ),
                   Text(
-                    _pathwayName(_model.recommendedPathwayId),
+                    _pathwayName(_kStartingPathwayId),
                     style: FlutterFlowTheme.of(context).titleLarge.override(
                           font: GoogleFonts.inter(
                             fontWeight: FlutterFlowTheme.of(context)
@@ -198,7 +213,7 @@ class _RecommendationResultPageWidgetState
                         ),
                   ),
                   Text(
-                    _model.recommendationReason!,
+                    _startingReason(),
                     style: FlutterFlowTheme.of(context).bodyMedium.override(
                           font: GoogleFonts.inter(
                             fontWeight: FlutterFlowTheme.of(context)
@@ -217,130 +232,15 @@ class _RecommendationResultPageWidgetState
                               FlutterFlowTheme.of(context).bodyMedium.fontStyle,
                         ),
                   ),
-                  if (!(_model.companionPathwayId == ''))
-                    Container(
-                      decoration: BoxDecoration(
-                        color: FlutterFlowTheme.of(context).alternate,
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              FFLocalizations.of(context).getText(
-                                'fgp4wla3' /* Additional resource */,
-                              ),
-                              style: FlutterFlowTheme.of(context)
-                                  .titleMedium
-                                  .override(
-                                    font: GoogleFonts.inter(
-                                      fontWeight: FlutterFlowTheme.of(context)
-                                          .titleMedium
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .titleMedium
-                                          .fontStyle,
-                                    ),
-                                    letterSpacing: 0.0,
-                                    fontWeight: FlutterFlowTheme.of(context)
-                                        .titleMedium
-                                        .fontWeight,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .titleMedium
-                                        .fontStyle,
-                                  ),
-                            ),
-                            Text(
-                              _pathwayName(_model.companionPathwayId),
-                              style: FlutterFlowTheme.of(context)
-                                  .titleSmall
-                                  .override(
-                                    font: GoogleFonts.inter(
-                                      fontWeight: FlutterFlowTheme.of(context)
-                                          .titleSmall
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .titleSmall
-                                          .fontStyle,
-                                    ),
-                                    letterSpacing: 0.0,
-                                    fontWeight: FlutterFlowTheme.of(context)
-                                        .titleSmall
-                                        .fontWeight,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .titleSmall
-                                        .fontStyle,
-                                  ),
-                            ),
-                            Text(
-                              FFLocalizations.of(context).getText(
-                                'scr433ev' /* One of your answers indicates ... */,
-                              ),
-                              style: FlutterFlowTheme.of(context)
-                                  .bodyMedium
-                                  .override(
-                                    font: GoogleFonts.inter(
-                                      fontWeight: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .fontStyle,
-                                    ),
-                                    color: FlutterFlowTheme.of(context)
-                                        .secondaryText,
-                                    letterSpacing: 0.0,
-                                    fontWeight: FlutterFlowTheme.of(context)
-                                        .bodyMedium
-                                        .fontWeight,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .bodyMedium
-                                        .fontStyle,
-                                  ),
-                            ),
-                            FFButtonWidget(
-                              onPressed: () async {
-                                context.pushNamed(
-                                  PathwayOverviewPageWidget.routeName,
-                                  queryParameters: {
-                                    'pathwayId': serializeParam(
-                                      _model.companionPathwayId,
-                                      ParamType.String,
-                                    ),
-                                  }.withoutNulls,
-                                );
-                              },
-                              text: FFLocalizations.of(context).getText(
-                                '4rf7c0y8' /* Open The New Man */,
-                              ),
-                              options: FFButtonOptions(
-                                padding: EdgeInsetsDirectional.fromSTEB(
-                                    0.0, 0.0, 0.0, 0.0),
-                                iconPadding: EdgeInsetsDirectional.fromSTEB(
-                                    0.0, 0.0, 0.0, 0.0),
-                                color: FlutterFlowTheme.of(context).tertiary,
-                                textStyle: TextStyle(
-                                  color:
-                                      FlutterFlowTheme.of(context).primaryText,
-                                ),
-                                borderRadius: BorderRadius.circular(12.0),
-                              ),
-                            ),
-                          ].divide(SizedBox(height: 8.0)),
-                        ),
-                      ),
-                    ),
+                  // Every member starts the core journey with Come & See,
+                  // so no companion pathway is suggested here.
                   FFButtonWidget(
                     onPressed: () async {
                       context.pushNamed(
                         PathwayOverviewPageWidget.routeName,
                         queryParameters: {
                           'pathwayId': serializeParam(
-                            _model.recommendedPathwayId,
+                            _kStartingPathwayId,
                             ParamType.String,
                           ),
                         }.withoutNulls,
