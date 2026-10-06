@@ -407,6 +407,8 @@ function splitLocalizedHeader(header, def) {
 // their column names are mapped to the importer's fields.
 
 const kSheetPreference = {
+  lessons: ["Lessons"],
+  quiz_questions: ["Quizzes"],
   encouragements: ["App Upload"],
   daily_scripture: ["365 Daily Encounters"],
 };
@@ -625,6 +627,8 @@ const kIdAliases = (() => {
     "KH-PATH-NM": "the-new-man",
     "KH-PATH-KHF": "kingdom-heirs-foundations",
     "KH-PATH-CG": "counterfeit-gospels",
+    "KH-PATH-RIC": "rooted-in-christ",
+    "KH-PATH-HS": "holy-spirit-in-the-life-of-every-christian",
   };
   const lessons = {};
   for (let n = 1; n <= 14; n++) {
@@ -633,10 +637,16 @@ const kIdAliases = (() => {
   for (let n = 1; n <= 5; n++) {
     lessons[`KH-RC-L${String(n).padStart(3, "0")}`] = `LESSON-ROOTED-${String(n).padStart(3, "0")}`;
   }
+  // Later Rooted in Christ files use KH-RIC-; days 6-30 already exist as KH-RC-.
+  for (let n = 1; n <= 30; n++) {
+    const d = String(n).padStart(3, "0");
+    lessons[`KH-RIC-L${d}`] = n <= 5 ? `LESSON-ROOTED-${d}` : `KH-RC-L${d}`;
+  }
   const quizzes = {
     "KH-CS-QZ01": "come-and-see-quiz-1",
     "KH-CS-QZ02": "come-and-see-quiz-2",
     "KH-RC-QZ01": "rooted-in-christ-quiz-1",
+    "KH-RIC-QZ01": "rooted-in-christ-quiz-1",
   };
   return { pathways, lessons, quizzes };
 })();
@@ -1329,10 +1339,20 @@ function buildPlan(type, records, existing) {
       update.stableId = record.id;
     }
     const currentStatus = (match.data && match.data.status) || "";
-    if (record.status && record.status !== currentStatus) {
-      update.status = record.status;
+    let fileStatus = record.status;
+    // An import never takes live content down; unpublish in Manage Content.
+    if (currentStatus === "published" && fileStatus === "draft") {
+      warnings.push({
+        row: record.rows[0],
+        column: "status",
+        message: `${record.id} is already published, so it stays published (status "draft" in the file is not applied).`,
+      });
+      fileStatus = "";
     }
-    const finalStatus = record.status || currentStatus || "draft";
+    if (fileStatus && fileStatus !== currentStatus) {
+      update.status = fileStatus;
+    }
+    const finalStatus = fileStatus || currentStatus || "draft";
     ops.push({
       action: Object.keys(update).length > 0 ? "update" : "unchanged",
       id: record.id,
