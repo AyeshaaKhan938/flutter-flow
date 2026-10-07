@@ -13,14 +13,13 @@ const kCorePathwayIds = [
   'journey-into-discipleship-evangelism',
   'holy-spirit-in-the-life-of-every-christian',
   'kingdom-heirs-foundations',
-  'counterfeit-gospels',
   'inner-healing-and-deliverance',
+  'counterfeit-gospels',
 ];
 
-/// Certificate id for completing every core pathway.
+/// Certificate id for completing all seven required core pathways.
 const kCoreCertificateId = 'core-discipleship';
-const kCoreCertificateTitle =
-    'Kingdom Heirs Core Discipleship Program Certificate';
+const kCoreCertificateTitle = 'Kingdom Heirs Complete Certificate';
 
 /// Shown on every certificate, as Kingdom Heirs requires.
 const kCertificateNotice =
@@ -561,9 +560,9 @@ const _kProgressionLabels = <String, Map<String, String>>{
     'lg': 'Satifikeeti zange',
   },
   kCoreCertificateTitle: {
-    'es': 'Certificado del Programa de Discipulado Central de Kingdom Heirs',
-    'ur': 'کنگڈم ہائرز بنیادی شاگردی پروگرام سرٹیفکیٹ',
-    'lg': 'Satifikeeti ya Pulogulaamu y’Obuyigirizwa Obukulu eya Kingdom Heirs',
+    'es': 'Certificado Completo de Kingdom Heirs',
+    'ur': 'کنگڈم ہائرز مکمل سرٹیفکیٹ',
+    'lg': 'Satifikeeti Enzijuvu eya Kingdom Heirs',
   },
   kCertificateNotice: {
     'es': 'Este certificado reconoce la finalización de un camino de discipulado de Kingdom Heirs. No es un título acreditado, una credencial profesional, una ordenación ni una licencia ministerial. Cualquier función ministerial o de liderazgo requiere un proceso de aprobación aparte de Kingdom Heirs.',
