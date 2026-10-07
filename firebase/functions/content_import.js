@@ -39,9 +39,10 @@ const kTypes = {
     // Growing studies outside the core order).
     // previewApproved: a Draft pathway may show a "Coming soon" card
     // (name, description, cover) without being opened.
+    // teaser: what the member will discover, shown on the locked preview.
     columns: ["stableId", "order", "durationDays", "status", "track",
       "previewApproved", "coverImageUrl"],
-    localized: ["title", "description"],
+    localized: ["title", "description", "teaser"],
     requiredHeaders: ["stableId", "order", "title_en"],
     requiredValues: ["stableId", "order", "title_en"],
     ints: ["order", "durationDays"],

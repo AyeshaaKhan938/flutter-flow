@@ -163,7 +163,10 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
         if ((_model.todayScriptureRef ?? '').isEmpty) {
           _model.todayScriptureRef = encounter.verseRef;
         }
-        if ((_model.todayScriptureText ?? '').isEmpty) {
+        // The backend returns stored translations even while a language
+        // is in review, so the CMS text (gated by forLanguage) wins then.
+        if ((_model.todayScriptureText ?? '').isEmpty ||
+            !LanguageRegistry.instance.isReleased(lang)) {
           _model.todayScriptureText = pick(encounter.text);
         }
         if (_todayPassage == null && encounter.verseRef.isNotEmpty) {
@@ -294,7 +297,11 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
     final passage = _todayPassage;
     final commentary = _backendText(_model.todayScriptureText);
     final title = _localizedField('theme');
-    final preview = _localizedField('versePreview');
+    // Licensed NIV preview: Scripture is never machine-translated.
+    final preview = LocaleTextStruct.maybeFromMap(
+                _encounter?.snapshotData['versePreview'])
+            ?.en ??
+        '';
     final readInContext =
         (_encounter?.snapshotData['readInContext'] as String?) ?? '';
     final gatewayUrl =

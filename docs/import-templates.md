@@ -34,6 +34,10 @@ The field dictionary and CSV templates for the **Bulk Curriculum Importer** (see
 | `durationDays` | recommended | integer |
 | `order` | recommended | integer; lower numbers are listed first |
 | `status` | recommended | |
+| `track` | recommended | `core` (unlocks in order) or `additional` (open any time) |
+| `teaser_en` … `teaser_lg` | optional | What the member will discover; shown on the locked preview |
+| `coverImageUrl` | optional | Approved cover art; a placeholder is shown until it is set |
+| `previewApproved` | optional | `true` shows a Draft pathway as "Coming soon" |
 
 ```csv
 stableId,title_en,title_es,title_ur,title_lg,description_en,description_es,description_ur,description_lg,durationDays,order,status

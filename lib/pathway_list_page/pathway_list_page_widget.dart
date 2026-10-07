@@ -86,8 +86,7 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
       }
       // Core journey locks / completion (lessons + quizzes at 80%+).
       _progression = await PathwayProgressionService.instance.refresh();
-      PathwayProgressionService.instance
-          .issueEarnedCertificates(_progression!);
+      PathwayProgressionService.instance.issueEarnedCertificates(_progression!);
       _model.isLoading = false;
       safeSetState(() {});
     });
@@ -249,7 +248,8 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
                         Text(
                           _t('Coming soon'),
                           style: theme.labelMedium.override(
-                            font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                            font:
+                                GoogleFonts.inter(fontWeight: FontWeight.w600),
                             color: theme.secondaryText,
                             letterSpacing: 0.0,
                           ),
@@ -325,198 +325,344 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
     );
   }
 
+  /// Approved cover art, or a branded placeholder until it is provided.
+  Widget _cover(PathwaysRecord p, double height, {bool locked = false}) {
+    final theme = FlutterFlowTheme.of(context);
+    final url = (p.snapshotData['coverImageUrl'] as String?) ?? '';
+    final placeholder = Container(
+      height: height,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [theme.primary, theme.secondary],
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Icon(Icons.auto_stories_outlined,
+          color: Colors.white.withValues(alpha: 0.85), size: height * 0.4),
+    );
+    final image = url.isEmpty
+        ? placeholder
+        : CachedNetworkImage(
+            imageUrl: url,
+            height: height,
+            width: double.infinity,
+            fit: BoxFit.cover,
+            placeholder: (_, __) => placeholder,
+            errorWidget: (_, __, ___) => placeholder,
+          );
+    if (!locked) {
+      return image;
+    }
+    return Stack(
+      children: [
+        ColorFiltered(
+          colorFilter:
+              const ColorFilter.mode(Colors.grey, BlendMode.saturation),
+          child: image,
+        ),
+        Positioned(
+          top: 10.0,
+          right: 10.0,
+          child: Container(
+            padding: const EdgeInsets.all(6.0),
+            decoration: const BoxDecoration(
+              color: Color(0x99000000),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.lock, color: Colors.white, size: 18.0),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// CMS teaser: what the member will discover in this pathway.
+  String _teaser(PathwaysRecord p) =>
+      LocaleTextStruct.maybeFromMap(p.snapshotData['teaser'])
+          ?.forLanguage(_model.memberLanguage) ??
+      '';
+
+  /// Preview of a locked pathway: cover, description and teaser, so the
+  /// member can see the journey ahead.
+  Future<void> _showLockedPreview(PathwayStatus status) async {
+    final theme = FlutterFlowTheme.of(context);
+    final p = status.pathway;
+    final lang = _model.memberLanguage;
+    final teaser = _teaser(p);
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: theme.secondaryBackground,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      builder: (context) => SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _cover(p, 180.0, locked: true),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20.0, 16.0, 20.0, 24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        '${_t('Step {n}', {
+                              'n': '${status.step}'
+                            })} · ${_t('Locked')}',
+                        style: theme.labelMedium.override(
+                          font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                          color: theme.secondaryText,
+                          letterSpacing: 0.0,
+                        ),
+                      ),
+                      Text(
+                        p.title.forLanguage(lang),
+                        style: theme.headlineSmall.override(
+                          font: GoogleFonts.inter(fontWeight: FontWeight.w700),
+                          letterSpacing: 0.0,
+                        ),
+                      ),
+                      if (p.description.en.isNotEmpty)
+                        Text(
+                          p.description.forLanguage(lang),
+                          style: theme.bodyMedium.override(
+                            font: GoogleFonts.inter(),
+                            letterSpacing: 0.0,
+                          ),
+                        ),
+                      if (teaser.isNotEmpty) ...[
+                        Text(
+                          _t('What you will discover'),
+                          style: theme.titleSmall.override(
+                            font:
+                                GoogleFonts.inter(fontWeight: FontWeight.w600),
+                            color: theme.primary,
+                            letterSpacing: 0.0,
+                          ),
+                        ),
+                        Text(
+                          teaser,
+                          style: theme.bodyMedium.override(
+                            font: GoogleFonts.inter(),
+                            letterSpacing: 0.0,
+                          ),
+                        ),
+                      ],
+                      Container(
+                        padding: const EdgeInsets.all(12.0),
+                        decoration: BoxDecoration(
+                          color: theme.primaryBackground,
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.lock_outline,
+                                size: 18.0, color: theme.secondaryText),
+                            const SizedBox(width: 8.0),
+                            Expanded(
+                              child: Text(
+                                _t('Complete your current pathway to unlock.'),
+                                style: theme.labelMedium.override(
+                                  font: GoogleFonts.inter(
+                                      fontWeight: FontWeight.w600),
+                                  letterSpacing: 0.0,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ].divide(const SizedBox(height: 10.0)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _pathwayCard(PathwayStatus status) {
     final theme = FlutterFlowTheme.of(context);
     final p = status.pathway;
     final lang = _model.memberLanguage;
     final locked = status.isCore && !status.unlocked;
-    final lockedByTitle = status.lockedBy?.title.forLanguage(lang) ?? '';
-    final lockMessage = _t('Complete {title} to unlock', {
-      'title': lockedByTitle,
-    });
+    final current = status.isCore && status.unlocked && !status.completed;
+    final teaser = _teaser(p);
 
-    Widget leading() {
-      if (!status.isCore) {
-        return Icon(Icons.auto_stories_outlined,
-            color: theme.secondary, size: 28.0);
-      }
-      final Color bg = status.completed
-          ? theme.success
-          : (locked ? theme.alternate : theme.primary);
-      return Container(
-        width: 36.0,
-        height: 36.0,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
-        child: status.completed
-            ? const Icon(Icons.check, color: Colors.white, size: 20.0)
-            : locked
-                ? Icon(Icons.lock_outline,
-                    color: theme.secondaryText, size: 18.0)
-                : Text(
-                    '${status.step}',
-                    style: GoogleFonts.inter(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15.0,
-                    ),
-                  ),
+    Future<void> open() async {
+      await context.pushNamed(
+        PathwayOverviewPageWidget.routeName,
+        queryParameters: {
+          'pathwayId': serializeParam(p.stableId, ParamType.String),
+        }.withoutNulls,
       );
+      // Progress may have changed while the pathway was open.
+      final updated = await PathwayProgressionService.instance.refresh();
+      if (mounted) {
+        safeSetState(() => _progression = updated);
+        PathwayProgressionService.instance.issueEarnedCertificates(updated);
+      }
     }
+
+    final label = !status.isCore
+        ? ''
+        : status.completed
+            ? '${_t('Step {n}', {'n': '${status.step}'})} · ${_t('Completed')}'
+            : current
+                ? '${_t('Step {n}', {
+                        'n': '${status.step}'
+                      })} · ${_t('Current Pathway')}'
+                : '${_t('Step {n}', {
+                        'n': '${status.step}'
+                      })} · ${_t('Locked')}';
 
     return InkWell(
       splashColor: Colors.transparent,
       focusColor: Colors.transparent,
       hoverColor: Colors.transparent,
       highlightColor: Colors.transparent,
-      onTap: () async {
-        if (locked) {
-          ScaffoldMessenger.of(context).clearSnackBars();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(lockMessage),
-              duration: const Duration(milliseconds: 3500),
-            ),
-          );
-          return;
-        }
-        await context.pushNamed(
-          PathwayOverviewPageWidget.routeName,
-          queryParameters: {
-            'pathwayId': serializeParam(p.stableId, ParamType.String),
-          }.withoutNulls,
-        );
-        // Progress may have changed while the pathway was open.
-        final updated = await PathwayProgressionService.instance.refresh();
-        if (mounted) {
-          safeSetState(() => _progression = updated);
-          PathwayProgressionService.instance.issueEarnedCertificates(updated);
-        }
-      },
-      child: Opacity(
-        opacity: locked ? 0.65 : 1.0,
-        child: Container(
-          decoration: BoxDecoration(
-            color: theme.secondaryBackground,
-            boxShadow: const [
-              BoxShadow(
-                blurRadius: 12.0,
-                color: Color(0x141E2A5A),
-                offset: Offset(0.0, 4.0),
-                spreadRadius: -4.0,
-              )
-            ],
-            borderRadius: BorderRadius.circular(16.0),
-            border: status.completed
-                ? Border.all(color: theme.success, width: 1.2)
-                : null,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                leading(),
-                const SizedBox(width: 14.0),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (status.isCore)
-                        Text(
-                          _t('Step {n}', {'n': '${status.step}'}),
-                          style: theme.labelSmall.override(
-                            font: GoogleFonts.inter(
-                                fontWeight: FontWeight.w600),
-                            color: theme.secondaryText,
+      onTap: locked ? () => _showLockedPreview(status) : open,
+      child: Container(
+        decoration: BoxDecoration(
+          color: theme.secondaryBackground,
+          boxShadow: const [
+            BoxShadow(
+              blurRadius: 12.0,
+              color: Color(0x141E2A5A),
+              offset: Offset(0.0, 4.0),
+              spreadRadius: -4.0,
+            )
+          ],
+          borderRadius: BorderRadius.circular(16.0),
+          border: status.completed
+              ? Border.all(color: theme.success, width: 1.2)
+              : current
+                  ? Border.all(color: theme.primary, width: 1.5)
+                  : null,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _cover(p, current ? 140.0 : 110.0, locked: locked),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (label.isNotEmpty)
+                    Text(
+                      label,
+                      style: theme.labelSmall.override(
+                        font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                        color: current
+                            ? theme.primary
+                            : status.completed
+                                ? theme.success
+                                : theme.secondaryText,
+                        letterSpacing: 0.0,
+                      ),
+                    ),
+                  Text(
+                    p.title.forLanguage(lang),
+                    style: theme.titleMedium.override(
+                      font: GoogleFonts.inter(
+                        fontWeight: theme.titleMedium.fontWeight,
+                        fontStyle: theme.titleMedium.fontStyle,
+                      ),
+                      color: theme.primaryText,
+                      letterSpacing: 0.0,
+                    ),
+                  ),
+                  Text(
+                    p.description.forLanguage(lang),
+                    maxLines: locked ? 3 : 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.bodyMedium.override(
+                      font: GoogleFonts.inter(),
+                      color: theme.secondaryText,
+                      letterSpacing: 0.0,
+                    ),
+                  ),
+                  if (locked && teaser.isNotEmpty)
+                    Text(
+                      teaser,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.bodySmall.override(
+                        font: GoogleFonts.inter(fontStyle: FontStyle.italic),
+                        color: theme.secondaryText,
+                        letterSpacing: 0.0,
+                      ),
+                    ),
+                  if (locked)
+                    Row(
+                      children: [
+                        Icon(Icons.lock_outline,
+                            size: 16.0, color: theme.secondaryText),
+                        const SizedBox(width: 6.0),
+                        Expanded(
+                          child: Text(
+                            _t('Complete your current pathway to unlock.'),
+                            style: theme.labelMedium.override(
+                              font: GoogleFonts.inter(
+                                  fontWeight: FontWeight.w600),
+                              color: theme.secondaryText,
+                              letterSpacing: 0.0,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  if (current)
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: FilledButton.icon(
+                        onPressed: open,
+                        icon: const Icon(Icons.play_arrow_rounded, size: 18.0),
+                        label: Text(status.lessonsCompleted > 0
+                            ? _t('Continue')
+                            : _t('Start')),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: theme.primary,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                  if (status.completed)
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: TextButton.icon(
+                        onPressed: () => _openCertificate(p.stableId),
+                        icon: Icon(Icons.workspace_premium_outlined,
+                            size: 16.0, color: theme.primary),
+                        label: Text(
+                          _t('View certificate'),
+                          style: theme.labelMedium.override(
+                            font:
+                                GoogleFonts.inter(fontWeight: FontWeight.w600),
+                            color: theme.primary,
                             letterSpacing: 0.0,
                           ),
                         ),
-                      Text(
-                        p.title.forLanguage(lang),
-                        style: theme.titleMedium.override(
-                          font: GoogleFonts.inter(
-                            fontWeight: theme.titleMedium.fontWeight,
-                            fontStyle: theme.titleMedium.fontStyle,
-                          ),
-                          color: theme.primaryText,
-                          letterSpacing: 0.0,
-                        ),
                       ),
-                      Text(
-                        p.description.forLanguage(lang),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.bodyMedium.override(
-                          font: GoogleFonts.inter(),
-                          color: theme.secondaryText,
-                          letterSpacing: 0.0,
-                        ),
-                      ),
-                      if (locked)
-                        Row(
-                          children: [
-                            Icon(Icons.lock_outline,
-                                size: 16.0, color: theme.secondaryText),
-                            const SizedBox(width: 6.0),
-                            Expanded(
-                              child: Text(
-                                lockMessage,
-                                style: theme.labelMedium.override(
-                                  font: GoogleFonts.inter(
-                                      fontWeight: FontWeight.w600),
-                                  color: theme.secondaryText,
-                                  letterSpacing: 0.0,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      if (status.completed)
-                        Wrap(
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          spacing: 8.0,
-                          children: [
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.check_circle,
-                                    size: 16.0, color: theme.success),
-                                const SizedBox(width: 4.0),
-                                Text(
-                                  _t('Completed'),
-                                  style: theme.labelMedium.override(
-                                    font: GoogleFonts.inter(
-                                        fontWeight: FontWeight.w600),
-                                    color: theme.success,
-                                    letterSpacing: 0.0,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            TextButton.icon(
-                              onPressed: () => _openCertificate(p.stableId),
-                              icon: Icon(Icons.workspace_premium_outlined,
-                                  size: 16.0, color: theme.primary),
-                              label: Text(
-                                _t('View certificate'),
-                                style: theme.labelMedium.override(
-                                  font: GoogleFonts.inter(
-                                      fontWeight: FontWeight.w600),
-                                  color: theme.primary,
-                                  letterSpacing: 0.0,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                    ].divide(const SizedBox(height: 4.0)),
-                  ),
-                ),
-              ],
+                    ),
+                ].divide(const SizedBox(height: 4.0)),
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

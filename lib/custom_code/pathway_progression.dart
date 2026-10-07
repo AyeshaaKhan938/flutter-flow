@@ -570,6 +570,54 @@ const _kProgressionLabels = <String, Map<String, String>>{
     'ur': 'یہ سرٹیفکیٹ کنگڈم ہائرز کے شاگردی کے ایک راستے کی تکمیل کا اعتراف ہے۔ یہ کوئی تسلیم شدہ ڈگری، پیشہ ورانہ سند، تقرری (آرڈینیشن) یا خدمت کا لائسنس نہیں۔ کسی بھی خدمت یا قیادت کے کردار کے لیے کنگڈم ہائرز کی الگ منظوری درکار ہے۔',
     'lg': 'Satifikeeti eno ekakasa okumaliriza omukutu gw’obuyigirizwa ogwa Kingdom Heirs. Si diguli ekkirizibwa, si bbaluwa ya bukugu, si kutongozebwa mu buweereza era si layisinsi ya buweereza. Omulimu gwonna ogw’obuweereza oba obukulembeze gwetaaga okukkirizibwa okw’enjawulo okwa Kingdom Heirs.',
   },
+  'Based on your answers, {title} will be especially meaningful for you. It unlocks as you complete the core pathways before it.':
+      {
+    'es':
+        'Según tus respuestas, {title} será especialmente significativo para ti. Se desbloquea a medida que completas los caminos principales anteriores.',
+    'ur':
+        'آپ کے جوابات کی بنیاد پر {title} آپ کے لیے خاص طور پر بامعنی ہوگا۔ یہ اس سے پہلے کے بنیادی راستے مکمل کرنے پر کھلتا ہے۔',
+    'lg':
+        'Okusinziira ku by’oddamu, {title} kijja kukuyamba nnyo. Kiggulwawo bw’omaliriza emikutu emikulu egikisooka.',
+  },
+  'Based on your answers, we also suggest {title}. You can explore it any time under Additional Studies.':
+      {
+    'es':
+        'Según tus respuestas, también te sugerimos {title}. Puedes explorarlo en cualquier momento en Estudios adicionales.',
+    'ur':
+        'آپ کے جوابات کی بنیاد پر ہم {title} بھی تجویز کرتے ہیں۔ آپ اسے کسی بھی وقت اضافی مطالعات میں دیکھ سکتے ہیں۔',
+    'lg':
+        'Okusinziira ku by’oddamu, era tukuwa amagezi ku {title}. Osobola okukisoma essaawa yonna wansi wa Ebyokusoma Ebirala.',
+  },
+  'Current Pathway': {
+    'es': 'Camino actual',
+    'ur': 'موجودہ راستہ',
+    'lg': 'Omukutu gw’oliko',
+  },
+  'Locked': {
+    'es': 'Bloqueado',
+    'ur': 'مقفل',
+    'lg': 'Kisibiddwa',
+  },
+  'Start': {
+    'es': 'Comenzar',
+    'ur': 'شروع کریں',
+    'lg': 'Tandika',
+  },
+  'Continue': {
+    'es': 'Continuar',
+    'ur': 'جاری رکھیں',
+    'lg': 'Weeyongereyo',
+  },
+  'Complete your current pathway to unlock.': {
+    'es': 'Completa tu camino actual para desbloquearlo.',
+    'ur': 'اسے کھولنے کے لیے اپنا موجودہ راستہ مکمل کریں۔',
+    'lg': 'Maliriza omukutu gw’oliko okuguggulawo.',
+  },
+  'What you will discover': {
+    'es': 'Lo que descubrirás',
+    'ur': 'آپ کیا دریافت کریں گے',
+    'lg': 'By’ogenda okuzuula',
+  },
   'Coming soon': {
     'es': 'Próximamente',
     'ur': 'جلد آ رہا ہے',

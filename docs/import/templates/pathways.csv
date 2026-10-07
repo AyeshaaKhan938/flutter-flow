@@ -1,2 +1,2 @@
-stableId,order,durationDays,status,title_en,title_es,title_ur,title_lg,description_en,description_es,description_ur,description_lg
-come-and-see,1,14,draft,Come & See,Ven y Ve,آؤ اور دیکھو,Jjangu Olabe,Meet Jesus...,Conoce a Jesús...,یسوع سے ملیں...,Sisinkana ne Yesu...
+stableId,order,durationDays,status,track,previewApproved,coverImageUrl,title_en,title_es,title_ur,title_lg,description_en,description_es,description_ur,description_lg,teaser_en,teaser_es,teaser_ur,teaser_lg
+come-and-see,1,14,draft,core,false,,Come & See,Ven y Ve,آؤ اور دیکھو,Jjangu Olabe,Meet Jesus...,Conoce a Jesús...,یسوع سے ملیں...,Sisinkana ne Yesu...,Discover who Jesus is...,,,

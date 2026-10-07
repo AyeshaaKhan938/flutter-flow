@@ -90,8 +90,8 @@ class TranslationService extends ChangeNotifier {
       english.length <= _kMaxTextLength &&
       LanguageRegistry.instance.allowsMachineTranslation(lang);
 
-  /// [english] in [lang]: reviewed text, else machine text, else English
-  /// (and a background request is scheduled).
+  /// [english] in [lang]: text an administrator approved, else English.
+  /// Machine drafts are still requested (for reviewers) but never shown.
   String translate(String english, String? lang) {
     final code = (lang ?? '').trim().toLowerCase();
     if (!_translatable(english, code)) {
@@ -99,7 +99,7 @@ class TranslationService extends ChangeNotifier {
     }
     final entry = _cache[code]?[english];
     if (entry != null) {
-      return entry.text;
+      return entry.approved ? entry.text : english;
     }
     loadLanguage(code);
     _schedule(english, code);
@@ -118,8 +118,8 @@ class TranslationService extends ChangeNotifier {
   }
 
   /// True when [english] is shown to the member as unreviewed machine text.
-  bool isMachine(String english, String? lang) =>
-      statusOf(english, lang) == TranslationStatus.machine;
+  /// Never, now: unreviewed text falls back to English.
+  bool isMachine(String english, String? lang) => false;
 
   void _schedule(String english, String lang) {
     final failed = _failedAt[_key(lang, english)];

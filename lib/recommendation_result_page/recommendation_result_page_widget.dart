@@ -58,6 +58,30 @@ class _RecommendationResultPageWidgetState
   /// whatever the assessment recommends.
   static const _kStartingPathwayId = 'come-and-see';
 
+  /// Personal suggestion from the assessment profile. It never changes
+  /// where the member starts: a core pathway still unlocks in order, an
+  /// additional study can be explored any time.
+  String _personalSuggestion() {
+    final ids = [_model.recommendedPathwayId, _model.companionPathwayId];
+    for (final id in ids) {
+      final p = _pathwaysById[id ?? ''];
+      if (p == null ||
+          p.stableId == _kStartingPathwayId ||
+          p.status != 'published') {
+        continue;
+      }
+      final core = PathwayProgressionService.trackOf(p) == 'core';
+      return progressionText(
+        core
+            ? 'Based on your answers, {title} will be especially meaningful for you. It unlocks as you complete the core pathways before it.'
+            : 'Based on your answers, we also suggest {title}. You can explore it any time under Additional Studies.',
+        LanguageRegistry.contentLanguage,
+        {'title': _pathwayName(p.stableId)},
+      );
+    }
+    return '';
+  }
+
   String _startingReason() => progressionText(
         'Every member begins the Kingdom Heirs core journey with {title}.',
         LanguageRegistry.contentLanguage,
@@ -206,8 +230,9 @@ class _RecommendationResultPageWidgetState
                                 .fontStyle,
                           ),
                           letterSpacing: 0.0,
-                          fontWeight:
-                              FlutterFlowTheme.of(context).titleLarge.fontWeight,
+                          fontWeight: FlutterFlowTheme.of(context)
+                              .titleLarge
+                              .fontWeight,
                           fontStyle:
                               FlutterFlowTheme.of(context).titleLarge.fontStyle,
                         ),
@@ -232,8 +257,35 @@ class _RecommendationResultPageWidgetState
                               FlutterFlowTheme.of(context).bodyMedium.fontStyle,
                         ),
                   ),
-                  // Every member starts the core journey with Come & See,
-                  // so no companion pathway is suggested here.
+                  // Every member starts the core journey with Come & See;
+                  // the assessment only personalizes suggestions.
+                  if (_personalSuggestion().isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(14.0),
+                      decoration: BoxDecoration(
+                        color: FlutterFlowTheme.of(context).secondaryBackground,
+                        borderRadius: BorderRadius.circular(14.0),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.lightbulb_outline,
+                              color: FlutterFlowTheme.of(context).primary),
+                          const SizedBox(width: 10.0),
+                          Expanded(
+                            child: Text(
+                              _personalSuggestion(),
+                              style: FlutterFlowTheme.of(context)
+                                  .bodyMedium
+                                  .override(
+                                    font: GoogleFonts.inter(),
+                                    letterSpacing: 0.0,
+                                  ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   FFButtonWidget(
                     onPressed: () async {
                       context.pushNamed(

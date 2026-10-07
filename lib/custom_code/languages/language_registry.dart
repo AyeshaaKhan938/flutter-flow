@@ -7,9 +7,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// One entry of the `languages/{code}` CMS collection.
 ///
-/// - [tier] 'approved': content reviewed by Kingdom Heirs.
-///   'machine': Google machine translation, shown with a notice until an
-///   administrator approves each text.
+/// - [tier] 'approved': translations reviewed and released by Kingdom
+///   Heirs; members see the stored translations.
+///   'machine': in review. Members see only texts an administrator has
+///   approved one by one, and English for everything else. Unreviewed
+///   machine translation is never shown to members.
 /// - [bibleId]: API.Bible id for Scripture in this language. Empty means the
 ///   English Bible is shown with a note. Scripture is never machine-translated.
 class AppLanguage {
@@ -90,7 +92,7 @@ const kDefaultLanguages = <AppLanguage>[
     code: 'es',
     name: 'Español',
     englishName: 'Spanish',
-    tier: 'approved',
+    tier: 'machine',
     order: 2,
     bibleId: '592420522e16049f-01',
     bibleName: 'RVR1909',
@@ -100,7 +102,7 @@ const kDefaultLanguages = <AppLanguage>[
     name: 'اردو',
     englishName: 'Urdu',
     rtl: true,
-    tier: 'approved',
+    tier: 'machine',
     order: 3,
     bibleId: 'eecbca904435fce9-01',
     bibleName: 'OUCV',
@@ -109,7 +111,7 @@ const kDefaultLanguages = <AppLanguage>[
     code: 'lg',
     name: 'Luganda',
     englishName: 'Luganda',
-    tier: 'approved',
+    tier: 'machine',
     order: 4,
     bibleId: 'f276be3571f516cb-01',
     bibleName: 'EEEE',
@@ -172,6 +174,13 @@ class LanguageRegistry extends ChangeNotifier {
   bool isRtl(String? code) {
     final c = (code ?? '').trim().toLowerCase();
     return byCode(c)?.rtl ?? _kRtlCodes.contains(c.split('_').first);
+  }
+
+  /// Whether the stored translations for [code] are reviewed and released
+  /// to members (English always is).
+  bool isReleased(String? code) {
+    final c = (code ?? '').trim().toLowerCase();
+    return c.isEmpty || c == 'en' || (byCode(c)?.isApproved ?? false);
   }
 
   /// Whether text for [code] may be machine-translated (an active language).

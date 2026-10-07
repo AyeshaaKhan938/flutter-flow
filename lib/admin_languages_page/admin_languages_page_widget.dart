@@ -176,9 +176,10 @@ class _AdminLanguagesPageWidgetState extends State<AdminLanguagesPageWidget> {
             const SizedBox(height: 8.0),
             Text(
               'Active languages appear in the member language picker '
-              'immediately: "approved" under Approved languages, "machine" '
-              'under More languages with a machine-translation notice. '
-              'English is the master source.',
+              'immediately. "Released" shows the stored translations; '
+              '"In review" shows only texts approved below and English for '
+              'everything else. Unreviewed machine translation is never '
+              'shown to members. English is the master source.',
               style: theme.labelSmall.override(
                 font: GoogleFonts.inter(),
                 color: theme.secondaryText,
@@ -205,7 +206,7 @@ class _AdminLanguagesPageWidgetState extends State<AdminLanguagesPageWidget> {
                           : '${l.name} · ${l.englishName} (${l.code})',
                     ),
                     subtitle: Text([
-                      l.isApproved ? 'Approved' : 'Machine-translated',
+                      l.isApproved ? 'Released' : 'In review',
                       l.active ? 'active' : 'inactive',
                       if (l.rtl) 'RTL',
                       'order ${l.order}',
@@ -836,10 +837,10 @@ class _LanguageEditorDialogState extends State<_LanguageEditorDialog> {
                 items: const [
                   DropdownMenuItem(
                       value: 'approved',
-                      child: Text('Approved (reviewed by Kingdom Heirs)')),
+                      child: Text('Released (reviewed by Kingdom Heirs)')),
                   DropdownMenuItem(
                       value: 'machine',
-                      child: Text('More languages (machine-translated)')),
+                      child: Text('In review (English shown until approved)')),
                 ],
                 onChanged: (v) => setState(() => _tier = v ?? 'machine'),
               ),

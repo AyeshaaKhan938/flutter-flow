@@ -7,6 +7,7 @@ import '/backend/schema/util/firestore_util.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 // Hand edit (keep after FlutterFlow sync): machine translation fallback.
 import '/custom_code/languages/translation_service.dart';
+import '/custom_code/languages/language_registry.dart';
 import 'package:collection/collection.dart' show MapEquality;
 
 /// DSL struct LocaleText
@@ -91,27 +92,35 @@ class LocaleTextStruct extends FFFirebaseStruct {
         _ => _extra[languageCode] ?? '',
       };
 
-  /// The text for [languageCode]: stored translation, else the cached
-  /// (reviewed or machine) translation of the English text, else English,
-  /// so the member never sees a blank. Kingdom Heirs-authored text only;
-  /// use [scriptureForLanguage] for Scripture.
+  /// Stored text for [languageCode] if that language is released to
+  /// members (reviewed), else ''.
+  String _releasedText(String? languageCode) =>
+      LanguageRegistry.instance.isReleased(languageCode)
+          ? storedText(languageCode)
+          : '';
+
+  /// The text for [languageCode]: stored translation of a released
+  /// language, else a translation an administrator approved, else English,
+  /// so the member never sees a blank or unreviewed machine text. Kingdom
+  /// Heirs-authored text only; use [scriptureForLanguage] for Scripture.
   String forLanguage(String? languageCode) {
-    final text = storedText(languageCode);
+    final text = _releasedText(languageCode);
     if (text.isNotEmpty) {
       return text;
     }
     return TranslationService.instance.translate(en, languageCode);
   }
 
-  /// Scripture text: stored translation or English, never machine-translated.
+  /// Scripture text: stored translation of a released language or English,
+  /// never machine-translated.
   String scriptureForLanguage(String? languageCode) {
-    final text = storedText(languageCode);
+    final text = _releasedText(languageCode);
     return text.isNotEmpty ? text : en;
   }
 
   /// True when [forLanguage] shows unreviewed machine translation.
   bool isMachineTranslated(String? languageCode) =>
-      storedText(languageCode).isEmpty &&
+      _releasedText(languageCode).isEmpty &&
       en.isNotEmpty &&
       TranslationService.instance.isMachine(en, languageCode);
 

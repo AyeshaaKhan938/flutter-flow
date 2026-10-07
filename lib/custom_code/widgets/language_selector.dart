@@ -12,7 +12,7 @@ import '/custom_code/languages/translation_service.dart';
 
 /// Language picker driven by the CMS `languages` collection: "Approved
 /// languages" (reviewed by Kingdom Heirs) first, then "More languages" whose
-/// content is machine-translated. New languages appear as soon as an
+/// translations are still in review (English is shown until approved). New languages appear as soon as an
 /// administrator activates them; no app update is needed.
 class LanguageSelector extends StatefulWidget {
   const LanguageSelector({
@@ -104,7 +104,7 @@ class _LanguageSelectorState extends State<LanguageSelector> {
                     children: [
                       Expanded(
                         child: Text(
-                          _t('More languages (machine-translated)'),
+                          _t('More languages (translation in review)'),
                           style: labelStyle,
                         ),
                       ),
@@ -118,9 +118,10 @@ class _LanguageSelectorState extends State<LanguageSelector> {
               ),
               if (_showMore) ...[
                 Text(
-                  _t('These languages use Google machine translation that '
-                      'Kingdom Heirs has not yet reviewed. Scripture is '
-                      'never machine-translated.'),
+                  _t('Kingdom Heirs is still reviewing the translations '
+                      'for these languages, so some content appears in '
+                      'English until it is approved. Scripture is never '
+                      'machine-translated.'),
                   style: theme.labelSmall.override(
                     font: GoogleFonts.inter(),
                     color: theme.secondaryText,
