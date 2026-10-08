@@ -587,6 +587,11 @@ const _kProgressionLabels = <String, Map<String, String>>{
     'lg':
         'Okusinziira ku by’oddamu, era tukuwa amagezi ku {title}. Osobola okukisoma essaawa yonna wansi wa Ebyokusoma Ebirala.',
   },
+  '{n} lessons': {
+    'es': '{n} lecciones',
+    'ur': '{n} اسباق',
+    'lg': 'Amasomo {n}',
+  },
   'Current Pathway': {
     'es': 'Camino actual',
     'ur': 'موجودہ راستہ',

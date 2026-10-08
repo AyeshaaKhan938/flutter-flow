@@ -7,7 +7,6 @@ import '/flutter_flow/flutter_flow_widgets.dart';
 import '/custom_code/actions/index.dart' as actions;
 import '/flutter_flow/custom_functions.dart' as functions;
 import '/index.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -16,6 +15,7 @@ import 'package:provider/provider.dart';
 import 'pathway_overview_page_model.dart';
 import '/custom_code/languages/language_registry.dart';
 import '/custom_code/pathway_progression.dart';
+import '/custom_code/widgets/pathway_cover.dart';
 export 'pathway_overview_page_model.dart';
 
 /// Shows a pathway's lessons and progress; entry point into the Daily Lesson
@@ -55,8 +55,7 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
         _progression = progression;
         _progressionLoaded = true;
         safeSetState(() {});
-        PathwayProgressionService.instance
-            .issueEarnedCertificates(progression);
+        PathwayProgressionService.instance.issueEarnedCertificates(progression);
       }, onError: (_) {
         _progressionLoaded = true;
         safeSetState(() {});
@@ -177,9 +176,9 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
         .toList()
       ..sort((a, b) => a.dayNumber.compareTo(b.dayNumber));
     for (final l in earlier) {
-      final done = functions.isLessonComplete(
-              _model.completedLessonsCsv, l.stableId) ??
-          false;
+      final done =
+          functions.isLessonComplete(_model.completedLessonsCsv, l.stableId) ??
+              false;
       if (!done) {
         return l;
       }
@@ -428,16 +427,16 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // Same official cover as the pathway card and preview.
                   ClipRRect(
                     borderRadius: BorderRadius.circular(20.0),
-                    child: CachedNetworkImage(
-                      fadeInDuration: Duration(milliseconds: 0),
-                      fadeOutDuration: Duration(milliseconds: 0),
-                      imageUrl:
-                          'https://firebasestorage.googleapis.com/v0/b/kingdom-heirs-discipleshipapp.firebasestorage.app/o/branding%2Fphoto_15.jpg?alt=media',
-                      width: double.infinity,
-                      height: 170.0,
-                      fit: BoxFit.cover,
+                    child: PathwayCover(
+                      pathwayId: widget.pathwayId ?? '',
+                      coverUrl: (_status?.pathway.snapshotData['coverImageUrl']
+                              as String?) ??
+                          '',
+                      height: 260.0,
+                      locked: _isLocked,
                     ),
                   ),
                   if (_isLocked) _buildLockedCard(),
@@ -645,18 +644,27 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
                   if (_progressionLoaded &&
                       !_isLocked &&
                       widget.pathwayId == 'come-and-see')
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        FFLocalizations.of(context).getText(
-                          '8la73y6n' /* Quizzes */,
-                        ),
-                        style:
-                            FlutterFlowTheme.of(context).titleMedium.override(
-                                  font: GoogleFonts.inter(
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          FFLocalizations.of(context).getText(
+                            '8la73y6n' /* Quizzes */,
+                          ),
+                          style:
+                              FlutterFlowTheme.of(context).titleMedium.override(
+                                    font: GoogleFonts.inter(
+                                      fontWeight: FlutterFlowTheme.of(context)
+                                          .titleMedium
+                                          .fontWeight,
+                                      fontStyle: FlutterFlowTheme.of(context)
+                                          .titleMedium
+                                          .fontStyle,
+                                    ),
+                                    color: FlutterFlowTheme.of(context).primary,
+                                    letterSpacing: 0.0,
                                     fontWeight: FlutterFlowTheme.of(context)
                                         .titleMedium
                                         .fontWeight,
@@ -664,24 +672,25 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
                                         .titleMedium
                                         .fontStyle,
                                   ),
-                                  color: FlutterFlowTheme.of(context).primary,
-                                  letterSpacing: 0.0,
+                        ),
+                        Text(
+                          FFLocalizations.of(context).getText(
+                            'tk5n04z3' /* Quiz 1 after Lesson 7 · Quiz 2... */,
+                          ),
+                          style: FlutterFlowTheme.of(context)
+                              .labelMedium
+                              .override(
+                                font: GoogleFonts.inter(
                                   fontWeight: FlutterFlowTheme.of(context)
-                                      .titleMedium
+                                      .labelMedium
                                       .fontWeight,
                                   fontStyle: FlutterFlowTheme.of(context)
-                                      .titleMedium
+                                      .labelMedium
                                       .fontStyle,
                                 ),
-                      ),
-                      Text(
-                        FFLocalizations.of(context).getText(
-                          'tk5n04z3' /* Quiz 1 after Lesson 7 · Quiz 2... */,
-                        ),
-                        style: FlutterFlowTheme.of(context)
-                            .labelMedium
-                            .override(
-                              font: GoogleFonts.inter(
+                                color:
+                                    FlutterFlowTheme.of(context).secondaryText,
+                                letterSpacing: 0.0,
                                 fontWeight: FlutterFlowTheme.of(context)
                                     .labelMedium
                                     .fontWeight,
@@ -689,281 +698,261 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
                                     .labelMedium
                                     .fontStyle,
                               ),
-                              color: FlutterFlowTheme.of(context).secondaryText,
-                              letterSpacing: 0.0,
-                              fontWeight: FlutterFlowTheme.of(context)
-                                  .labelMedium
-                                  .fontWeight,
-                              fontStyle: FlutterFlowTheme.of(context)
-                                  .labelMedium
-                                  .fontStyle,
-                            ),
-                      ),
-                      FFButtonWidget(
-                        onPressed: () async {
-                          context.pushNamed(
-                            QuizPageWidget.routeName,
-                            queryParameters: {
-                              'pathwayId': serializeParam(
-                                widget.pathwayId,
-                                ParamType.String,
-                              ),
-                              'quizId': serializeParam(
-                                'come-and-see-quiz-1',
-                                ParamType.String,
-                              ),
-                            }.withoutNulls,
-                          );
-                        },
-                        text: FFLocalizations.of(context).getText(
-                          'cp7vkmln' /* Take Come & See Quiz 1 */,
                         ),
-                        options: FFButtonOptions(
-                          width: double.infinity,
-                          padding: EdgeInsetsDirectional.fromSTEB(
-                              0.0, 0.0, 0.0, 0.0),
-                          iconPadding: EdgeInsetsDirectional.fromSTEB(
-                              0.0, 0.0, 0.0, 0.0),
-                          color: FlutterFlowTheme.of(context).secondary,
-                          textStyle: TextStyle(
-                            color: FlutterFlowTheme.of(context).primaryText,
-                          ),
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                      ),
-                      FFButtonWidget(
-                        onPressed: () async {
-                          context.pushNamed(
-                            QuizPageWidget.routeName,
-                            queryParameters: {
-                              'pathwayId': serializeParam(
-                                widget.pathwayId,
-                                ParamType.String,
-                              ),
-                              'quizId': serializeParam(
-                                'come-and-see-quiz-2',
-                                ParamType.String,
-                              ),
-                            }.withoutNulls,
-                          );
-                        },
-                        text: FFLocalizations.of(context).getText(
-                          'm9uk4ao4' /* Take Come & See Quiz 2 */,
-                        ),
-                        options: FFButtonOptions(
-                          width: double.infinity,
-                          padding: EdgeInsetsDirectional.fromSTEB(
-                              0.0, 0.0, 0.0, 0.0),
-                          iconPadding: EdgeInsetsDirectional.fromSTEB(
-                              0.0, 0.0, 0.0, 0.0),
-                          color: FlutterFlowTheme.of(context).secondary,
-                          textStyle: TextStyle(
-                            color: FlutterFlowTheme.of(context).primaryText,
-                          ),
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                      ),
-                    ].divide(SizedBox(height: 8.0)),
-                  ),
-                  if (_progressionLoaded && !_isLocked)
-                  Builder(
-                    builder: (context) {
-                      final lessonsListItem = _model.lessonsList.toList()
-                        ..sort((a, b) => a.dayNumber.compareTo(b.dayNumber));
-
-                      return ListView.separated(
-                        padding: EdgeInsets.zero,
-                        primary: false,
-                        shrinkWrap: true,
-                        scrollDirection: Axis.vertical,
-                        itemCount: lessonsListItem.length,
-                        separatorBuilder: (_, __) => SizedBox(height: 8.0),
-                        itemBuilder: (context, lessonsListItemIndex) {
-                          final lessonsListItemItem =
-                              lessonsListItem[lessonsListItemIndex];
-                          return Visibility(
-                            visible: lessonsListItemItem.pathwayId ==
-                                widget.pathwayId,
-                            child: InkWell(
-                              splashColor: Colors.transparent,
-                              focusColor: Colors.transparent,
-                              hoverColor: Colors.transparent,
-                              highlightColor: Colors.transparent,
-                              onTap: () async {
-                                // Lessons are taken in order (any number per
-                                // day): earlier lessons must be completed.
-                                final blocking = _firstIncompleteBefore(
-                                    lessonsListItemItem);
-                                if (blocking != null) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(_t(
-                                          'Complete lesson {n} first.',
-                                          {'n': '${blocking.dayNumber}'})),
-                                    ),
-                                  );
-                                  return;
-                                }
-                                context.pushNamed(
-                                  DailyLessonPageWidget.routeName,
-                                  queryParameters: {
-                                    'pathwayId': serializeParam(
-                                      widget.pathwayId,
-                                      ParamType.String,
-                                    ),
-                                    'lessonId': serializeParam(
-                                      lessonsListItemItem.stableId,
-                                      ParamType.String,
-                                    ),
-                                  }.withoutNulls,
-                                );
-                              },
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: FlutterFlowTheme.of(context)
-                                      .secondaryBackground,
-                                  borderRadius: BorderRadius.circular(14.0),
+                        FFButtonWidget(
+                          onPressed: () async {
+                            context.pushNamed(
+                              QuizPageWidget.routeName,
+                              queryParameters: {
+                                'pathwayId': serializeParam(
+                                  widget.pathwayId,
+                                  ParamType.String,
                                 ),
-                                child: Padding(
-                                  padding: EdgeInsets.all(14.0),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.max,
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      Flexible(
-                                        flex: 1,
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            if (!['es', 'ur'].contains(_model.memberLanguage))
-                                              Text(
-                                                lessonsListItemItem.title.forLanguage(_model.memberLanguage),
-                                                style:
-                                                    FlutterFlowTheme.of(context)
-                                                        .titleSmall
-                                                        .override(
-                                                          font:
-                                                              GoogleFonts.inter(
-                                                            fontWeight:
-                                                                FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .titleSmall
-                                                                    .fontWeight,
-                                                            fontStyle:
-                                                                FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .titleSmall
-                                                                    .fontStyle,
-                                                          ),
-                                                          letterSpacing: 0.0,
-                                                          fontWeight:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .titleSmall
-                                                                  .fontWeight,
-                                                          fontStyle:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .titleSmall
-                                                                  .fontStyle,
-                                                        ),
-                                              ),
-                                            if (_model.memberLanguage == 'es')
-                                              Text(
-                                                lessonsListItemItem.title.forLanguage('es'),
-                                                style:
-                                                    FlutterFlowTheme.of(context)
-                                                        .titleSmall
-                                                        .override(
-                                                          font:
-                                                              GoogleFonts.inter(
-                                                            fontWeight:
-                                                                FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .titleSmall
-                                                                    .fontWeight,
-                                                            fontStyle:
-                                                                FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .titleSmall
-                                                                    .fontStyle,
-                                                          ),
-                                                          letterSpacing: 0.0,
-                                                          fontWeight:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .titleSmall
-                                                                  .fontWeight,
-                                                          fontStyle:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .titleSmall
-                                                                  .fontStyle,
-                                                        ),
-                                              ),
-                                            if (_model.memberLanguage == 'ur')
-                                              Text(
-                                                lessonsListItemItem.title.forLanguage('ur'),
-                                                style:
-                                                    FlutterFlowTheme.of(context)
-                                                        .titleSmall
-                                                        .override(
-                                                          font:
-                                                              GoogleFonts.inter(
-                                                            fontWeight:
-                                                                FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .titleSmall
-                                                                    .fontWeight,
-                                                            fontStyle:
-                                                                FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .titleSmall
-                                                                    .fontStyle,
-                                                          ),
-                                                          letterSpacing: 0.0,
-                                                          fontWeight:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .titleSmall
-                                                                  .fontWeight,
-                                                          fontStyle:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .titleSmall
-                                                                  .fontStyle,
-                                                        ),
-                                              ),
-                                            Text(
-                                              lessonsListItemItem.scriptureRef,
-                                              style:
-                                                  FlutterFlowTheme.of(context)
-                                                      .labelSmall
+                                'quizId': serializeParam(
+                                  'come-and-see-quiz-1',
+                                  ParamType.String,
+                                ),
+                              }.withoutNulls,
+                            );
+                          },
+                          text: FFLocalizations.of(context).getText(
+                            'cp7vkmln' /* Take Come & See Quiz 1 */,
+                          ),
+                          options: FFButtonOptions(
+                            width: double.infinity,
+                            padding: EdgeInsetsDirectional.fromSTEB(
+                                0.0, 0.0, 0.0, 0.0),
+                            iconPadding: EdgeInsetsDirectional.fromSTEB(
+                                0.0, 0.0, 0.0, 0.0),
+                            color: FlutterFlowTheme.of(context).secondary,
+                            textStyle: TextStyle(
+                              color: FlutterFlowTheme.of(context).primaryText,
+                            ),
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                        ),
+                        FFButtonWidget(
+                          onPressed: () async {
+                            context.pushNamed(
+                              QuizPageWidget.routeName,
+                              queryParameters: {
+                                'pathwayId': serializeParam(
+                                  widget.pathwayId,
+                                  ParamType.String,
+                                ),
+                                'quizId': serializeParam(
+                                  'come-and-see-quiz-2',
+                                  ParamType.String,
+                                ),
+                              }.withoutNulls,
+                            );
+                          },
+                          text: FFLocalizations.of(context).getText(
+                            'm9uk4ao4' /* Take Come & See Quiz 2 */,
+                          ),
+                          options: FFButtonOptions(
+                            width: double.infinity,
+                            padding: EdgeInsetsDirectional.fromSTEB(
+                                0.0, 0.0, 0.0, 0.0),
+                            iconPadding: EdgeInsetsDirectional.fromSTEB(
+                                0.0, 0.0, 0.0, 0.0),
+                            color: FlutterFlowTheme.of(context).secondary,
+                            textStyle: TextStyle(
+                              color: FlutterFlowTheme.of(context).primaryText,
+                            ),
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                        ),
+                      ].divide(SizedBox(height: 8.0)),
+                    ),
+                  if (_progressionLoaded && !_isLocked)
+                    Builder(
+                      builder: (context) {
+                        final lessonsListItem = _model.lessonsList.toList()
+                          ..sort((a, b) => a.dayNumber.compareTo(b.dayNumber));
+
+                        return ListView.separated(
+                          padding: EdgeInsets.zero,
+                          primary: false,
+                          shrinkWrap: true,
+                          scrollDirection: Axis.vertical,
+                          itemCount: lessonsListItem.length,
+                          separatorBuilder: (_, __) => SizedBox(height: 8.0),
+                          itemBuilder: (context, lessonsListItemIndex) {
+                            final lessonsListItemItem =
+                                lessonsListItem[lessonsListItemIndex];
+                            return Visibility(
+                              visible: lessonsListItemItem.pathwayId ==
+                                  widget.pathwayId,
+                              child: InkWell(
+                                splashColor: Colors.transparent,
+                                focusColor: Colors.transparent,
+                                hoverColor: Colors.transparent,
+                                highlightColor: Colors.transparent,
+                                onTap: () async {
+                                  // Lessons are taken in order (any number per
+                                  // day): earlier lessons must be completed.
+                                  final blocking = _firstIncompleteBefore(
+                                      lessonsListItemItem);
+                                  if (blocking != null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(_t(
+                                            'Complete lesson {n} first.',
+                                            {'n': '${blocking.dayNumber}'})),
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  context.pushNamed(
+                                    DailyLessonPageWidget.routeName,
+                                    queryParameters: {
+                                      'pathwayId': serializeParam(
+                                        widget.pathwayId,
+                                        ParamType.String,
+                                      ),
+                                      'lessonId': serializeParam(
+                                        lessonsListItemItem.stableId,
+                                        ParamType.String,
+                                      ),
+                                    }.withoutNulls,
+                                  );
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: FlutterFlowTheme.of(context)
+                                        .secondaryBackground,
+                                    borderRadius: BorderRadius.circular(14.0),
+                                  ),
+                                  child: Padding(
+                                    padding: EdgeInsets.all(14.0),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.max,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Flexible(
+                                          flex: 1,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              if (![
+                                                'es',
+                                                'ur'
+                                              ].contains(_model.memberLanguage))
+                                                Text(
+                                                  lessonsListItemItem.title
+                                                      .forLanguage(_model
+                                                          .memberLanguage),
+                                                  style: FlutterFlowTheme.of(
+                                                          context)
+                                                      .titleSmall
                                                       .override(
                                                         font: GoogleFonts.inter(
                                                           fontWeight:
                                                               FlutterFlowTheme.of(
                                                                       context)
-                                                                  .labelSmall
+                                                                  .titleSmall
                                                                   .fontWeight,
                                                           fontStyle:
                                                               FlutterFlowTheme.of(
                                                                       context)
-                                                                  .labelSmall
+                                                                  .titleSmall
                                                                   .fontStyle,
                                                         ),
-                                                        color:
+                                                        letterSpacing: 0.0,
+                                                        fontWeight:
                                                             FlutterFlowTheme.of(
                                                                     context)
-                                                                .secondaryText,
+                                                                .titleSmall
+                                                                .fontWeight,
+                                                        fontStyle:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .titleSmall
+                                                                .fontStyle,
+                                                      ),
+                                                ),
+                                              if (_model.memberLanguage == 'es')
+                                                Text(
+                                                  lessonsListItemItem.title
+                                                      .forLanguage('es'),
+                                                  style: FlutterFlowTheme.of(
+                                                          context)
+                                                      .titleSmall
+                                                      .override(
+                                                        font: GoogleFonts.inter(
+                                                          fontWeight:
+                                                              FlutterFlowTheme.of(
+                                                                      context)
+                                                                  .titleSmall
+                                                                  .fontWeight,
+                                                          fontStyle:
+                                                              FlutterFlowTheme.of(
+                                                                      context)
+                                                                  .titleSmall
+                                                                  .fontStyle,
+                                                        ),
                                                         letterSpacing: 0.0,
+                                                        fontWeight:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .titleSmall
+                                                                .fontWeight,
+                                                        fontStyle:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .titleSmall
+                                                                .fontStyle,
+                                                      ),
+                                                ),
+                                              if (_model.memberLanguage == 'ur')
+                                                Text(
+                                                  lessonsListItemItem.title
+                                                      .forLanguage('ur'),
+                                                  style: FlutterFlowTheme.of(
+                                                          context)
+                                                      .titleSmall
+                                                      .override(
+                                                        font: GoogleFonts.inter(
+                                                          fontWeight:
+                                                              FlutterFlowTheme.of(
+                                                                      context)
+                                                                  .titleSmall
+                                                                  .fontWeight,
+                                                          fontStyle:
+                                                              FlutterFlowTheme.of(
+                                                                      context)
+                                                                  .titleSmall
+                                                                  .fontStyle,
+                                                        ),
+                                                        letterSpacing: 0.0,
+                                                        fontWeight:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .titleSmall
+                                                                .fontWeight,
+                                                        fontStyle:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .titleSmall
+                                                                .fontStyle,
+                                                      ),
+                                                ),
+                                              Text(
+                                                lessonsListItemItem
+                                                    .scriptureRef,
+                                                style: FlutterFlowTheme.of(
+                                                        context)
+                                                    .labelSmall
+                                                    .override(
+                                                      font: GoogleFonts.inter(
                                                         fontWeight:
                                                             FlutterFlowTheme.of(
                                                                     context)
@@ -975,22 +964,53 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
                                                                 .labelSmall
                                                                 .fontStyle,
                                                       ),
-                                            ),
-                                          ].divide(SizedBox(height: 4.0)),
-                                        ),
-                                      ),
-                                      if (functions.isLessonComplete(
-                                              _model.completedLessonsCsv,
-                                              lessonsListItemItem.stableId) ??
-                                          true)
-                                        Text(
-                                          FFLocalizations.of(context).getText(
-                                            'bnbr5hsc' /* Done */,
+                                                      color:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .secondaryText,
+                                                      letterSpacing: 0.0,
+                                                      fontWeight:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .labelSmall
+                                                              .fontWeight,
+                                                      fontStyle:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .labelSmall
+                                                              .fontStyle,
+                                                    ),
+                                              ),
+                                            ].divide(SizedBox(height: 4.0)),
                                           ),
-                                          style: FlutterFlowTheme.of(context)
-                                              .labelMedium
-                                              .override(
-                                                font: GoogleFonts.inter(
+                                        ),
+                                        if (functions.isLessonComplete(
+                                                _model.completedLessonsCsv,
+                                                lessonsListItemItem.stableId) ??
+                                            true)
+                                          Text(
+                                            FFLocalizations.of(context).getText(
+                                              'bnbr5hsc' /* Done */,
+                                            ),
+                                            style: FlutterFlowTheme.of(context)
+                                                .labelMedium
+                                                .override(
+                                                  font: GoogleFonts.inter(
+                                                    fontWeight:
+                                                        FlutterFlowTheme.of(
+                                                                context)
+                                                            .labelMedium
+                                                            .fontWeight,
+                                                    fontStyle:
+                                                        FlutterFlowTheme.of(
+                                                                context)
+                                                            .labelMedium
+                                                            .fontStyle,
+                                                  ),
+                                                  color: FlutterFlowTheme.of(
+                                                          context)
+                                                      .success,
+                                                  letterSpacing: 0.0,
                                                   fontWeight:
                                                       FlutterFlowTheme.of(
                                                               context)
@@ -1002,30 +1022,17 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
                                                           .labelMedium
                                                           .fontStyle,
                                                 ),
-                                                color:
-                                                    FlutterFlowTheme.of(context)
-                                                        .success,
-                                                letterSpacing: 0.0,
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .labelMedium
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .labelMedium
-                                                        .fontStyle,
-                                              ),
-                                        ),
-                                    ],
+                                          ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
+                            );
+                          },
+                        );
+                      },
+                    ),
                 ].divide(SizedBox(height: 16.0)),
               ),
             ),

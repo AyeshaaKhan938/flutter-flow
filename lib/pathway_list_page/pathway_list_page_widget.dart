@@ -5,7 +5,6 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -14,6 +13,7 @@ import 'pathway_list_page_model.dart';
 import '/custom_code/languages/language_registry.dart';
 import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/custom_code/pathway_progression.dart';
+import '/custom_code/widgets/pathway_cover.dart';
 export 'pathway_list_page_model.dart';
 
 /// Browse available discipleship pathways.
@@ -211,7 +211,6 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
   Widget _previewCard(PathwaysRecord p) {
     final theme = FlutterFlowTheme.of(context);
     final lang = _model.memberLanguage;
-    final cover = (p.snapshotData['coverImageUrl'] as String?) ?? '';
     return InkWell(
       borderRadius: BorderRadius.circular(16.0),
       onTap: () => ScaffoldMessenger.of(context).showSnackBar(
@@ -228,13 +227,7 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (cover.isNotEmpty)
-                CachedNetworkImage(
-                  imageUrl: cover,
-                  height: 110.0,
-                  fit: BoxFit.cover,
-                  errorWidget: (_, __, ___) => const SizedBox.shrink(),
-                ),
+              _cover(p, 180.0),
               Padding(
                 padding: const EdgeInsets.all(14.0),
                 child: Column(
@@ -325,57 +318,22 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
     );
   }
 
-  /// Approved cover art, or a branded placeholder until it is provided.
-  Widget _cover(PathwaysRecord p, double height, {bool locked = false}) {
-    final theme = FlutterFlowTheme.of(context);
-    final url = (p.snapshotData['coverImageUrl'] as String?) ?? '';
-    final placeholder = Container(
-      height: height,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [theme.primary, theme.secondary],
-        ),
-      ),
-      alignment: Alignment.center,
-      child: Icon(Icons.auto_stories_outlined,
-          color: Colors.white.withValues(alpha: 0.85), size: height * 0.4),
-    );
-    final image = url.isEmpty
-        ? placeholder
-        : CachedNetworkImage(
-            imageUrl: url,
-            height: height,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            placeholder: (_, __) => placeholder,
-            errorWidget: (_, __, ___) => placeholder,
-          );
-    if (!locked) {
-      return image;
-    }
-    return Stack(
-      children: [
-        ColorFiltered(
-          colorFilter:
-              const ColorFilter.mode(Colors.grey, BlendMode.saturation),
-          child: image,
-        ),
-        Positioned(
-          top: 10.0,
-          right: 10.0,
-          child: Container(
-            padding: const EdgeInsets.all(6.0),
-            decoration: const BoxDecoration(
-              color: Color(0x99000000),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.lock, color: Colors.white, size: 18.0),
-          ),
-        ),
-      ],
-    );
+  /// Official cover (whole, never cropped), or the Draft placeholder.
+  Widget _cover(PathwaysRecord p, double height, {bool locked = false}) =>
+      PathwayCover(
+        pathwayId: p.stableId,
+        coverUrl: (p.snapshotData['coverImageUrl'] as String?) ?? '',
+        height: height,
+        locked: locked,
+      );
+
+  /// Why a core pathway is locked: the pathway to finish first.
+  String _lockReason(PathwayStatus status) {
+    final before =
+        status.lockedBy?.title.forLanguage(_model.memberLanguage) ?? '';
+    return before.isEmpty
+        ? _t('Complete your current pathway to unlock.')
+        : _t('Complete {title} to unlock', {'title': before});
   }
 
   /// CMS teaser: what the member will discover in this pathway.
@@ -408,16 +366,19 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _cover(p, 180.0, locked: true),
+                _cover(p, 260.0, locked: true),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20.0, 16.0, 20.0, 24.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        '${_t('Step {n}', {
-                              'n': '${status.step}'
-                            })} · ${_t('Locked')}',
+                        [
+                          _t('Step {n}', {'n': '${status.step}'}),
+                          _t('Locked'),
+                          if (status.lessonsTotal > 0)
+                            _t('{n} lessons', {'n': '${status.lessonsTotal}'}),
+                        ].join(' · '),
                         style: theme.labelMedium.override(
                           font: GoogleFonts.inter(fontWeight: FontWeight.w600),
                           color: theme.secondaryText,
@@ -470,7 +431,7 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
                             const SizedBox(width: 8.0),
                             Expanded(
                               child: Text(
-                                _t('Complete your current pathway to unlock.'),
+                                _lockReason(status),
                                 style: theme.labelMedium.override(
                                   font: GoogleFonts.inter(
                                       fontWeight: FontWeight.w600),
@@ -515,17 +476,19 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
       }
     }
 
-    final label = !status.isCore
-        ? ''
-        : status.completed
-            ? '${_t('Step {n}', {'n': '${status.step}'})} · ${_t('Completed')}'
+    final lessons = status.lessonsTotal > 0
+        ? _t('{n} lessons', {'n': '${status.lessonsTotal}'})
+        : '';
+    final label = [
+      if (status.isCore) _t('Step {n}', {'n': '${status.step}'}),
+      if (status.isCore)
+        status.completed
+            ? _t('Completed')
             : current
-                ? '${_t('Step {n}', {
-                        'n': '${status.step}'
-                      })} · ${_t('Current Pathway')}'
-                : '${_t('Step {n}', {
-                        'n': '${status.step}'
-                      })} · ${_t('Locked')}';
+                ? _t('Current Pathway')
+                : _t('Locked'),
+      if (lessons.isNotEmpty) lessons,
+    ].join(' · ');
 
     return InkWell(
       splashColor: Colors.transparent,
@@ -555,7 +518,7 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _cover(p, current ? 140.0 : 110.0, locked: locked),
+            _cover(p, current ? 220.0 : 180.0, locked: locked),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -615,7 +578,7 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
                         const SizedBox(width: 6.0),
                         Expanded(
                           child: Text(
-                            _t('Complete your current pathway to unlock.'),
+                            _lockReason(status),
                             style: theme.labelMedium.override(
                               font: GoogleFonts.inter(
                                   fontWeight: FontWeight.w600),
