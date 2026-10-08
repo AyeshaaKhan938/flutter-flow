@@ -630,6 +630,9 @@ const kIdAliases = (() => {
     "KH-PATH-CG": "counterfeit-gospels",
     "KH-PATH-RIC": "rooted-in-christ",
     "KH-PATH-HS": "holy-spirit-in-the-life-of-every-christian",
+    "heart-of-a-king": "the-heart-of-a-king",
+    "joseph-the-dreamer-holy-spirit": "joseph-the-dreamer-and-the-holy-spirit",
+    "the-shepherds-lantern": "shepherds-lantern-allegory",
   };
   const lessons = {};
   for (let n = 1; n <= 14; n++) {
