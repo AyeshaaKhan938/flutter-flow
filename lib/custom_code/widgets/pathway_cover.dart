@@ -12,6 +12,11 @@ const kBundledPathwayCovers = {
   'counterfeit-gospels',
   'joseph-the-dreamer-and-the-holy-spirit',
   'the-heart-of-a-king',
+  'inner-healing-and-deliverance',
+  'the-new-man',
+  'a-letter-to-my-catholic-family',
+  'who-is-isa-al-masih',
+  'shepherds-lantern-allegory',
 };
 
 const _kCoverBackground = [Color(0xFF0E1630), Color(0xFF1E2A5A)];
