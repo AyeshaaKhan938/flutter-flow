@@ -105,7 +105,9 @@ SOURCES = [
          author="Thomas F. Jacob", edition="Manuscript (KDP paperback, 6x9, 248 pp)"),
     dict(pathwayId="joseph-the-dreamer-and-the-holy-spirit",
          title="The Holy Spirit and Joseph the Dreamer: 30 Days Devotional",
-         files=["THE HOLY SPIRIT AND JOSEPH THE DREAMER - 30 DAYS DEVOTIONAL.pdf"],
+         # Revised manuscript (adds Day 16); the earlier PDF is the fallback.
+         files=["The_Holy_Spirit_and_Joseph_the_Dreamer_30_Day_Devotional_Advised_16.docx",
+                "THE HOLY SPIRIT AND JOSEPH THE DREAMER - 30 DAYS DEVOTIONAL.pdf"],
          edition="30-day devotional (\u00a9 2025)"),
     dict(pathwayId="the-heart-of-a-king", title="The Heart of a King: 30 Day App Curriculum",
          files=["The_Heart_of_a_King_30_Day_App_Curriculum.docx"],
