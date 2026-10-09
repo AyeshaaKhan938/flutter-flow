@@ -23,6 +23,8 @@ const kLocation = "us-central1";
 // Multilingual, so questions in Spanish, Urdu or Luganda find English sources.
 const kEmbeddingModel = "text-multilingual-embedding-002";
 const kAnswerModel = "gemini-2.5-flash";
+// Faster fallback when the shared Gemini capacity is slow or busy.
+const kFallbackModel = "gemini-2.5-flash-lite";
 const kTopSections = 8;
 const kMinScore = 0.45;
 const kMaxQuestionLength = 1000;
@@ -81,7 +83,15 @@ Rules you must always follow:
 4. Summarize in your own words. You may quote at most two short excerpts, each under ${kMaxExcerptWords} words. Never reproduce whole sections, chapters, or long passages.
 5. When you mention Scripture, give the reference exactly as it appears in the SOURCES (for example "John 8:36") and do not quote more than one verse.
 6. Be gentle, pastoral, and Scripture-centered. Do not give medical, mental-health, legal, diagnostic, or emergency advice. Never tell anyone to start, stop, or change a medication or treatment; say that such decisions belong with their doctor or a qualified professional. Never pressure anyone to disclose trauma or to forgive on a timetable. For those needs, encourage a qualified professional or a trusted pastor.
-7. Keep answers under 200 words, conversational, in the same language as the question (sources are in English; do not translate source quotations).`;
+7. Keep answers under 200 words and conversational.`;
+
+// Kingdom Heirs has not approved machine-translated teaching, so answers are
+// in English (questions may be in any language) unless
+// config/askKingdomHeirs.answerInMemberLanguage is turned on.
+const kLanguageRule = {
+  english: "8. Always answer in English, even if the question is in another language.",
+  member: "8. Answer in the same language as the question. Do not translate quotations from the sources.",
+};
 
 let auth = null;
 function authClient() {
@@ -96,26 +106,42 @@ function projectId(admin) {
     admin.app().options.projectId;
 }
 
-function modelUrl(admin, model, method) {
-  return `https://${kLocation}-aiplatform.googleapis.com/v1/projects/` +
-    `${projectId(admin)}/locations/${kLocation}/publishers/google/models/` +
-    `${model}:${method}`;
+function modelUrl(admin, model, method, location = kLocation) {
+  const host = location === "global" ? "aiplatform.googleapis.com" : `${location}-aiplatform.googleapis.com`;
+  return `https://${host}/v1/projects/${projectId(admin)}/locations/${location}/` +
+    `publishers/google/models/${model}:${method}`;
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/** POST with retries on 429/503 (Vertex shared capacity), across locations. */
+async function vertexPost(urls, data) {
+  const client = await authClient();
+  let lastErr = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const url = urls[attempt % urls.length];
+    try {
+      return await client.request({ url, method: "POST", data, timeout: 25000 });
+    } catch (err) {
+      const code = err && err.response && err.response.status;
+      const timedOut = err && (err.type === "request-timeout" || /timeout/i.test(err.message || ""));
+      lastErr = err;
+      if (!timedOut && code !== 429 && code !== 503 && code !== 500) throw err;
+      await sleep(500 * (attempt + 1));
+    }
+  }
+  throw lastErr;
 }
 
 /** Embeddings for [texts] (RETRIEVAL_DOCUMENT or RETRIEVAL_QUERY). */
 async function embed(admin, texts, taskType, titles) {
-  const client = await authClient();
-  const res = await client.request({
-    url: modelUrl(admin, kEmbeddingModel, "predict"),
-    method: "POST",
-    data: {
+  const res = await vertexPost([modelUrl(admin, kEmbeddingModel, "predict")], {
       instances: texts.map((content, i) => ({
         content,
         task_type: taskType,
         ...(titles && titles[i] ? { title: titles[i] } : {}),
       })),
       parameters: { autoTruncate: true },
-    },
   });
   return res.data.predictions.map((p) => p.embeddings.values);
 }
@@ -196,18 +222,27 @@ function limitVerbatim(answer, sources) {
   return out.join(" ");
 }
 
-async function generate(admin, question, hits) {
+async function generate(admin, question, hits, memberLanguage, professional) {
   const sourcesBlock = hits.map(({ s }) =>
     `[${s.id}] ${citationLabel(s).replace(/^Source: /, "")}\n${s.text}`).join("\n\n---\n\n");
-  const client = await authClient();
-  const res = await client.request({
-    url: modelUrl(admin, kAnswerModel, "generateContent"),
-    method: "POST",
-    data: {
-      systemInstruction: { parts: [{ text: kSystemInstruction }] },
+  const languageRule = kLanguageRule[memberLanguage ? "member" : "english"];
+  const res = await vertexPost([
+    modelUrl(admin, kAnswerModel, "generateContent", "global"),
+    modelUrl(admin, kFallbackModel, "generateContent", "global"),
+    modelUrl(admin, kAnswerModel, "generateContent"),
+  ], {
+      systemInstruction: {
+        parts: [{ text: kSystemInstruction + "\n" + languageRule }],
+      },
       contents: [{
         role: "user",
-        parts: [{ text: `SOURCES:\n\n${sourcesBlock}\n\nQUESTION: ${question}` }],
+        parts: [{ text: `SOURCES:\n\n${sourcesBlock}\n\nQUESTION: ${question}\n\n(${languageRule.slice(3)})` +
+          (professional
+            ? "\n(This question touches on medication, treatment, or legal matters. Do NOT tell the person " +
+              "what to do or not do about them, and do not begin with yes or no. Share only what the " +
+              "sources teach about faith and wise care, and encourage them to decide with their doctor " +
+              "or a qualified professional.)"
+            : "") }],
       }],
       generationConfig: {
         temperature: 0.2,
@@ -224,7 +259,6 @@ async function generate(admin, question, hits) {
         },
         thinkingConfig: { thinkingBudget: 0 },
       },
-    },
   });
   const cand = res.data.candidates && res.data.candidates[0];
   const text = cand && cand.content && cand.content.parts &&
@@ -294,12 +328,14 @@ async function answerQuestion({ db, admin, uid, question }) {
     return { status: "not_found", answer: kNotFoundAnswer, citations: [] };
   }
 
-  const { parsed, usage } = await generate(admin, q, hits);
+  const { parsed, usage } = await generate(admin, q, hits,
+    config.answerInMemberLanguage === true, kProfessionalPattern.test(q));
   const byId = new Map(hits.map(({ s }) => [s.id, s]));
   const cited = [...new Set((parsed.citations || []).filter((id) => byId.has(id)))]
     .slice(0, kMaxCitations);
   if (!parsed.found || cited.length === 0) {
-    return { status: "not_found", answer: kNotFoundAnswer, citations: [] };
+    const note = kProfessionalPattern.test(q) ? kProfessionalNote : "";
+    return { status: "not_found", answer: kNotFoundAnswer + note, citations: [] };
   }
   const used = cited.map((id) => byId.get(id));
   let answer = limitVerbatim(String(parsed.answer || "").trim(), used);
@@ -428,7 +464,7 @@ if (functionsLib) {
   };
 
   module.exports.askKingdomHeirs = functionsLib
-    .runWith({ timeoutSeconds: 60, memory: "1GB" })
+    .runWith({ timeoutSeconds: 120, memory: "1GB" })
     .https.onCall(async (data, context) => {
       if (!context.auth) {
         throw new functionsLib.https.HttpsError("unauthenticated", "Sign in to ask a question.");

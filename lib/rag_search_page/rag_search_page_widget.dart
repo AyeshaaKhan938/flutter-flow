@@ -48,7 +48,7 @@ class _RagSearchPageWidgetState extends State<RagSearchPageWidget> {
       final result = await FirebaseFunctions.instance
           .httpsCallable('askKingdomHeirs',
               options:
-                  HttpsCallableOptions(timeout: const Duration(seconds: 70)))
+                  HttpsCallableOptions(timeout: const Duration(seconds: 120)))
           .call({'question': question});
       final data = Map<String, dynamic>.from(result.data as Map);
       _model.answerText = '${data['answer'] ?? ''}';
