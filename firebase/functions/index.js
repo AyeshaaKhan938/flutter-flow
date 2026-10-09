@@ -764,6 +764,11 @@ exports.onUserDeleted = functions.auth.user().onDelete(async (user) => {
 
 // CMS CSV importer (Admin > Import page). Source: content_import.js
 exports.importContentCsv = require("./content_import").importContentCsv;
+const researchLibrary = require("./research_library");
+exports.askKingdomHeirs = researchLibrary.askKingdomHeirs;
+exports.ingestResearchSections = researchLibrary.ingestResearchSections;
+exports.setResearchSourceStatus = researchLibrary.setResearchSourceStatus;
+exports.onAskBudgetAlert = researchLibrary.onAskBudgetAlert;
 
 // Machine translation for CMS-managed languages (see translation.js).
 Object.assign(exports, require("./translation"));

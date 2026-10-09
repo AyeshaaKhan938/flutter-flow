@@ -29,6 +29,25 @@ service cloud.firestore {
     }
 
     // Pathway completion certificates: issued once by the app, never edited.
+    // Kingdom Heirs Research Library and Ask Kingdom Heirs data: server
+    // only (Cloud Functions use the Admin SDK). Raw manuscripts are never
+    // readable or downloadable by members.
+    match /researchSources/{doc} {
+      allow read, write: if false;
+    }
+    match /researchSections/{doc} {
+      allow read, write: if false;
+    }
+    match /askLogs/{doc} {
+      allow read, write: if false;
+    }
+    match /config/askKingdomHeirs {
+      allow read, write: if false;
+    }
+    match /users/{uid}/askUsage/{day} {
+      allow read, write: if false;
+    }
+
     match /users/{uid}/certificates/{certId} {
       allow read, create: if request.auth != null && request.auth.uid == uid;
       allow update, delete: if false;
