@@ -20,7 +20,8 @@
 const { GoogleAuth } = require("google-auth-library");
 
 const kLocation = "us-central1";
-const kEmbeddingModel = "text-embedding-005";
+// Multilingual, so questions in Spanish, Urdu or Luganda find English sources.
+const kEmbeddingModel = "text-multilingual-embedding-002";
 const kAnswerModel = "gemini-2.5-flash";
 const kTopSections = 8;
 const kMinScore = 0.45;
@@ -28,11 +29,12 @@ const kMaxQuestionLength = 1000;
 const kDefaultDailyLimit = 100;
 const kAdminRoles = ["admin", "ministry_reviewer"];
 const kMaxExcerptWords = 40;
+const kMaxCitations = 4;
 
 const kCrisisPattern = new RegExp(
   [
-    "kill (myself|me)", "suicid", "end (my|it all)", "want to die",
-    "don'?t want to (live|be alive)", "hurt (myself|me)", "self[- ]?harm",
+    "kill (myself|me)", "suicid", "end my life", "end it all", "want to die",
+    "don'?t want to (live|be alive)", "hurt myself", "harm myself", "self[- ]?harm",
     "cut(ting)? myself", "overdos", "being abused", "abusing me",
     "not safe at home", "going to hurt (someone|him|her|them)",
   ].join("|"),
@@ -50,6 +52,21 @@ const kCrisisAnswer =
   "\"The Lord is close to the brokenhearted and saves those who are " +
   "crushed in spirit.\" (Psalm 34:18)";
 
+// Requests for whole chapters or books get a policy answer, not the text.
+const kFullTextPattern = /(full|entire|whole|complete) (text|chapter|book)|word for word|verbatim|copy (the|this) (chapter|book)|download (the|this)? ?(book|manuscript)/i;
+const kFullTextAnswer =
+  "I can't share full chapters or the complete books, but I'm glad to " +
+  "summarize a chapter, answer a question about it, or point you to the " +
+  "pathway where it is taught. What would you like to know?";
+
+// Medication, diagnosis or legal questions always carry this reminder.
+const kProfessionalPattern = /medic(ation|ine)|prescri|dosage|diagnos|therap(y|ist)|psychiatr|antidepress|lawyer|legal|court|divorce|custody/i;
+const kProfessionalNote =
+  "\n\nPlease talk with your doctor or a qualified professional before " +
+  "making any decision about medication, treatment, or legal matters. " +
+  "Kingdom Heirs offers biblical discipleship support, not medical, " +
+  "mental-health, or legal advice.";
+
 const kNotFoundAnswer =
   "I couldn't find an answer to that in the approved Kingdom Heirs " +
   "resources. You may want to try different words, explore a related " +
@@ -60,10 +77,10 @@ const kSystemInstruction = `You are "Ask Kingdom Heirs", a helpful, warm assista
 Rules you must always follow:
 1. Answer ONLY from the SOURCES provided in the user message. Do not use outside knowledge, other books, or your own opinions, and never present an opinion as Kingdom Heirs teaching.
 2. If the SOURCES do not answer the question, set "found" to false and say so briefly. Do not guess.
-3. Cite every source you used by its id in "citations". Never cite an id that is not in SOURCES.
+3. Cite only the sources you actually drew from (at most ${kMaxCitations}), by id, in "citations". Never cite an id that is not in SOURCES.
 4. Summarize in your own words. You may quote at most two short excerpts, each under ${kMaxExcerptWords} words. Never reproduce whole sections, chapters, or long passages.
 5. When you mention Scripture, give the reference exactly as it appears in the SOURCES (for example "John 8:36") and do not quote more than one verse.
-6. Be gentle, pastoral, and Scripture-centered. Do not give medical, mental-health, legal, diagnostic, or emergency advice. Never pressure anyone to disclose trauma or to forgive on a timetable. For those needs, encourage a qualified professional or a trusted pastor.
+6. Be gentle, pastoral, and Scripture-centered. Do not give medical, mental-health, legal, diagnostic, or emergency advice. Never tell anyone to start, stop, or change a medication or treatment; say that such decisions belong with their doctor or a qualified professional. Never pressure anyone to disclose trauma or to forgive on a timetable. For those needs, encourage a qualified professional or a trusted pastor.
 7. Keep answers under 200 words, conversational, in the same language as the question (sources are in English; do not translate source quotations).`;
 
 let auth = null;
@@ -247,6 +264,9 @@ async function answerQuestion({ db, admin, uid, question }) {
   if (kCrisisPattern.test(q)) {
     return { status: "crisis", answer: kCrisisAnswer, citations: [] };
   }
+  if (kFullTextPattern.test(q)) {
+    return { status: "policy", answer: kFullTextAnswer, citations: [] };
+  }
 
   // Per-member daily safety limit (blocks automated abuse only).
   const day = new Date().toISOString().slice(0, 10);
@@ -276,12 +296,14 @@ async function answerQuestion({ db, admin, uid, question }) {
 
   const { parsed, usage } = await generate(admin, q, hits);
   const byId = new Map(hits.map(({ s }) => [s.id, s]));
-  const cited = [...new Set((parsed.citations || []).filter((id) => byId.has(id)))];
+  const cited = [...new Set((parsed.citations || []).filter((id) => byId.has(id)))]
+    .slice(0, kMaxCitations);
   if (!parsed.found || cited.length === 0) {
     return { status: "not_found", answer: kNotFoundAnswer, citations: [] };
   }
   const used = cited.map((id) => byId.get(id));
-  const answer = limitVerbatim(String(parsed.answer || "").trim(), used);
+  let answer = limitVerbatim(String(parsed.answer || "").trim(), used);
+  if (kProfessionalPattern.test(q)) answer += kProfessionalNote;
 
   // Minimal, non-identifying usage record (no question text is stored).
   await db.collection("askLogs").add({
