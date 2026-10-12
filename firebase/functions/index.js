@@ -769,6 +769,8 @@ exports.askKingdomHeirs = researchLibrary.askKingdomHeirs;
 exports.ingestResearchSections = researchLibrary.ingestResearchSections;
 exports.setResearchSourceStatus = researchLibrary.setResearchSourceStatus;
 exports.onAskBudgetAlert = researchLibrary.onAskBudgetAlert;
+exports.reportAskIssue = researchLibrary.reportAskIssue;
+exports.askConfig = researchLibrary.askConfig;
 
 // Machine translation for CMS-managed languages (see translation.js).
 Object.assign(exports, require("./translation"));

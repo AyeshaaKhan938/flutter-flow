@@ -78,6 +78,87 @@ class _RagSearchPageWidgetState extends State<RagSearchPageWidget> {
     }
   }
 
+  /// "Report an issue" on an answer: wrong source, unhelpful, or a concern.
+  /// Sent to Kingdom Heirs for review (reportAskIssue).
+  Future<void> _reportIssue() async {
+    const reasons = {
+      'wrong_source': 'The source or citation looks wrong',
+      'not_helpful': 'The answer was not helpful',
+      'concern': 'I have a concern about this answer',
+      'other': 'Something else',
+    };
+    var reason = 'wrong_source';
+    final note = TextEditingController();
+    final send = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Report an issue'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final e in reasons.entries)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(reason == e.key
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_unchecked),
+                    title: Text(e.value),
+                    onTap: () => setDialogState(() => reason = e.key),
+                  ),
+                  ),
+                TextField(
+                  controller: note,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    hintText: 'Optional note',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Send'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (send != true) {
+      return;
+    }
+    try {
+      await FirebaseFunctions.instance.httpsCallable('reportAskIssue').call({
+        'reason': reason,
+        'note': note.text,
+        'question': _model.questionInput ?? '',
+        'answer': _model.answerText ?? '',
+        'citations': [for (final c in _citations) '${c['label'] ?? ''}'],
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Thank you. Kingdom Heirs will review it.')),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Could not send the report. Please try again.')),
+        );
+      }
+    }
+  }
+
   /// One cited source: cover, "Source: Title, Chapter n — ..." and a link
   /// to its pathway (the pathway page keeps locked pathways locked).
   Widget _citationCard(Map<String, dynamic> c) {
@@ -384,6 +465,15 @@ class _RagSearchPageWidgetState extends State<RagSearchPageWidget> {
                   ),
                   if (_asking) const Center(child: CircularProgressIndicator()),
                   for (final c in _citations) _citationCard(c),
+                  if ((_model.answerText ?? '').isNotEmpty && !_asking)
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: TextButton.icon(
+                        onPressed: _reportIssue,
+                        icon: const Icon(Icons.flag_outlined, size: 18.0),
+                        label: const Text('Report an issue'),
+                      ),
+                    ),
                   Text(
                     _model.fallbackText!,
                     style: FlutterFlowTheme.of(context).bodyMedium.override(

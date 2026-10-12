@@ -496,6 +496,43 @@ if (functionsLib) {
       return setSourceStatus({ db: db(), sourceId: String(data && data.sourceId || ""), status: data && data.status });
     });
 
+  // Member feedback on an answer ("Report an issue"). Stores only what the
+  // member chose to send, for ministry review.
+  module.exports.reportAskIssue = functionsLib.https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functionsLib.https.HttpsError("unauthenticated", "Sign in first.");
+    }
+    const text = (v, n) => String(v || "").slice(0, n);
+    await db().collection("askReports").add({
+      at: admin.firestore.FieldValue.serverTimestamp(),
+      uid: context.auth.uid,
+      reason: text(data && data.reason, 60),
+      note: text(data && data.note, 1000),
+      question: text(data && data.question, 1000),
+      answer: text(data && data.answer, 4000),
+      citations: Array.isArray(data && data.citations) ? data.citations.slice(0, 8).map((c) => text(c, 300)) : [],
+      status: "open",
+    });
+    return { ok: true };
+  });
+
+  // Admin: read or change config/askKingdomHeirs (enabled, paused,
+  // answerInMemberLanguage, dailyLimitPerMember).
+  module.exports.askConfig = functionsLib.https.onCall(async (data, context) => {
+    await requireAdmin(context);
+    const ref = db().collection("config").doc("askKingdomHeirs");
+    const allowed = ["enabled", "paused", "answerInMemberLanguage", "dailyLimitPerMember"];
+    const update = {};
+    allowed.forEach((k) => {
+      if (data && data.set && data.set[k] !== undefined) update[k] = data.set[k];
+    });
+    if (Object.keys(update).length) await ref.set(update, { merge: true });
+    const snap = await ref.get();
+    const out = snap.data() || {};
+    if (out.pausedAt && out.pausedAt.toDate) out.pausedAt = out.pausedAt.toDate().toISOString();
+    return out;
+  });
+
   // Budget alerts (Pub/Sub topic "ask-kingdom-heirs-budget", linked to the
   // $50/month Cloud Billing budget) pause Ask Kingdom Heirs at 100%.
   module.exports.onAskBudgetAlert = functionsLib.pubsub

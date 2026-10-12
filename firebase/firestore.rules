@@ -38,6 +38,9 @@ service cloud.firestore {
     match /researchSections/{doc} {
       allow read, write: if false;
     }
+    match /askReports/{doc} {
+      allow read, write: if false;
+    }
     match /askLogs/{doc} {
       allow read, write: if false;
     }
