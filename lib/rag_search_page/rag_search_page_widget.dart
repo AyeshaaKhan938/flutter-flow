@@ -107,7 +107,6 @@ class _RagSearchPageWidgetState extends State<RagSearchPageWidget> {
                     title: Text(e.value),
                     onTap: () => setDialogState(() => reason = e.key),
                   ),
-                  ),
                 TextField(
                   controller: note,
                   maxLines: 3,
