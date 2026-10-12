@@ -11,6 +11,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'profile_page_model.dart';
 import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/custom_code/languages/language_registry.dart';
@@ -29,6 +30,36 @@ class ProfilePageWidget extends StatefulWidget {
 }
 
 class _ProfilePageWidgetState extends State<ProfilePageWidget> {
+  static const _kSupportUrl =
+      'https://kingdomheirsfoundation.com/partner-with-us';
+  static const _kSupportBody =
+      'All Kingdom Heirs discipleship and recovery resources are free for '
+      'everyone. They are supported by voluntary gifts. Giving is optional '
+      'and never changes your access.';
+  static const _kSupportLabels = <String, Map<String, String>>{
+    'Support Kingdom Heirs': {
+      'es': 'Apoya a Kingdom Heirs',
+      'ur': 'کنگڈم ہائرز کی مدد کریں',
+      'lg': 'Wagira Kingdom Heirs',
+    },
+    _kSupportBody: {
+      'es':
+          'Todos los recursos de discipulado y recuperación de Kingdom Heirs son gratuitos para todos. Se sostienen con donaciones voluntarias. Dar es opcional y nunca cambia tu acceso.',
+      'ur':
+          'کنگڈم ہائرز کے تمام شاگردی اور بحالی کے وسائل سب کے لیے مفت ہیں۔ یہ رضاکارانہ عطیات سے چلتے ہیں۔ عطیہ دینا اختیاری ہے اور آپ کی رسائی کبھی نہیں بدلتی۔',
+      'lg':
+          'Ebikozesebwa byonna ebya Kingdom Heirs eby’obuyigirizwa n’okuwona bya bwereere eri buli muntu. Biwagirwa ebirabo by’abantu ku bwagazi. Okugaba si kya buwaze era tekikyusa ngeri gy’okozesaamu app.',
+    },
+    'Give or become a monthly partner': {
+      'es': 'Donar o ser socio mensual',
+      'ur': 'عطیہ دیں یا ماہانہ شراکت دار بنیں',
+      'lg': 'Gaba oba beera munnaffe buli mwezi',
+    },
+  };
+
+  String _supportText(String english) =>
+      _kSupportLabels[english]?[_model.currentLanguage] ?? english;
+
   late ProfilePageModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
@@ -448,6 +479,68 @@ class _ProfilePageWidgetState extends State<ProfilePageWidget> {
                             },
                           ),
                         ].divide(SizedBox(height: 10.0)),
+                      ),
+                    ),
+                  ),
+                  // Support Kingdom Heirs: discreet and optional. Opens the
+                  // Kingdom Heirs Foundation giving page (Givebutter) in the
+                  // browser; nothing in the app depends on giving.
+                  Container(
+                    decoration: BoxDecoration(
+                      color: FlutterFlowTheme.of(context).secondaryBackground,
+                      borderRadius: BorderRadius.circular(16.0),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _supportText('Support Kingdom Heirs'),
+                            style: FlutterFlowTheme.of(context)
+                                .titleMedium
+                                .override(
+                                  font: GoogleFonts.inter(
+                                      fontWeight: FontWeight.w600),
+                                  letterSpacing: 0.0,
+                                ),
+                          ),
+                          Text(
+                            _supportText(_kSupportBody),
+                            style: FlutterFlowTheme.of(context)
+                                .bodyMedium
+                                .override(
+                                  font: GoogleFonts.inter(),
+                                  color: FlutterFlowTheme.of(context)
+                                      .secondaryText,
+                                  letterSpacing: 0.0,
+                                ),
+                          ),
+                          TextButton.icon(
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              alignment: AlignmentDirectional.centerStart,
+                            ),
+                            onPressed: () => launchUrl(
+                              Uri.parse(_kSupportUrl),
+                              mode: LaunchMode.externalApplication,
+                            ),
+                            icon: Icon(Icons.favorite_outline,
+                                size: 18.0,
+                                color: FlutterFlowTheme.of(context).primary),
+                            label: Text(
+                              _supportText('Give or become a monthly partner'),
+                              style: FlutterFlowTheme.of(context)
+                                  .labelLarge
+                                  .override(
+                                    font: GoogleFonts.inter(
+                                        fontWeight: FontWeight.w600),
+                                    color: FlutterFlowTheme.of(context).primary,
+                                    letterSpacing: 0.0,
+                                  ),
+                            ),
+                          ),
+                        ].divide(const SizedBox(height: 8.0)),
                       ),
                     ),
                   ),
