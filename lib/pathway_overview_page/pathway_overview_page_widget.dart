@@ -354,7 +354,7 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
             const SizedBox(height: 8.0),
             FFButtonWidget(
               onPressed: () => _openCertificate(kCoreCertificateId),
-              text: _t('View Core Discipleship Certificate'),
+              text: _t('View Commissioning Certificate'),
               options: FFButtonOptions(
                 width: double.infinity,
                 height: 48.0,

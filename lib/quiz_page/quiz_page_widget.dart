@@ -7,6 +7,7 @@ import '/flutter_flow/flutter_flow_widgets.dart';
 import '/backend/schema/structs/index.dart';
 import '/custom_code/actions/index.dart' as actions;
 import '/custom_code/offline_submissions.dart';
+import '/custom_code/pathway_progression.dart';
 import '/index.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -308,6 +309,14 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
                       (_model.priorAttemptResult?.jsonBody ?? ''))
                   ?.attemptCount;
               safeSetState(() {});
+              final priorAttempt = QuizAttemptResponseStruct.maybeFromMap(
+                  (_model.priorAttemptResult?.jsonBody ?? ''));
+              // Keep the best score for certificate grades.
+              await PathwayProgressionService.recordQuizScore(
+                widget.quizId,
+                correct: priorAttempt?.correctCount,
+                total: priorAttempt?.total,
+              );
               final storedAnswers = await actions.loadQuizAnswers(
                 currentUserUid,
                 widget.quizId,
@@ -8538,6 +8547,15 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
                                                 ''))
                                         ?.passed;
                                 safeSetState(() {});
+                                final scored =
+                                    SubmitQuizResponseStruct.maybeFromMap(
+                                        (_model.submitResult?.jsonBody ?? ''));
+                                // Keep the best score for certificate grades.
+                                await PathwayProgressionService.recordQuizScore(
+                                  widget.quizId,
+                                  correct: scored?.correctCount,
+                                  total: scored?.total,
+                                );
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(

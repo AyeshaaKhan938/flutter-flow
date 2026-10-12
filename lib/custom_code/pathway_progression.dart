@@ -1,12 +1,17 @@
 import 'dart:async';
+import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/api_requests/api_calls.dart';
 import '/backend/backend.dart';
+import '/custom_code/certificate_pdf.dart';
 import '/custom_code/languages/translation_service.dart';
 
 /// The Kingdom Heirs core journey, in order (pathway `stableId`s). Used when a
 /// pathway document has no `track` field, and as a tie-breaker for `order`.
+/// These are the seven required pathways for the Commissioning Certificate.
 const kCorePathwayIds = [
   'come-and-see',
   'rooted-in-christ',
@@ -17,22 +22,104 @@ const kCorePathwayIds = [
   'counterfeit-gospels',
 ];
 
-/// Certificate id for completing all seven required core pathways.
+/// Certificate id for completing all seven required core pathways (kept as
+/// 'core-discipleship' so certificates already issued stay valid).
 const kCoreCertificateId = 'core-discipleship';
-const kCoreCertificateTitle = 'Kingdom Heirs Complete Certificate';
+const kCoreCertificateTitle = 'Kingdom Heirs Commissioning Certificate';
 
-/// Shown on every certificate, as Kingdom Heirs requires.
-const kCertificateNotice =
-    'This certificate recognizes completion of a Kingdom Heirs discipleship '
-    'pathway. It is not an accredited degree, professional credential, '
-    'ordination or ministry license. Any ministry or leadership role '
-    'requires a separate Kingdom Heirs approval process.';
+/// Title of the certificate earned for every required or optional pathway.
+const kPathwayCertificateTitle = 'Pathway Certificate of Completion';
+
+/// Shown on every Pathway Certificate (no commissioning language).
+const kCertificateNotice = kPathwayCertificateNotice;
+
+/// The commissioning wording, as Kingdom Heirs requires it.
+const kCommissioningStatement =
+    'Having completed all seven required Kingdom Heirs pathways and met the '
+    'required program assessment standard, this disciple is commissioned to '
+    'go into all the world in the name of Jesus Christ: to proclaim the '
+    'gospel, pray for the sick, make disciples of all nations, and serve the '
+    'least of these with humility, mercy, truth, and love.';
+const kCommissioningReferences = 'Mark 16:15 · Matthew 28:19 · Matthew 25:40';
 
 /// Number of core pathways that make up the full core journey.
 const kCorePathwayCount = 7;
 
-/// Minimum quiz score (percent) that counts as passed for progression.
-const kMinPassingScore = 80;
+/// Default passing standard (percent) for every required quiz.
+const kDefaultPassingScore = 80;
+
+/// A pathway's passing standard: the pathway document's `passingScore`
+/// (1-100) when set, else [kDefaultPassingScore]. This lets one pathway use a
+/// different standard later (planned: from-bondage-to-freedom at 75%).
+int passingScoreFor(PathwaysRecord pathway) {
+  final v = PathwayProgressionService._toInt(
+      pathway.snapshotData['passingScore']);
+  return v != null && v > 0 && v <= 100 ? v : kDefaultPassingScore;
+}
+
+/// One quiz result as correct answers out of questions.
+class QuizScore {
+  const QuizScore(this.correct, this.total);
+
+  final int correct;
+  final int total;
+
+  double get ratio => total > 0 ? correct / total : 0;
+
+  /// At least [percent]% correct (exact; no rounding up).
+  bool passes(int percent) => total > 0 && correct * 100 >= percent * total;
+
+  Map<String, dynamic> toMap() => {'correct': correct, 'total': total};
+
+  static QuizScore? fromMap(dynamic data) {
+    if (data is! Map) {
+      return null;
+    }
+    final correct = PathwayProgressionService._toInt(data['correct']);
+    final total = PathwayProgressionService._toInt(data['total']);
+    if (correct == null || total == null || total <= 0) {
+      return null;
+    }
+    return QuizScore(correct.clamp(0, total), total);
+  }
+
+  /// The higher of two scores (by percentage; more questions on a tie).
+  static QuizScore? best(QuizScore? a, QuizScore? b) {
+    if (a == null) {
+      return b;
+    }
+    if (b == null) {
+      return a;
+    }
+    if (a.ratio != b.ratio) {
+      return a.ratio > b.ratio ? a : b;
+    }
+    return a.total >= b.total ? a : b;
+  }
+}
+
+/// A certificate grade: total correct answers over total questions across
+/// the required quizzes (best attempt per quiz) — not an average of
+/// percentages.
+class CertificateGrade {
+  const CertificateGrade(this.correct, this.total);
+
+  factory CertificateGrade.of(Iterable<QuizScore> scores) {
+    var correct = 0;
+    var total = 0;
+    for (final s in scores) {
+      correct += s.correct;
+      total += s.total;
+    }
+    return CertificateGrade(correct, total);
+  }
+
+  final int correct;
+  final int total;
+
+  /// Whole percent, or null when there are no quiz questions.
+  int? get percent => total > 0 ? (correct * 100 / total).round() : null;
+}
 
 /// The member's standing on one published pathway.
 class PathwayStatus {
@@ -47,6 +134,9 @@ class PathwayStatus {
     this.lessonsCompleted = 0,
     this.quizzesTotal = 0,
     this.quizzesPassed = 0,
+    this.passingScore = kDefaultPassingScore,
+    this.requiredQuizIds = const [],
+    this.quizScores = const {},
   });
 
   final PathwaysRecord pathway;
@@ -66,11 +156,24 @@ class PathwayStatus {
   final int quizzesTotal;
   final int quizzesPassed;
 
+  /// Passing standard (percent) for this pathway's quizzes.
+  final int passingScore;
+
+  /// Published quizzes of this pathway (all of them are required).
+  final List<String> requiredQuizIds;
+
+  /// The member's best score per quiz id (only quizzes with an attempt).
+  final Map<String, QuizScore> quizScores;
+
   String get stableId => pathway.stableId;
   bool get isCore => track == 'core';
 
   /// English title of the blocking pathway ('' when unlocked).
   String get lockedByTitle => lockedBy?.title.en ?? '';
+
+  /// Pathway grade from the best attempt of every required quiz.
+  CertificateGrade get grade => CertificateGrade.of(
+      requiredQuizIds.map((id) => quizScores[id]).whereType<QuizScore>());
 }
 
 /// The member's progression across all published pathways.
@@ -78,7 +181,7 @@ class PathwayProgression {
   PathwayProgression({
     required this.core,
     required this.additional,
-    required this.issuedCertificateIds,
+    required this.issuedCertificates,
   });
 
   /// Published core pathways in journey order.
@@ -87,14 +190,16 @@ class PathwayProgression {
   /// Published additional studies ("Continue Growing"), never locked.
   final List<PathwayStatus> additional;
 
-  /// Certificates already stored in users/{uid}/certificates.
-  final Set<String> issuedCertificateIds;
+  /// Certificates already stored in users/{uid}/certificates, by id.
+  final Map<String, Map<String, dynamic>> issuedCertificates;
 
   static PathwayProgression get empty => PathwayProgression(
         core: const [],
         additional: const [],
-        issuedCertificateIds: <String>{},
+        issuedCertificates: {},
       );
+
+  Set<String> get issuedCertificateIds => issuedCertificates.keys.toSet();
 
   Iterable<PathwayStatus> get all => [...core, ...additional];
 
@@ -107,9 +212,20 @@ class PathwayProgression {
     return i >= 0 && i + 1 < core.length ? core[i + 1] : null;
   }
 
-  /// True when all seven core pathways are published and completed.
+  /// True when all seven required pathways are published and completed (in
+  /// order: each one only unlocks after the one before it). Optional
+  /// studies never count.
   bool get coreJourneyCompleted =>
       core.length >= kCorePathwayCount && core.every((s) => s.completed);
+
+  /// Overall program grade: correct answers over questions across every
+  /// quiz of the seven required pathways (best attempt per quiz).
+  CertificateGrade get commissioningGrade => CertificateGrade.of([
+        for (final s in core)
+          ...s.requiredQuizIds
+              .map((id) => s.quizScores[id])
+              .whereType<QuizScore>(),
+      ]);
 
   /// Whether the member has earned [certificateId] (a pathway stableId or
   /// [kCoreCertificateId]).
@@ -119,12 +235,66 @@ class PathwayProgression {
     }
     return statusFor(certificateId)?.completed ?? false;
   }
+
+  /// Current grade for [certificateId] (null when not earned).
+  CertificateGrade? gradeFor(String certificateId) {
+    if (!hasEarned(certificateId)) {
+      return null;
+    }
+    return certificateId == kCoreCertificateId
+        ? commissioningGrade
+        : statusFor(certificateId)?.grade;
+  }
+}
+
+/// Best quiz scores seen on this device, per member. The backend's
+/// getQuizAttempt returns a single attempt, so the best score is also kept
+/// here (and on issued certificates) to grade from the highest attempt.
+class _QuizBestScores {
+  static String _key(String uid) => 'kh_quiz_best_$uid';
+
+  static Future<Map<String, QuizScore>> load(String uid) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_key(uid));
+      if (raw == null || raw.isEmpty) {
+        return {};
+      }
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) {
+        return {};
+      }
+      return {
+        for (final e in decoded.entries)
+          if (QuizScore.fromMap(e.value) != null)
+            e.key as String: QuizScore.fromMap(e.value)!,
+      };
+    } catch (_) {
+      return {};
+    }
+  }
+
+  static Future<void> save(String uid, Map<String, QuizScore> scores) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        _key(uid),
+        jsonEncode({for (final e in scores.entries) e.key: e.value.toMap()}),
+      );
+    } catch (_) {}
+  }
 }
 
 /// Loads published pathways, lessons and quizzes plus the member's lesson
 /// progress and quiz attempts, and works out which core pathways are
 /// completed and unlocked. Uses the same backend calls (same parameters) as
 /// the pages, so cached responses keep it working offline.
+///
+/// A pathway is completed when 100% of its published lessons are complete
+/// and every published quiz is passed at the pathway's standard (80% by
+/// default) with the member's highest score. Reflections are saved with
+/// lesson completion and no lesson marks a reflection as required, so
+/// lesson completion covers the reflection requirement.
 class PathwayProgressionService {
   PathwayProgressionService._();
   static final PathwayProgressionService instance =
@@ -153,6 +323,31 @@ class PathwayProgressionService {
   void clear() {
     _cached = null;
     _cachedUid = null;
+  }
+
+  /// Remembers a quiz result (e.g. right after submitting) so the highest
+  /// attempt counts even if the backend later reports a lower retake.
+  static Future<void> recordQuizScore(
+    String? quizId, {
+    int? correct,
+    int? total,
+  }) async {
+    final uid = currentUserUid;
+    if (uid.isEmpty ||
+        quizId == null ||
+        quizId.isEmpty ||
+        correct == null ||
+        total == null ||
+        total <= 0) {
+      return;
+    }
+    final scores = await _QuizBestScores.load(uid);
+    final best =
+        QuizScore.best(scores[quizId], QuizScore(correct.clamp(0, total), total));
+    if (best != null && !identical(best, scores[quizId])) {
+      scores[quizId] = best;
+      await _QuizBestScores.save(uid, scores);
+    }
   }
 
   static String trackOf(PathwaysRecord p) {
@@ -185,6 +380,18 @@ class PathwayProgressionService {
   static int? _toInt(dynamic v) =>
       v is num ? v.toInt() : (v is String ? int.tryParse(v.trim()) : null);
 
+  /// Number of questions in a quiz document (`questions` list or map).
+  static int _questionCount(QuizzesRecord q) {
+    final questions = q.questions;
+    if (questions is List) {
+      return questions.length;
+    }
+    if (questions is Map) {
+      return questions.length;
+    }
+    return 0;
+  }
+
   Future<PathwayProgression> _compute() async {
     final uid = currentUserUid;
     final token = currentJwtToken;
@@ -199,12 +406,28 @@ class PathwayProgressionService {
         limit: 1000,
       ).catchError((_) => <LessonsRecord>[]),
       queryQuizzesRecordOnce().catchError((_) => <QuizzesRecord>[]),
-      _issuedCertificateIds(uid),
+      _issuedCertificates(uid),
+      _QuizBestScores.load(uid),
     ]);
     final pathways = (results[0] as List).cast<PathwaysRecord>();
     final lessons = (results[1] as List).cast<LessonsRecord>();
     final quizzes = (results[2] as List).cast<QuizzesRecord>();
-    final issued = results[3] as Set<String>;
+    final issued = results[3] as Map<String, Map<String, dynamic>>;
+    final localBest = results[4] as Map<String, QuizScore>;
+
+    // Best scores already recorded on issued certificates.
+    final storedBest = <String, QuizScore>{};
+    for (final cert in issued.values) {
+      final scores = cert['quizScores'];
+      if (scores is Map) {
+        scores.forEach((id, value) {
+          final s = QuizScore.fromMap(value);
+          if (id is String && s != null) {
+            storedBest[id] = QuizScore.best(storedBest[id], s)!;
+          }
+        });
+      }
+    }
 
     // Published lessons per pathway; only pathways with lessons are shown.
     final lessonsByPathway = <String, List<LessonsRecord>>{};
@@ -293,17 +516,43 @@ class PathwayProgressionService {
       );
     }
 
-    // Quiz attempts, only where they can change the outcome (all lessons
-    // done), to keep the number of calls down.
-    final quizPassed = <String, bool>{};
+    // Quiz attempts, only where they can change the outcome or the grade
+    // (all lessons done, or a certificate already issued), to keep the
+    // number of calls down.
+    final fetched = <String, QuizScore?>{};
     await Future.wait([
       for (final p in visible)
-        if (statusInputs[p.stableId]!.lessonsDone)
+        if (statusInputs[p.stableId]!.lessonsDone ||
+            issued.containsKey(p.stableId))
           for (final q in quizzesByPathway[p.stableId] ?? <QuizzesRecord>[])
             () async {
-              quizPassed[_quizId(q)] = await _quizPassed(q, token);
+              fetched[_quizId(q)] = await _attemptScore(q, token);
             }(),
     ]);
+
+    // Highest score per quiz: backend attempt, this device, certificates.
+    final best = <String, QuizScore>{};
+    for (final id in {...fetched.keys, ...localBest.keys, ...storedBest.keys}) {
+      final s = QuizScore.best(
+          QuizScore.best(fetched[id], localBest[id]), storedBest[id]);
+      if (s != null) {
+        best[id] = s;
+      }
+    }
+    if (uid.isNotEmpty) {
+      final merged = {...localBest};
+      var changed = false;
+      fetched.forEach((id, s) {
+        final b = QuizScore.best(merged[id], s);
+        if (b != null && !identical(b, merged[id])) {
+          merged[id] = b;
+          changed = true;
+        }
+      });
+      if (changed) {
+        unawaited(_QuizBestScores.save(uid, merged));
+      }
+    }
 
     final core = <PathwayStatus>[];
     final additional = <PathwayStatus>[];
@@ -312,14 +561,18 @@ class PathwayProgressionService {
     for (final p in visible) {
       final input = statusInputs[p.stableId]!;
       final pathwayQuizzes = quizzesByPathway[p.stableId] ?? [];
+      final quizIds = pathwayQuizzes.map(_quizId).toList();
+      final threshold = passingScoreFor(p);
+      final scores = {
+        for (final id in quizIds)
+          if (best[id] != null) id: best[id]!,
+      };
       final passed =
-          pathwayQuizzes.where((q) => quizPassed[_quizId(q)] == true).length;
+          quizIds.where((id) => scores[id]?.passes(threshold) ?? false).length;
       // A certificate already issued means it was completed when issued;
       // content added later never takes that back.
-      final completed = issued.contains(p.stableId) ||
-          (input.total > 0 &&
-              input.lessonsDone &&
-              passed == pathwayQuizzes.length);
+      final completed = issued.containsKey(p.stableId) ||
+          (input.total > 0 && input.lessonsDone && passed == quizIds.length);
       final track = trackOf(p);
       if (track == 'core') {
         // Unpublished core pathways are skipped: the next published one
@@ -334,8 +587,11 @@ class PathwayProgressionService {
           lockedBy: unlocked ? null : previousCore,
           lessonsTotal: input.total,
           lessonsCompleted: input.done,
-          quizzesTotal: pathwayQuizzes.length,
+          quizzesTotal: quizIds.length,
           quizzesPassed: passed,
+          passingScore: threshold,
+          requiredQuizIds: quizIds,
+          quizScores: scores,
         ));
         previousCore = p;
         previousCompleted = previousCompleted && completed;
@@ -348,8 +604,11 @@ class PathwayProgressionService {
           unlocked: true,
           lessonsTotal: input.total,
           lessonsCompleted: input.done,
-          quizzesTotal: pathwayQuizzes.length,
+          quizzesTotal: quizIds.length,
           quizzesPassed: passed,
+          passingScore: threshold,
+          requiredQuizIds: quizIds,
+          quizScores: scores,
         ));
       }
     }
@@ -357,39 +616,40 @@ class PathwayProgressionService {
     final result = PathwayProgression(
       core: core,
       additional: additional,
-      issuedCertificateIds: issued,
+      issuedCertificates: issued,
     );
     _cached = result;
     _cachedUid = uid;
     return result;
   }
 
-  /// Passed at 80% or higher (or the quiz's own passing score if higher).
-  Future<bool> _quizPassed(QuizzesRecord quiz, String? token) async {
+  /// The member's attempt as reported by getQuizAttempt, as correct answers
+  /// out of questions. When the response has no counts, they are derived
+  /// from the percentage and the quiz document's question count.
+  Future<QuizScore?> _attemptScore(QuizzesRecord quiz, String? token) async {
     try {
       final r = await GetQuizAttemptCall.call(
         authToken: token,
         quizId: _quizId(quiz),
       );
       if (!r.succeeded) {
-        return false;
+        return null;
       }
       final attempt = QuizAttemptResponseStruct.maybeFromMap(r.jsonBody);
       if (attempt == null || !attempt.hasAttempt) {
-        return false;
+        return null;
       }
-      final docScore = _toInt(quiz.snapshotData['passingScore']) ?? 0;
-      final threshold = [kMinPassingScore, docScore, attempt.passingScore]
-          .reduce((a, b) => a > b ? a : b);
-      if (attempt.percentage >= threshold) {
-        return true;
+      if (attempt.total > 0) {
+        return QuizScore(
+            attempt.correctCount.clamp(0, attempt.total), attempt.total);
       }
-      // Trust the backend's pass only when its own bar was at least 80%.
-      return attempt.passed &&
-          attempt.passingScore >= kMinPassingScore &&
-          attempt.passingScore >= docScore;
+      // Percentage only: correct = round(pct x questions / 100). Quizzes
+      // have at most 10 questions in the app, used when the count is unknown.
+      final questions = _questionCount(quiz) > 0 ? _questionCount(quiz) : 10;
+      final pct = attempt.percentage.clamp(0, 100);
+      return QuizScore((pct * questions / 100).round(), questions);
     } catch (_) {
-      return false;
+      return null;
     }
   }
 
@@ -399,71 +659,131 @@ class PathwayProgressionService {
           .doc(uid)
           .collection('certificates');
 
-  Future<Set<String>> _issuedCertificateIds(String uid) async {
+  Future<Map<String, Map<String, dynamic>>> _issuedCertificates(
+      String uid) async {
     if (uid.isEmpty) {
       return {};
     }
     try {
       final snap = await certificatesOf(uid).get();
-      return snap.docs.map((d) => d.id).toSet();
+      return {for (final d in snap.docs) d.id: d.data()};
     } catch (_) {
       return {};
     }
   }
 
-  /// Creates users/{uid}/certificates/{id} for every earned certificate not
-  /// yet stored. Best effort; existing certificates are never rewritten.
+  /// Issues every earned certificate not yet stored, and raises the stored
+  /// grade of issued ones when the member has since improved a quiz score.
+  /// Best effort.
   Future<void> issueEarnedCertificates(PathwayProgression progression) async {
-    final uid = currentUserUid;
-    if (uid.isEmpty) {
-      return;
-    }
-    final toIssue = <String, String>{
+    final ids = [
       for (final s in progression.all)
-        if (s.completed && !progression.issuedCertificateIds.contains(s.stableId))
-          s.stableId: s.pathway.title.en,
-      if (progression.coreJourneyCompleted &&
-          !progression.issuedCertificateIds.contains(kCoreCertificateId))
-        kCoreCertificateId: kCoreCertificateTitle,
-    };
-    for (final entry in toIssue.entries) {
-      unawaited(issueCertificate(entry.key, entry.value).then((_) {
-        progression.issuedCertificateIds.add(entry.key);
-      }).catchError((_) {}));
+        if (s.completed) s.stableId,
+      if (progression.coreJourneyCompleted) kCoreCertificateId,
+    ];
+    for (final id in ids) {
+      unawaited(syncCertificate(progression, id).catchError((_) => null));
     }
   }
 
-  /// Stores the certificate once (create only); returns its data.
-  Future<Map<String, dynamic>?> issueCertificate(
+  /// Returns the stored certificate [certificateId], creating it the first
+  /// time it is earned. Name, completion date and certificate ID never
+  /// change after that; only the grade may be raised (Firestore rules
+  /// enforce this). Returns null when not earned.
+  Future<Map<String, dynamic>?> syncCertificate(
+    PathwayProgression progression,
     String certificateId,
-    String title,
   ) async {
     final uid = currentUserUid;
-    if (uid.isEmpty) {
-      return null;
+    if (uid.isEmpty || !progression.hasEarned(certificateId)) {
+      return progression.issuedCertificates[certificateId];
     }
+    final isCore = certificateId == kCoreCertificateId;
+    final status = isCore ? null : progression.statusFor(certificateId);
+    final grade = progression.gradeFor(certificateId);
+    final scores = <String, QuizScore>{
+      if (isCore)
+        for (final s in progression.core) ...s.quizScores
+      else
+        ...?status?.quizScores,
+    };
+    final gradeFields = <String, dynamic>{
+      if (grade?.percent != null) 'grade': grade!.percent,
+      if (grade != null) 'correctCount': grade.correct,
+      if (grade != null) 'questionCount': grade.total,
+      'quizScores': {for (final e in scores.entries) e.key: e.value.toMap()},
+    };
+
     final ref = certificatesOf(uid).doc(certificateId);
-    try {
-      final existing = await ref.get();
-      if (existing.exists) {
-        return existing.data();
+    var existing = progression.issuedCertificates[certificateId];
+    if (existing == null) {
+      try {
+        final snap = await ref.get();
+        existing = snap.exists ? snap.data() : null;
+      } catch (_) {}
+    }
+
+    if (existing != null) {
+      final stored = _toInt(existing['grade']);
+      final improved = grade?.percent != null &&
+          (stored == null || grade!.percent! > stored);
+      if (!improved) {
+        progression.issuedCertificates[certificateId] = existing;
+        return existing;
       }
-    } catch (_) {}
+      final update = {
+        ...gradeFields,
+        'gradeUpdatedAt': FieldValue.serverTimestamp(),
+      };
+      // Not awaited: offline, the write is queued and synced later.
+      unawaited(ref.update(update).catchError((_) {}));
+      final updated = {
+        ...existing,
+        ...gradeFields,
+        'gradeUpdatedAt': Timestamp.now(),
+      };
+      progression.issuedCertificates[certificateId] = updated;
+      return updated;
+    }
+
     final data = <String, dynamic>{
       'pathwayId': certificateId,
-      'title': title,
+      'type': isCore ? 'commissioning' : 'pathway',
+      'title': isCore
+          ? kCoreCertificateTitle
+          : (status?.pathway.title.en ?? certificateId),
       'memberName': memberDisplayName(),
       'certificateId': certificateNumber(uid, certificateId),
+      'passingScore': isCore
+          ? kDefaultPassingScore
+          : (status?.passingScore ?? kDefaultPassingScore),
+      ...gradeFields,
       'issuedAt': FieldValue.serverTimestamp(),
+      'completedAt': FieldValue.serverTimestamp(),
     };
     // Not awaited: offline, the write is queued and synced later.
     unawaited(ref.set(data).catchError((_) {}));
-    return {...data, 'issuedAt': null};
+    final now = Timestamp.now();
+    final local = {...data, 'issuedAt': now, 'completedAt': now};
+    progression.issuedCertificates[certificateId] = local;
+    return local;
   }
 
+  /// The member's full name from their profile, else the account name.
   static String memberDisplayName() {
+    final fullName = (currentUserDocument?.fullName ?? '').trim();
+    if (fullName.isNotEmpty) {
+      return fullName;
+    }
     final name = currentUserDisplayName.trim();
     return name.isNotEmpty ? name : currentUserEmail;
+  }
+
+  /// Completion date of a stored certificate (`completedAt`, or `issuedAt`
+  /// on certificates issued before `completedAt` existed).
+  static DateTime completedAtOf(Map<String, dynamic> data) {
+    final v = data['completedAt'] ?? data['issuedAt'];
+    return v is Timestamp ? v.toDate() : DateTime.now();
   }
 
   /// Stable, human-readable certificate number for [uid] + [certificateId].
@@ -483,6 +803,7 @@ class PathwayProgressionService {
     return 'KH-${part(0x811C9DC5).substring(0, 5)}-${part(0x01000193).substring(0, 5)}';
   }
 }
+
 
 /// Localized labels for progression screens: compiled en/es/ur/lg text,
 /// else machine translation of the English (via [TranslationService]).
@@ -560,9 +881,64 @@ const _kProgressionLabels = <String, Map<String, String>>{
     'lg': 'Satifikeeti zange',
   },
   kCoreCertificateTitle: {
-    'es': 'Certificado Completo de Kingdom Heirs',
-    'ur': 'کنگڈم ہائرز مکمل سرٹیفکیٹ',
-    'lg': 'Satifikeeti Enzijuvu eya Kingdom Heirs',
+    'es': 'Certificado de Comisionamiento de Kingdom Heirs',
+    'ur': 'کنگڈم ہائرز کمیشننگ سرٹیفکیٹ',
+    'lg': "Satifikeeti y'Okutumibwa eya Kingdom Heirs",
+  },
+  kPathwayCertificateTitle: {
+    'es': 'Certificado de finalización del camino',
+    'ur': 'راستے کی تکمیل کا سرٹیفکیٹ',
+    'lg': "Satifikeeti y'Okumaliriza Omukutu",
+  },
+  kCommissioningStatement: {
+    'es':
+        'Habiendo completado los siete caminos requeridos de Kingdom Heirs y alcanzado el estándar de evaluación requerido del programa, este discípulo es comisionado para ir por todo el mundo en el nombre de Jesucristo: para proclamar el evangelio, orar por los enfermos, hacer discípulos a todas las naciones y servir a los más pequeños con humildad, misericordia, verdad y amor.',
+    'ur':
+        'کنگڈم ہائرز کے ساتوں لازمی راستے مکمل کرنے اور پروگرام کے مقررہ جانچ کے معیار پر پورا اترنے کے بعد، اس شاگرد کو یسوع مسیح کے نام میں تمام دنیا میں جانے کے لیے بھیجا جاتا ہے: تاکہ وہ انجیل کی منادی کرے، بیماروں کے لیے دعا کرے، سب قوموں کو شاگرد بنائے، اور سب سے چھوٹوں کی خدمت فروتنی، رحم، سچائی اور محبت سے کرے۔',
+    'lg':
+        "Bw'amaze okumaliriza emikutu omusanvu egyetaagisa egya Kingdom Heirs n'atuuka ku mutindo gw'okugezesebwa ogwetaagisa mu pulogulaamu, omuyigirizwa ono atumibwa okugenda mu nsi yonna mu linnya lya Yesu Kristo: okubuulira enjiri, okusabira abalwadde, okufuula amawanga gonna abayigirizwa, n'okuweereza abasembayo obuto n'obwetoowaze, okusaasira, amazima n'okwagala.",
+  },
+  kCommissioningReferences: {
+    'es': 'Marcos 16:15 · Mateo 28:19 · Mateo 25:40',
+    'ur': 'مرقس 16:15 · متی 28:19 · متی 25:40',
+    'lg': 'Makko 16:15 · Matayo 28:19 · Matayo 25:40',
+  },
+  kCommissioningDisclaimer: {
+    'es':
+        'Este es un certificado de comisionamiento y reconocimiento ministerial de Kingdom Heirs. No es un título académico acreditado, una licencia profesional ni una credencial de ordenación.',
+    'ur':
+        'یہ کنگڈم ہائرز کی خدمتی کمیشننگ اور اعتراف کا سرٹیفکیٹ ہے۔ یہ کوئی تسلیم شدہ تعلیمی ڈگری، پیشہ ورانہ لائسنس یا تقرری (آرڈینیشن) کی سند نہیں۔',
+    'lg':
+        "Eno satifikeeti ya Kingdom Heirs ey'okutumibwa n'okusiimibwa mu buweereza. Si diguli ya ssomero ekkirizibwa, si layisinsi ya bukugu, era si bbaluwa ya kutongozebwa.",
+  },
+  'Grade {grade}': {
+    'es': 'Calificación {grade}',
+    'ur': 'گریڈ {grade}',
+    'lg': 'Obubonero {grade}',
+  },
+  'Completed {date} · Grade {grade}': {
+    'es': 'Completado el {date} · Calificación {grade}',
+    'ur': 'تکمیل: {date} · گریڈ {grade}',
+    'lg': 'Kyamalirizibwa {date} · Obubonero {grade}',
+  },
+  'Download PDF': {
+    'es': 'Descargar PDF',
+    'ur': 'پی ڈی ایف ڈاؤن لوڈ کریں',
+    'lg': 'Wanula PDF',
+  },
+  'Your grade was updated to {grade}. Your certificate ID and completion date stay the same.':
+      {
+    'es':
+        'Tu calificación se actualizó a {grade}. El ID del certificado y la fecha de finalización no cambian.',
+    'ur':
+        'آپ کا گریڈ {grade} کر دیا گیا ہے۔ آپ کے سرٹیفکیٹ کی آئی ڈی اور تاریخِ تکمیل وہی رہیں گی۔',
+    'lg':
+        "Obubonero bwo bukyusiddwa okudda ku {grade}. Namba ya satifikeeti n'olunaku lw'okumaliriza tebikyuka.",
+  },
+  'The official certificate is issued in English.': {
+    'es': 'El certificado oficial se emite en inglés.',
+    'ur': 'سرکاری سرٹیفکیٹ انگریزی میں جاری کیا جاتا ہے۔',
+    'lg': 'Satifikeeti entongole efulumizibwa mu Lungereza.',
   },
   kCertificateNotice: {
     'es': 'Este certificado reconoce la finalización de un camino de discipulado de Kingdom Heirs. No es un título acreditado, una credencial profesional, una ordenación ni una licencia ministerial. Cualquier función ministerial o de liderazgo requiere un proceso de aprobación aparte de Kingdom Heirs.',
@@ -672,10 +1048,10 @@ const _kProgressionLabels = <String, Map<String, String>>{
     'ur': '{title} کی طرف بڑھیں',
     'lg': 'Weeyongereyo ku {title}',
   },
-  'View Core Discipleship Certificate': {
-    'es': 'Ver el Certificado de Discipulado Principal',
-    'ur': 'بنیادی شاگردی کا سرٹیفکیٹ دیکھیں',
-    'lg': "Laba Satifikeeti y'Obuyigirizwa Obukulu",
+  'View Commissioning Certificate': {
+    'es': 'Ver el Certificado de Comisionamiento',
+    'ur': 'کمیشننگ سرٹیفکیٹ دیکھیں',
+    'lg': "Laba Satifikeeti y'Okutumibwa",
   },
   'Explore pathways': {
     'es': 'Explorar caminos',
@@ -734,21 +1110,23 @@ const _kProgressionLabels = <String, Map<String, String>>{
     'ur': 'ابھی حاصل نہیں ہوا',
     'lg': 'Tekinnafunibwa',
   },
-  'Finish every lesson and pass every quiz with 80% or higher to earn this certificate.':
+  'Finish every lesson and pass every quiz with {n}% or higher to earn this certificate.':
       {
     'es':
-        'Termina todas las lecciones y aprueba todos los cuestionarios con 80% o más para obtener este certificado.',
+        'Termina todas las lecciones y aprueba todos los cuestionarios con {n}% o más para obtener este certificado.',
     'ur':
-        'یہ سرٹیفکیٹ حاصل کرنے کے لیے تمام اسباق مکمل کریں اور تمام کوئز 80% یا زیادہ نمبروں سے پاس کریں۔',
+        'یہ سرٹیفکیٹ حاصل کرنے کے لیے تمام اسباق مکمل کریں اور تمام کوئز {n}% یا زیادہ نمبروں سے پاس کریں۔',
     'lg':
-        'Maliriza buli ssomo era oyite buli kibuuzo ku 80% oba okusingawo okufuna satifikeeti eno.',
+        'Maliriza buli ssomo era oyite buli kibuuzo ku {n}% oba okusingawo okufuna satifikeeti eno.',
   },
-  'Complete all seven core pathways to earn this certificate.': {
+  'Complete all seven required pathways in order, passing every quiz with 80% or higher, to earn this certificate.':
+      {
     'es':
-        'Completa los siete caminos principales para obtener este certificado.',
+        'Completa en orden los siete caminos requeridos, aprobando todos los cuestionarios con 80% o más, para obtener este certificado.',
     'ur':
-        'یہ سرٹیفکیٹ حاصل کرنے کے لیے ساتوں بنیادی راستے مکمل کریں۔',
-    'lg': 'Maliriza emikutu omusanvu emikulu okufuna satifikeeti eno.',
+        'یہ سرٹیفکیٹ حاصل کرنے کے لیے ساتوں لازمی راستے ترتیب سے مکمل کریں اور تمام کوئز 80% یا زیادہ نمبروں سے پاس کریں۔',
+    'lg':
+        'Maliriza emikutu omusanvu egyetaagisa mu nsengeka yaagyo, ng’oyita buli kibuuzo ku 80% oba okusingawo, okufuna satifikeeti eno.',
   },
   'No certificates yet. Complete a pathway to earn your first certificate.': {
     'es':

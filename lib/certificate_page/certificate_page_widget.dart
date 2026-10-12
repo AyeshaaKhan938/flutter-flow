@@ -1,12 +1,12 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/backend.dart';
+import '/custom_code/certificate_pdf.dart';
 import '/custom_code/languages/language_registry.dart';
 import '/custom_code/languages/translation_service.dart';
 import '/custom_code/pathway_progression.dart';
@@ -25,11 +25,14 @@ String formatCertificateDate(DateTime date, String lang) {
   }
 }
 
-/// A completion certificate for one pathway, or the Kingdom Heirs Core
-/// Discipleship Certificate (`pathwayId` = [kCoreCertificateId]).
+/// A Pathway Certificate of Completion, or the Kingdom Heirs Commissioning
+/// Certificate (`pathwayId` = [kCoreCertificateId]).
 ///
 /// The certificate is stored once in users/{uid}/certificates/{pathwayId}
-/// the first time it is earned; later views show the stored record.
+/// the first time it is earned; later views show the stored record (name,
+/// completion date and certificate ID never change; the grade is raised
+/// when the member improves a quiz score). The PDF is generated from that
+/// record on the client's official template.
 class CertificatePageWidget extends StatefulWidget {
   const CertificatePageWidget({super.key, this.pathwayId});
 
@@ -43,15 +46,11 @@ class CertificatePageWidget extends StatefulWidget {
 }
 
 class _CertificatePageWidgetState extends State<CertificatePageWidget> {
-  final _boundaryKey = GlobalKey();
-
   bool _loading = true;
-  bool _earned = false;
   bool _sharing = false;
-  String _memberName = '';
-  String _certificateNumber = '';
-  DateTime? _issuedAt;
+  CertificateData? _certificate;
   PathwaysRecord? _pathway;
+  int _passingScore = kDefaultPassingScore;
 
   String get _lang => LanguageRegistry.contentLanguage;
   String get _id => widget.pathwayId ?? '';
@@ -83,23 +82,23 @@ class _CertificatePageWidgetState extends State<CertificatePageWidget> {
     }
 
     Map<String, dynamic>? data;
+    int? previousGrade;
     if (uid.isNotEmpty && _id.isNotEmpty) {
-      try {
-        final snap =
-            await PathwayProgressionService.certificatesOf(uid).doc(_id).get();
-        if (snap.exists) {
-          data = snap.data();
-        }
-      } catch (_) {}
+      final service = PathwayProgressionService.instance;
+      final progression = await service.refresh();
+      _passingScore =
+          progression.statusFor(_id)?.passingScore ?? kDefaultPassingScore;
+      final stored = progression.issuedCertificates[_id];
+      final storedGrade = stored?['grade'];
+      previousGrade = storedGrade is num ? storedGrade.toInt() : null;
+      // Issues the certificate when first earned, or raises its grade.
+      data = await service.syncCertificate(progression, _id);
       if (data == null) {
-        final progression =
-            await PathwayProgressionService.instance.refresh();
-        if (progression.hasEarned(_id)) {
-          data = await PathwayProgressionService.instance.issueCertificate(
-            _id,
-            _isCore ? kCoreCertificateTitle : (_pathway?.title.en ?? _id),
-          );
-        }
+        try {
+          final snap =
+              await PathwayProgressionService.certificatesOf(uid).doc(_id).get();
+          data = snap.exists ? snap.data() : null;
+        } catch (_) {}
       }
     }
 
@@ -108,44 +107,52 @@ class _CertificatePageWidgetState extends State<CertificatePageWidget> {
     }
     setState(() {
       _loading = false;
-      _earned = data != null;
       if (data != null) {
         final name = (data['memberName'] as String? ?? '').trim();
-        _memberName =
-            name.isNotEmpty ? name : PathwayProgressionService.memberDisplayName();
-        _certificateNumber = (data['certificateId'] as String? ?? '').isNotEmpty
-            ? data['certificateId'] as String
-            : PathwayProgressionService.certificateNumber(uid, _id);
-        final issued = data['issuedAt'];
-        _issuedAt = issued is Timestamp ? issued.toDate() : DateTime.now();
+        final number = (data['certificateId'] as String? ?? '').trim();
+        final grade = data['grade'];
+        _certificate = CertificateData(
+          kind: _isCore
+              ? CertificateKind.commissioning
+              : CertificateKind.pathway,
+          memberName: name.isNotEmpty
+              ? name
+              : PathwayProgressionService.memberDisplayName(),
+          // The official template is English.
+          pathwayName: _pathway?.title.en ?? (data['title'] as String? ?? _id),
+          completedAt: PathwayProgressionService.completedAtOf(data),
+          certificateNumber: number.isNotEmpty
+              ? number
+              : PathwayProgressionService.certificateNumber(uid, _id),
+          gradePercent: grade is num ? grade.toInt() : null,
+        );
       }
     });
+    final newGrade = _certificate?.gradePercent;
+    if (previousGrade != null && newGrade != null && newGrade > previousGrade) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(_t(
+          'Your grade was updated to {grade}. Your certificate ID and completion date stay the same.',
+          {'grade': '$newGrade%'},
+        )),
+      ));
+    }
   }
 
-  Future<void> _share() async {
-    if (_sharing) {
+  Future<void> _downloadPdf() async {
+    final certificate = _certificate;
+    if (_sharing || certificate == null) {
       return;
     }
     setState(() => _sharing = true);
     try {
-      final boundary = _boundaryKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
-      if (boundary == null) {
-        throw StateError('Certificate not rendered');
-      }
-      final image = await boundary.toImage(pixelRatio: 3.0);
-      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      if (bytes == null) {
-        throw StateError('No image data');
-      }
-      final fileName = 'kingdom-heirs-certificate-$_id.png';
+      final bytes = await buildCertificatePdf(certificate);
+      final fileName = _isCore
+          ? 'kingdom-heirs-commissioning-certificate.pdf'
+          : 'kingdom-heirs-certificate-$_id.pdf';
       await SharePlus.instance.share(ShareParams(
         files: [
-          XFile.fromData(
-            bytes.buffer.asUint8List(),
-            mimeType: 'image/png',
-            name: fileName,
-          ),
+          XFile.fromData(bytes, mimeType: 'application/pdf', name: fileName),
         ],
         fileNameOverrides: [fileName],
         text: _title,
@@ -201,9 +208,9 @@ class _CertificatePageWidgetState extends State<CertificatePageWidget> {
                   padding: const EdgeInsets.all(20.0),
                   child: Center(
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 560.0),
-                      child: _earned
-                          ? _buildEarned(theme)
+                      constraints: const BoxConstraints(maxWidth: 720.0),
+                      child: _certificate != null
+                          ? _buildEarned(theme, _certificate!)
                           : _buildNotEarned(theme),
                     ),
                   ),
@@ -238,9 +245,11 @@ class _CertificatePageWidgetState extends State<CertificatePageWidget> {
         const SizedBox(height: 8.0),
         Text(
           _isCore
-              ? _t('Complete all seven core pathways to earn this certificate.')
+              ? _t(
+                  'Complete all seven required pathways in order, passing every quiz with 80% or higher, to earn this certificate.')
               : _t(
-                  'Finish every lesson and pass every quiz with 80% or higher to earn this certificate.'),
+                  'Finish every lesson and pass every quiz with {n}% or higher to earn this certificate.',
+                  {'n': '$_passingScore'}),
           textAlign: TextAlign.center,
           style: theme.bodyMedium.override(
             font: GoogleFonts.inter(),
@@ -264,36 +273,78 @@ class _CertificatePageWidgetState extends State<CertificatePageWidget> {
     );
   }
 
-  Widget _buildEarned(FlutterFlowTheme theme) {
+  Widget _buildEarned(FlutterFlowTheme theme, CertificateData certificate) {
+    final body = theme.bodyMedium.override(
+      font: GoogleFonts.inter(),
+      color: theme.secondaryText,
+      letterSpacing: 0.0,
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        RepaintBoundary(
-          key: _boundaryKey,
-          child: _CertificateCard(
-            heading: _isCore
-                ? _t(kCoreCertificateTitle)
-                : _t('Certificate of Completion'),
-            certifies: _t('This certifies that'),
-            memberName: _memberName,
-            hasCompleted: _t('has completed'),
-            achievement: _isCore
-                ? _t(
-                    'all seven core pathways of the Kingdom Heirs discipleship journey')
-                : _title,
-            dateLine: _t('Completed on {date}', {
-              'date': formatCertificateDate(_issuedAt ?? DateTime.now(), _lang),
-            }),
-            idLine: _t('Certificate ID: {id}', {'id': _certificateNumber}),
-            notice: _t(kCertificateNotice),
-            rtl: _lang == 'ur',
+        CertificatePreview(data: certificate),
+        const SizedBox(height: 16.0),
+        Text(
+          _isCore ? _t(kCoreCertificateTitle) : _t(kPathwayCertificateTitle),
+          textAlign: TextAlign.center,
+          style: theme.titleMedium.override(
+            font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            letterSpacing: 0.0,
           ),
         ),
+        if (!_isCore) ...[
+          const SizedBox(height: 4.0),
+          Text(_title, textAlign: TextAlign.center, style: theme.titleSmall),
+        ],
+        const SizedBox(height: 8.0),
+        Text(
+          [
+            _t('Completed on {date}', {
+              'date': formatCertificateDate(certificate.completedAt, _lang),
+            }),
+            _t('Grade {grade}', {'grade': certificate.gradeText}),
+            _t('Certificate ID: {id}', {'id': certificate.certificateNumber}),
+          ].join('\n'),
+          textAlign: TextAlign.center,
+          style: body,
+        ),
+        if (_isCore) ...[
+          const SizedBox(height: 12.0),
+          Text(_t(kCommissioningStatement),
+              textAlign: TextAlign.center,
+              style: theme.bodyMedium.override(
+                font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                letterSpacing: 0.0,
+              )),
+          const SizedBox(height: 6.0),
+          Text(_t(kCommissioningReferences),
+              textAlign: TextAlign.center, style: body),
+        ],
+        const SizedBox(height: 12.0),
+        Text(
+          _t(_isCore ? kCommissioningDisclaimer : kCertificateNotice),
+          textAlign: TextAlign.center,
+          style: theme.labelSmall.override(
+            font: GoogleFonts.inter(),
+            color: theme.secondaryText,
+            letterSpacing: 0.0,
+          ),
+        ),
+        if (_lang != 'en') ...[
+          const SizedBox(height: 6.0),
+          Text(_t('The official certificate is issued in English.'),
+              textAlign: TextAlign.center,
+              style: theme.labelSmall.override(
+                font: GoogleFonts.inter(),
+                color: theme.secondaryText,
+                letterSpacing: 0.0,
+              )),
+        ],
         const SizedBox(height: 20.0),
         FFButtonWidget(
-          onPressed: _sharing ? null : _share,
-          text: _t('Share / Save'),
-          icon: const Icon(Icons.ios_share, size: 18.0),
+          onPressed: _sharing ? null : _downloadPdf,
+          text: _t('Download PDF'),
+          icon: const Icon(Icons.picture_as_pdf_outlined, size: 18.0),
           options: FFButtonOptions(
             width: double.infinity,
             height: 48.0,
@@ -322,136 +373,74 @@ class _CertificatePageWidgetState extends State<CertificatePageWidget> {
   }
 }
 
-/// The printable certificate itself. Fixed light colours so it looks the
-/// same (and prints well) in dark mode.
-class _CertificateCard extends StatelessWidget {
-  const _CertificateCard({
-    required this.heading,
-    required this.certifies,
-    required this.memberName,
-    required this.hasCompleted,
-    required this.achievement,
-    required this.dateLine,
-    required this.idLine,
-    required this.notice,
-    required this.rtl,
-  });
+/// On-screen preview of the certificate: the official template with the
+/// same text boxes the PDF uses ([CertificateTemplate.boxes]).
+class CertificatePreview extends StatelessWidget {
+  const CertificatePreview({super.key, required this.data});
 
-  final String heading;
-  final String certifies;
-  final String memberName;
-  final String hasCompleted;
-  final String achievement;
-  final String dateLine;
-  final String idLine;
-  final String notice;
-  final bool rtl;
-
-  static const _paper = Color(0xFFFFFBF2);
-  static const _gold = Color(0xFFB8892B);
-  static const _ink = Color(0xFF1E2A5A);
-  static const _muted = Color(0xFF5B6275);
+  final CertificateData data;
 
   @override
   Widget build(BuildContext context) {
-    TextStyle serif(double size,
-            {FontWeight weight = FontWeight.w400,
-            Color color = _ink,
-            FontStyle style = FontStyle.normal}) =>
-        GoogleFonts.playfairDisplay(
-          fontSize: size,
-          fontWeight: weight,
-          color: color,
-          fontStyle: style,
-          height: 1.25,
-        );
-    TextStyle sans(double size,
-            {FontWeight weight = FontWeight.w400,
-            Color color = _muted,
-            double spacing = 0.0}) =>
-        GoogleFonts.inter(
-          fontSize: size,
-          fontWeight: weight,
-          color: color,
-          letterSpacing: spacing,
-        );
-
-    return Directionality(
-      textDirection: rtl ? ui.TextDirection.rtl : ui.TextDirection.ltr,
-      child: Container(
-        color: _paper,
-        padding: const EdgeInsets.all(10.0),
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: _gold, width: 3.0),
-          ),
-          padding: const EdgeInsets.all(5.0),
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: _gold, width: 1.0),
+    return AspectRatio(
+      aspectRatio: CertificateTemplate.pageWidth / CertificateTemplate.pageHeight,
+      child: LayoutBuilder(builder: (context, constraints) {
+        final scale = constraints.maxWidth / CertificateTemplate.pageWidth;
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                CertificateTemplate.backgroundAsset(data.kind),
+                fit: BoxFit.fill,
+              ),
             ),
-            padding: const EdgeInsets.fromLTRB(20.0, 28.0, 20.0, 20.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.workspace_premium, color: _gold, size: 44.0),
-                const SizedBox(height: 6.0),
-                Text(
-                  'KINGDOM HEIRS',
-                  textAlign: TextAlign.center,
-                  style: sans(12.0,
-                      weight: FontWeight.w700, color: _gold, spacing: 3.0),
-                ),
-                const SizedBox(height: 14.0),
-                Text(heading,
-                    textAlign: TextAlign.center,
-                    style: serif(24.0, weight: FontWeight.w700)),
-                const SizedBox(height: 18.0),
-                Text(certifies, textAlign: TextAlign.center, style: sans(13.0)),
-                const SizedBox(height: 8.0),
-                Text(
-                  memberName,
-                  textAlign: TextAlign.center,
-                  style: serif(26.0,
-                      weight: FontWeight.w600, style: FontStyle.italic),
-                ),
-                Container(
-                  margin: const EdgeInsets.symmetric(
-                      horizontal: 24.0, vertical: 8.0),
-                  height: 1.0,
-                  color: _gold,
-                ),
-                Text(hasCompleted,
-                    textAlign: TextAlign.center, style: sans(13.0)),
-                const SizedBox(height: 8.0),
-                Text(achievement,
-                    textAlign: TextAlign.center,
-                    style: serif(20.0, weight: FontWeight.w700)),
-                const SizedBox(height: 16.0),
-                Text(dateLine,
-                    textAlign: TextAlign.center,
-                    style: sans(13.0, color: _ink)),
-                const SizedBox(height: 26.0),
-                Container(width: 180.0, height: 1.0, color: _ink),
-                const SizedBox(height: 6.0),
-                Text(
-                  'Kingdom Heirs Foundation',
-                  textAlign: TextAlign.center,
-                  style: serif(15.0, weight: FontWeight.w600),
-                ),
-                const SizedBox(height: 18.0),
-                Text(idLine,
-                    textAlign: TextAlign.center,
-                    style: sans(10.0, spacing: 0.5)),
-                const SizedBox(height: 10.0),
-                Text(notice,
-                    textAlign: TextAlign.center,
-                    style: sans(9.0, color: _ink)),
-              ],
-            ),
-          ),
-        ),
-      ),
+            for (final box in CertificateTemplate.boxes(data))
+              Positioned(
+                left: box.rect.left * scale,
+                top: box.rect.top * scale,
+                width: box.rect.width * scale,
+                height: box.rect.height * scale,
+                child: _boxText(box, scale),
+              ),
+          ],
+        );
+      }),
     );
+  }
+
+  Widget _boxText(CertificateTextBox box, double scale) {
+    final size = box.size * scale;
+    final color = Color(box.color);
+    final style = switch (box.font) {
+      CertificateFont.serif =>
+        GoogleFonts.lora(fontSize: size, color: color, height: 1.2),
+      CertificateFont.sans =>
+        GoogleFonts.inter(fontSize: size, color: color, height: 1.2),
+      CertificateFont.sansBold => GoogleFonts.inter(
+          fontSize: size,
+          color: color,
+          fontWeight: FontWeight.w700,
+          height: 1.2),
+    };
+    final align = switch (box.align) {
+      CertificateAlign.left => TextAlign.left,
+      CertificateAlign.right => TextAlign.right,
+      CertificateAlign.center => TextAlign.center,
+    };
+    final alignment = switch (box.align) {
+      CertificateAlign.left => Alignment.centerLeft,
+      CertificateAlign.right => Alignment.centerRight,
+      CertificateAlign.center => Alignment.center,
+    };
+    final text = Text(
+      box.text,
+      textAlign: align,
+      textDirection: ui.TextDirection.ltr,
+      style: style,
+    );
+    if (box.wrap) {
+      return text;
+    }
+    return FittedBox(fit: BoxFit.scaleDown, alignment: alignment, child: text);
   }
 }

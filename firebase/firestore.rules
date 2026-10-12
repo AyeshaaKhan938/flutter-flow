@@ -28,7 +28,6 @@ service cloud.firestore {
       allow delete: if request.auth.uid == document;
     }
 
-    // Pathway completion certificates: issued once by the app, never edited.
     // Kingdom Heirs Research Library and Ask Kingdom Heirs data: server
     // only (Cloud Functions use the Admin SDK). Raw manuscripts are never
     // readable or downloadable by members.
@@ -51,9 +50,32 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Certificates (Pathway Certificates and the Commissioning Certificate
+    // 'core-discipleship'). Issued once by the app. Member name, completion
+    // date and certificate ID never change; the only allowed update raises
+    // the grade (with its supporting counts and best quiz scores) after the
+    // member improves a quiz score. Never deleted by the member.
     match /users/{uid}/certificates/{certId} {
-      allow read, create: if request.auth != null && request.auth.uid == uid;
-      allow update, delete: if false;
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.issuedAt == request.time
+        && request.resource.data.get('completedAt', request.time)
+           == request.time
+        && request.resource.data.certificateId is string
+        && request.resource.data.memberName is string
+        && (!('grade' in request.resource.data)
+            || (request.resource.data.grade is int
+                && request.resource.data.grade >= 0
+                && request.resource.data.grade <= 100));
+      allow update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['grade', 'correctCount', 'questionCount', 'quizScores',
+                     'gradeUpdatedAt'])
+        && request.resource.data.grade is int
+        && request.resource.data.grade <= 100
+        && request.resource.data.grade > resource.data.get('grade', -1)
+        && request.resource.data.gradeUpdatedAt == request.time;
+      allow delete: if false;
     }
 
     match /pathways/{document} {

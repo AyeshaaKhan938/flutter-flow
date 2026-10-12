@@ -160,7 +160,7 @@ class _PathwayListPageWidgetState extends State<PathwayListPageWidget> {
             onPressed: () => _openCertificate(kCoreCertificateId),
             icon: Icon(Icons.workspace_premium,
                 color: FlutterFlowTheme.of(context).secondary),
-            label: Text(_t('View Core Discipleship Certificate')),
+            label: Text(_t('View Commissioning Certificate')),
           ),
         ..._inOrder(
           [for (final s in core) (s.pathway.order, _pathwayCard(s))],

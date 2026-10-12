@@ -11,7 +11,9 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import 'certificate_page_widget.dart' show formatCertificateDate;
 
-/// The member's issued certificates (users/{uid}/certificates).
+/// The member's issued certificates (users/{uid}/certificates): the
+/// Commissioning Certificate and a Pathway Certificate per completed pathway.
+/// Each opens the certificate page, where the PDF can be downloaded again.
 class MyCertificatesPageWidget extends StatefulWidget {
   const MyCertificatesPageWidget({super.key});
 
@@ -95,12 +97,15 @@ class _MyCertificatesPageWidgetState extends State<MyCertificatesPageWidget> {
                     }
                     final docs = snapshot.data!.docs.toList()
                       ..sort((a, b) {
-                        DateTime at(QueryDocumentSnapshot<Map<String, dynamic>> d) {
-                          final v = d.data()['issuedAt'];
-                          return v is Timestamp ? v.toDate() : DateTime.now();
+                        // Commissioning first, then newest first.
+                        final core = (b.id == kCoreCertificateId ? 1 : 0) -
+                            (a.id == kCoreCertificateId ? 1 : 0);
+                        if (core != 0) {
+                          return core;
                         }
-
-                        return at(b).compareTo(at(a));
+                        return PathwayProgressionService.completedAtOf(b.data())
+                            .compareTo(
+                                PathwayProgressionService.completedAtOf(a.data()));
                       });
                     if (docs.isEmpty) {
                       return Padding(
@@ -133,11 +138,13 @@ class _MyCertificatesPageWidgetState extends State<MyCertificatesPageWidget> {
                       itemBuilder: (context, i) {
                         final data = docs[i].data();
                         final id = docs[i].id;
-                        final issued = data['issuedAt'];
                         final date = formatCertificateDate(
-                          issued is Timestamp ? issued.toDate() : DateTime.now(),
+                          PathwayProgressionService.completedAtOf(data),
                           _lang,
                         );
+                        final grade = data['grade'];
+                        final gradeText =
+                            grade is num ? '${grade.toInt()}%' : 'N/A';
                         final isCore = id == kCoreCertificateId;
                         return Material(
                           color: theme.secondaryBackground,
@@ -167,7 +174,11 @@ class _MyCertificatesPageWidgetState extends State<MyCertificatesPageWidget> {
                               ),
                             ),
                             subtitle: Text(
-                              _t('Issued {date}', {'date': date}),
+                              [
+                                if (!isCore) _t(kPathwayCertificateTitle),
+                                _t('Completed {date} · Grade {grade}',
+                                    {'date': date, 'grade': gradeText}),
+                              ].join('\n'),
                               style: theme.labelMedium.override(
                                 font: GoogleFonts.inter(),
                                 color: theme.secondaryText,
