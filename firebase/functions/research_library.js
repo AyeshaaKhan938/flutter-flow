@@ -376,6 +376,15 @@ async function ingest({ db, admin, data }) {
     throw new Error("source.sourceId is required");
   }
   const status = source.status === "approved" ? "approved" : "draft";
+  // A new edition replaces every section of the old one.
+  if (data.replace === true) {
+    const old = await db.collection("researchSections").where("sourceId", "==", source.sourceId).get();
+    for (let i = 0; i < old.docs.length; i += 50) {
+      const batch = db.batch();
+      old.docs.slice(i, i + 50).forEach((d) => batch.delete(d.ref));
+      await batch.commit();
+    }
+  }
   await db.collection("researchSources").doc(source.sourceId).set({
     sourceId: source.sourceId,
     title: String(source.title || ""),

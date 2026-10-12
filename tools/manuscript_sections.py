@@ -77,10 +77,10 @@ SOURCES = [
          edition="90-day devotional (\u00a9 2026)"),
     dict(pathwayId="holy-spirit-in-the-life-of-every-christian",
          title="The Holy Spirit in the Life of Every Christian",
-         files=["The Holy Spirit in the Life of Every Christian.pdf",
-                "The Holy Spirit in the Life of Every Christian.docx"],
+         files=["The Holy Spirit in the Life of Every Christian - KDP Interior.docx",
+                "The Holy Spirit in the Life of Every Christian.pdf"],
          cover_only=["The Holy Spirit in the Life of Every Christian - KDP Cover - Supplied Front.pdf"],
-         edition=""),
+         edition="KDP interior", markers_only=True),
     dict(pathwayId="kingdom-heirs-foundations", title="Kingdom Heirs Foundations",
          files=["Kingdom_Heirs_Foundation - Rev James  @2026 - Edition.pdf"],
          edition="2026 Edition", chapter_size=16),
@@ -89,8 +89,11 @@ SOURCES = [
          edition="Master Manuscript (\u00a9 2026)", markers_only=True),
     dict(pathwayId="counterfeit-gospels",
          title="Counterfeit Gospels: The Truth Stick",
-         files=["Counterfeit gospel the true stick polished edition.pdf"],
-         edition="Polished edition"),
+         # Corrected final edition (KDP, with answer key) replaces the
+         # polished edition, which was missing Chapter 6.
+         files=["Counterfeit_Gospel_KDP_FINAL_WITH_ANSWER_KEY.pdf",
+                "Counterfeit gospel the true stick polished edition.pdf"],
+         edition="KDP final edition (with answer key)"),
     dict(pathwayId="the-new-man",
          title="The New Man: A 90-Day Christian Journey to Freedom from Pornography, Shame and Sexual Addiction",
          files=["The New Man - 90-day Christian Journey to freddom from pornography, shame and sexual addiction - Rev. James Maddalone.docx"],
@@ -251,6 +254,10 @@ def pdf_lines(path, notes):
             if not text:
                 return
             m = _mult(tm, cm)
+            # pypdf may replay the whole page's text at the origin (form
+            # XObjects); that copy duplicates every line, so skip it.
+            if m[4] == 0 and m[5] == 0 and len(text) > 120:
+                return
             size = abs(fs * math.hypot(m[2], m[3])) or abs(fs)
             name = str(fd.get("/BaseFont", "")) if fd else ""
             frags.append((m[5], m[4], round(size, 1), _is_bold(name), text.replace("\n", " ")))
@@ -259,7 +266,17 @@ def pdf_lines(path, notes):
             page.extract_text(visitor_text=visit)
         except Exception as e:  # pragma: no cover
             notes.append(f"p{pno} extract error {e}")
-        frags = [f for f in frags if f[4]]
+        # Some PDFs make pypdf report the same run several times (once per
+        # content-stream pass); keep one copy per position and text.
+        seen = set()
+        unique = []
+        for f in frags:
+            key = (round(f[0]), f[4])
+            if f[4].strip() and key in seen:
+                continue
+            seen.add(key)
+            unique.append(f)
+        frags = [f for f in unique if f[4]]
         if not "".join(f[4] for f in frags).strip():
             empty += 1
             pages.append([])

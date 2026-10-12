@@ -20,6 +20,16 @@
           "queryScope": "COLLECTION_GROUP"
         }
       ]
+    },
+    {
+      "collectionGroup": "researchSections",
+      "fieldPath": "embedding",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "researchSections",
+      "fieldPath": "text",
+      "indexes": []
     }
   ]
 }
