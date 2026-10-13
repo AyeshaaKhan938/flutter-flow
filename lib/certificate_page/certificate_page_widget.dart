@@ -95,8 +95,9 @@ class _CertificatePageWidgetState extends State<CertificatePageWidget> {
       data = await service.syncCertificate(progression, _id);
       if (data == null) {
         try {
-          final snap =
-              await PathwayProgressionService.certificatesOf(uid).doc(_id).get();
+          final snap = await PathwayProgressionService.certificatesOf(uid)
+              .doc(_id)
+              .get();
           data = snap.exists ? snap.data() : null;
         } catch (_) {}
       }
@@ -112,9 +113,8 @@ class _CertificatePageWidgetState extends State<CertificatePageWidget> {
         final number = (data['certificateId'] as String? ?? '').trim();
         final grade = data['grade'];
         _certificate = CertificateData(
-          kind: _isCore
-              ? CertificateKind.commissioning
-              : CertificateKind.pathway,
+          kind:
+              _isCore ? CertificateKind.commissioning : CertificateKind.pathway,
           memberName: name.isNotEmpty
               ? name
               : PathwayProgressionService.memberDisplayName(),
@@ -310,7 +310,7 @@ class _CertificatePageWidgetState extends State<CertificatePageWidget> {
         ),
         if (_isCore) ...[
           const SizedBox(height: 12.0),
-          Text(_t(kCommissioningStatement),
+          Text(commissioningStatementFor(certificate.memberName),
               textAlign: TextAlign.center,
               style: theme.bodyMedium.override(
                 font: GoogleFonts.inter(fontWeight: FontWeight.w600),
@@ -383,7 +383,8 @@ class CertificatePreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
-      aspectRatio: CertificateTemplate.pageWidth / CertificateTemplate.pageHeight,
+      aspectRatio:
+          CertificateTemplate.pageWidth / CertificateTemplate.pageHeight,
       child: LayoutBuilder(builder: (context, constraints) {
         final scale = constraints.maxWidth / CertificateTemplate.pageWidth;
         return Stack(

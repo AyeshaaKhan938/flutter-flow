@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import 'pathway_progression.dart' show commissioningStatementFor;
+
 /// The two official Kingdom Heirs certificate designs.
 enum CertificateKind { pathway, commissioning }
 
@@ -63,6 +65,7 @@ class CertificateTextBox {
     this.color = CertificateTemplate.navy,
     this.align = CertificateAlign.center,
     this.wrap = false,
+    this.background,
   });
 
   final Rect rect;
@@ -74,6 +77,9 @@ class CertificateTextBox {
 
   /// Wraps over several lines instead of shrinking to one line.
   final bool wrap;
+
+  /// Fills the box first (ARGB), to replace wording printed on the template.
+  final int? background;
 }
 
 /// Layout of the client's fillable templates
@@ -93,6 +99,9 @@ class CertificateTemplate {
   static const navy = 0xFF061B3E;
   static const brown = 0xFF514B42;
 
+  /// Template paper colour (#FBF4E4).
+  static const paper = 0xFFFBF4E4;
+
   static String backgroundAsset(CertificateKind kind) =>
       kind == CertificateKind.commissioning
           ? 'assets/images/certificate_template_commissioning.jpg'
@@ -111,6 +120,11 @@ class CertificateTemplate {
         // AcroForm field "completion_date".
         CertificateTextBox(const Rect.fromLTRB(510, 515, 620, 538), d.dateText,
             size: 12),
+        // Kingdom Heirs' approved commissioning wording replaces the two
+        // paragraphs printed on the template (cream fill matches the paper).
+        CertificateTextBox(const Rect.fromLTRB(92, 336, 700, 428),
+            commissioningStatementFor(d.memberName),
+            size: 12.5, wrap: true, color: brown, background: paper),
         CertificateTextBox(const Rect.fromLTRB(305, 546, 645, 556), d.idText,
             size: 7.5, font: CertificateFont.sansBold),
         const CertificateTextBox(
@@ -189,9 +203,11 @@ Future<Uint8List> buildCertificatePdf(CertificateData data) async {
     return pw.Positioned(
       left: b.rect.left,
       top: b.rect.top,
-      child: pw.SizedBox(
+      child: pw.Container(
         width: b.rect.width,
         height: b.rect.height,
+        color: b.background == null ? null : PdfColor.fromInt(b.background!),
+        alignment: b.background == null ? null : pw.Alignment.center,
         child: b.wrap
             ? pw.Text(b.text, style: style, textAlign: align)
             : pw.FittedBox(

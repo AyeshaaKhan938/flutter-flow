@@ -33,13 +33,21 @@ const kPathwayCertificateTitle = 'Pathway Certificate of Completion';
 /// Shown on every Pathway Certificate (no commissioning language).
 const kCertificateNotice = kPathwayCertificateNotice;
 
-/// The commissioning wording, as Kingdom Heirs requires it.
+/// The commissioning wording, exactly as Kingdom Heirs approved it
+/// (2026-10-14). {name} is the member's name. English only: doctrinal
+/// wording is not translated until a ministry reviewer approves it.
 const kCommissioningStatement =
-    'Having completed all seven required Kingdom Heirs pathways and met the '
-    'required program assessment standard, this disciple is commissioned to '
-    'go into all the world in the name of Jesus Christ: to proclaim the '
-    'gospel, pray for the sick, make disciples of all nations, and serve the '
-    'least of these with humility, mercy, truth, and love.';
+    'Having faithfully completed the required Kingdom Heirs Discipleship '
+    'Pathways and satisfied the learning and assessment requirements, this '
+    'certifies that {name} is commissioned by Kingdom Heirs Foundation to go '
+    'into all the world, proclaim the Gospel of Jesus Christ, pray for the '
+    'sick, make disciples, and serve the least of these in the name of Jesus '
+    'Christ.';
+
+/// The commissioning wording with the member's name filled in.
+String commissioningStatementFor(String memberName) =>
+    kCommissioningStatement.replaceAll('{name}',
+        memberName.trim().isEmpty ? 'this disciple' : memberName.trim());
 const kCommissioningReferences = 'Mark 16:15 · Matthew 28:19 · Matthew 25:40';
 
 /// Number of core pathways that make up the full core journey.
@@ -52,8 +60,8 @@ const kDefaultPassingScore = 80;
 /// (1-100) when set, else [kDefaultPassingScore]. This lets one pathway use a
 /// different standard later (planned: from-bondage-to-freedom at 75%).
 int passingScoreFor(PathwaysRecord pathway) {
-  final v = PathwayProgressionService._toInt(
-      pathway.snapshotData['passingScore']);
+  final v =
+      PathwayProgressionService._toInt(pathway.snapshotData['passingScore']);
   return v != null && v > 0 && v <= 100 ? v : kDefaultPassingScore;
 }
 
@@ -342,8 +350,8 @@ class PathwayProgressionService {
       return;
     }
     final scores = await _QuizBestScores.load(uid);
-    final best =
-        QuizScore.best(scores[quizId], QuizScore(correct.clamp(0, total), total));
+    final best = QuizScore.best(
+        scores[quizId], QuizScore(correct.clamp(0, total), total));
     if (best != null && !identical(best, scores[quizId])) {
       scores[quizId] = best;
       await _QuizBestScores.save(uid, scores);
@@ -804,7 +812,6 @@ class PathwayProgressionService {
   }
 }
 
-
 /// Localized labels for progression screens: compiled en/es/ur/lg text,
 /// else machine translation of the English (via [TranslationService]).
 /// `{title}`, `{n}`, `{date}`, `{id}` placeholders are filled from [args].
@@ -851,7 +858,8 @@ const _kProgressionLabels = <String, Map<String, String>>{
     'lg': 'Ebisomesebwa Ebirala — Weeyongere Okukula',
   },
   'Grow deeper at your own pace. These studies are always open.': {
-    'es': 'Profundiza a tu propio ritmo. Estos estudios siempre están abiertos.',
+    'es':
+        'Profundiza a tu propio ritmo. Estos estudios siempre están abiertos.',
     'ur': 'اپنی رفتار سے گہرائی میں بڑھیں۔ یہ مطالعے ہمیشہ کھلے رہتے ہیں۔',
     'lg': 'Weeyongere okukula mu mbeera yo. Ebisomesebwa bino bulijjo biggule.',
   },
@@ -889,14 +897,6 @@ const _kProgressionLabels = <String, Map<String, String>>{
     'es': 'Certificado de finalización del camino',
     'ur': 'راستے کی تکمیل کا سرٹیفکیٹ',
     'lg': "Satifikeeti y'Okumaliriza Omukutu",
-  },
-  kCommissioningStatement: {
-    'es':
-        'Habiendo completado los siete caminos requeridos de Kingdom Heirs y alcanzado el estándar de evaluación requerido del programa, este discípulo es comisionado para ir por todo el mundo en el nombre de Jesucristo: para proclamar el evangelio, orar por los enfermos, hacer discípulos a todas las naciones y servir a los más pequeños con humildad, misericordia, verdad y amor.',
-    'ur':
-        'کنگڈم ہائرز کے ساتوں لازمی راستے مکمل کرنے اور پروگرام کے مقررہ جانچ کے معیار پر پورا اترنے کے بعد، اس شاگرد کو یسوع مسیح کے نام میں تمام دنیا میں جانے کے لیے بھیجا جاتا ہے: تاکہ وہ انجیل کی منادی کرے، بیماروں کے لیے دعا کرے، سب قوموں کو شاگرد بنائے، اور سب سے چھوٹوں کی خدمت فروتنی، رحم، سچائی اور محبت سے کرے۔',
-    'lg':
-        "Bw'amaze okumaliriza emikutu omusanvu egyetaagisa egya Kingdom Heirs n'atuuka ku mutindo gw'okugezesebwa ogwetaagisa mu pulogulaamu, omuyigirizwa ono atumibwa okugenda mu nsi yonna mu linnya lya Yesu Kristo: okubuulira enjiri, okusabira abalwadde, okufuula amawanga gonna abayigirizwa, n'okuweereza abasembayo obuto n'obwetoowaze, okusaasira, amazima n'okwagala.",
   },
   kCommissioningReferences: {
     'es': 'Marcos 16:15 · Mateo 28:19 · Mateo 25:40',
@@ -941,9 +941,12 @@ const _kProgressionLabels = <String, Map<String, String>>{
     'lg': 'Satifikeeti entongole efulumizibwa mu Lungereza.',
   },
   kCertificateNotice: {
-    'es': 'Este certificado reconoce la finalización de un camino de discipulado de Kingdom Heirs. No es un título acreditado, una credencial profesional, una ordenación ni una licencia ministerial. Cualquier función ministerial o de liderazgo requiere un proceso de aprobación aparte de Kingdom Heirs.',
-    'ur': 'یہ سرٹیفکیٹ کنگڈم ہائرز کے شاگردی کے ایک راستے کی تکمیل کا اعتراف ہے۔ یہ کوئی تسلیم شدہ ڈگری، پیشہ ورانہ سند، تقرری (آرڈینیشن) یا خدمت کا لائسنس نہیں۔ کسی بھی خدمت یا قیادت کے کردار کے لیے کنگڈم ہائرز کی الگ منظوری درکار ہے۔',
-    'lg': 'Satifikeeti eno ekakasa okumaliriza omukutu gw’obuyigirizwa ogwa Kingdom Heirs. Si diguli ekkirizibwa, si bbaluwa ya bukugu, si kutongozebwa mu buweereza era si layisinsi ya buweereza. Omulimu gwonna ogw’obuweereza oba obukulembeze gwetaaga okukkirizibwa okw’enjawulo okwa Kingdom Heirs.',
+    'es':
+        'Este certificado reconoce la finalización de un camino de discipulado de Kingdom Heirs. No es un título acreditado, una credencial profesional, una ordenación ni una licencia ministerial. Cualquier función ministerial o de liderazgo requiere un proceso de aprobación aparte de Kingdom Heirs.',
+    'ur':
+        'یہ سرٹیفکیٹ کنگڈم ہائرز کے شاگردی کے ایک راستے کی تکمیل کا اعتراف ہے۔ یہ کوئی تسلیم شدہ ڈگری، پیشہ ورانہ سند، تقرری (آرڈینیشن) یا خدمت کا لائسنس نہیں۔ کسی بھی خدمت یا قیادت کے کردار کے لیے کنگڈم ہائرز کی الگ منظوری درکار ہے۔',
+    'lg':
+        'Satifikeeti eno ekakasa okumaliriza omukutu gw’obuyigirizwa ogwa Kingdom Heirs. Si diguli ekkirizibwa, si bbaluwa ya bukugu, si kutongozebwa mu buweereza era si layisinsi ya buweereza. Omulimu gwonna ogw’obuweereza oba obukulembeze gwetaaga okukkirizibwa okw’enjawulo okwa Kingdom Heirs.',
   },
   'Based on your answers, {title} will be especially meaningful for you. It unlocks as you complete the core pathways before it.':
       {
@@ -1145,7 +1148,8 @@ const _kProgressionLabels = <String, Map<String, String>>{
     'es':
         'Todo miembro comienza el recorrido principal de Kingdom Heirs con {title}.',
     'ur': 'ہر رکن Kingdom Heirs کے بنیادی سفر کا آغاز {title} سے کرتا ہے۔',
-    'lg': 'Buli mmemba atandika olugendo olukulu olwa Kingdom Heirs ne {title}.',
+    'lg':
+        'Buli mmemba atandika olugendo olukulu olwa Kingdom Heirs ne {title}.',
   },
   'Loading…': {
     'es': 'Cargando…',
