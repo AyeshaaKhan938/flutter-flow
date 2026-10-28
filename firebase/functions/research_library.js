@@ -147,6 +147,8 @@ function cleanAnswer(text) {
   return kept.join("\n\n").trim();
 }
 
+// Only questions about Ask itself may draw on the Safety & Boundaries rules.
+const kBoundaryQuestion = /ask kingdom heirs|boundar|safety|\badvice\b|can(not|'t|not) (you|it|ask)|help (me )?with|what (can|will) (you|it|ask)/i;
 /** Safety & Boundaries describes the rules; it is not teaching to cite. */
 const isSafetyRules = (s) => s.sourceId === kAppHelpSourceId && s.chapterTitle === "Safety & Boundaries";
 
@@ -448,7 +450,7 @@ async function answerQuestion({ db, admin, uid, email, question }) {
   const sections = await loadSections(db);
   const [qv] = await embed(admin, [q], "RETRIEVAL_QUERY");
   const hits = boostAppHelp(search(sections, qv, kTopSections * 2), q)
-    .filter((h) => !safety || !isSafetyRules(h.s))
+    .filter((h) => !isSafetyRules(h.s) || (!safety && kBoundaryQuestion.test(q)))
     .slice(0, kTopSections);
   if (hits.length === 0) {
     return safety ? safetyOnly() : { status: "not_found", answer: kNotFoundAnswer, citations: [] };
