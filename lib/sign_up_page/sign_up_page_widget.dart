@@ -404,7 +404,9 @@ class _SignUpPageWidgetState extends State<SignUpPageWidget> {
                               _model.signUpPasswordFieldVisibility =
                                   !_model.signUpPasswordFieldVisibility);
                         },
-                        focusNode: FocusNode(skipTraversal: true),
+                        focusNode: _model
+                            .signUpPasswordFieldPasswordVisibilityFocusNode
+                          ..skipTraversal = !(false),
                         child: Icon(
                           _model.signUpPasswordFieldVisibility
                               ? Icons.visibility_outlined

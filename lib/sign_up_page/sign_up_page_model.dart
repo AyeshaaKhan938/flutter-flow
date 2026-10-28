@@ -36,6 +36,7 @@ class SignUpPageModel extends FlutterFlowModel<SignUpPageWidget> {
   String? Function(BuildContext, String?)?
       signUpEmailFieldTextControllerValidator;
   // State field(s) for SignUpPasswordField widget.
+  late FocusNode signUpPasswordFieldPasswordVisibilityFocusNode;
   FocusNode? signUpPasswordFieldFocusNode;
   TextEditingController? signUpPasswordFieldTextController;
   late bool signUpPasswordFieldVisibility;
@@ -46,6 +47,7 @@ class SignUpPageModel extends FlutterFlowModel<SignUpPageWidget> {
 
   @override
   void initState(BuildContext context) {
+    signUpPasswordFieldPasswordVisibilityFocusNode = FocusNode();
     signUpPasswordFieldVisibility = false;
   }
 
@@ -62,5 +64,6 @@ class SignUpPageModel extends FlutterFlowModel<SignUpPageWidget> {
 
     signUpPasswordFieldFocusNode?.dispose();
     signUpPasswordFieldTextController?.dispose();
+    signUpPasswordFieldPasswordVisibilityFocusNode.dispose();
   }
 }

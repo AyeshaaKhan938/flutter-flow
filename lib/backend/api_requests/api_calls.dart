@@ -143,7 +143,7 @@ class CreateUserProfileCall {
     String? preferredLanguage = '',
   }) async {
     final ffApiRequestBody = '''
-{"fullName":"${fullName}","preferredLanguage":"${preferredLanguage}","role":"member","surveyResponses":{}}''';
+{"fullName":${fullName == null ? 'null' : '"${fullName}"'},"preferredLanguage":${preferredLanguage == null ? 'null' : '"${preferredLanguage}"'},"role":"member","surveyResponses":{}}''';
     if (FFDataSource.isMock) {
       return MockApiAdapter.createUserProfileCall(
         fullName: fullName,
@@ -176,7 +176,7 @@ class UpdateUserProfileCall {
     String? surveyResponses = '',
   }) async {
     final ffApiRequestBody = '''
-{"preferredLanguage":"${preferredLanguage}","surveyResponses":"${surveyResponses}"}''';
+{"preferredLanguage":${preferredLanguage == null ? 'null' : '"${preferredLanguage}"'},"surveyResponses":${surveyResponses == null ? 'null' : '"${surveyResponses}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'UpdateUserProfile',
       apiUrl:
@@ -212,7 +212,7 @@ class UpdateUserProfileFullCall {
     String? assessmentGoals = '',
   }) async {
     final ffApiRequestBody = '''
-{"preferredLanguage":"${preferredLanguage}","surveyResponses":"${surveyResponses}","recommendedPathwayId":"${recommendedPathwayId}","recommendationReason":"${recommendationReason}","assessmentBibleConfidence":"${assessmentBibleConfidence}","assessmentNeeds":"${assessmentNeeds}","assessmentHabits":"${assessmentHabits}","assessmentGoals":"${assessmentGoals}"}''';
+{"preferredLanguage":${preferredLanguage == null ? 'null' : '"${preferredLanguage}"'},"surveyResponses":${surveyResponses == null ? 'null' : '"${surveyResponses}"'},"recommendedPathwayId":${recommendedPathwayId == null ? 'null' : '"${recommendedPathwayId}"'},"recommendationReason":${recommendationReason == null ? 'null' : '"${recommendationReason}"'},"assessmentBibleConfidence":${assessmentBibleConfidence == null ? 'null' : '"${assessmentBibleConfidence}"'},"assessmentNeeds":${assessmentNeeds == null ? 'null' : '"${assessmentNeeds}"'},"assessmentHabits":${assessmentHabits == null ? 'null' : '"${assessmentHabits}"'},"assessmentGoals":${assessmentGoals == null ? 'null' : '"${assessmentGoals}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'UpdateUserProfileFull',
       apiUrl:
@@ -248,7 +248,7 @@ class UpdateUserProfileV2Call {
     String? assessmentGoals = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","preferredLanguage":"${preferredLanguage}","surveyResponses":"${surveyResponses}","recommendedPathwayId":"${recommendedPathwayId}","recommendationReason":"${recommendationReason}","assessmentBibleConfidence":"${assessmentBibleConfidence}","assessmentNeeds":"${assessmentNeeds}","assessmentHabits":"${assessmentHabits}","assessmentGoals":"${assessmentGoals}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'},"preferredLanguage":${preferredLanguage == null ? 'null' : '"${preferredLanguage}"'},"surveyResponses":${surveyResponses == null ? 'null' : '"${surveyResponses}"'},"recommendedPathwayId":${recommendedPathwayId == null ? 'null' : '"${recommendedPathwayId}"'},"recommendationReason":${recommendationReason == null ? 'null' : '"${recommendationReason}"'},"assessmentBibleConfidence":${assessmentBibleConfidence == null ? 'null' : '"${assessmentBibleConfidence}"'},"assessmentNeeds":${assessmentNeeds == null ? 'null' : '"${assessmentNeeds}"'},"assessmentHabits":${assessmentHabits == null ? 'null' : '"${assessmentHabits}"'},"assessmentGoals":${assessmentGoals == null ? 'null' : '"${assessmentGoals}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'UpdateUserProfileV2',
       apiUrl:
@@ -275,7 +275,7 @@ class GetUserProfileV2Call {
     String? authToken = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetUserProfileV2',
       apiUrl:
@@ -302,7 +302,7 @@ class GetUserProfileV3Call {
     String? authToken = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetUserProfileV3',
       apiUrl:
@@ -330,7 +330,7 @@ class GetPathwayProgressCall {
     String? pathwayId = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","pathwayId":"${pathwayId}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'},"pathwayId":${pathwayId == null ? 'null' : '"${pathwayId}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetPathwayProgress',
       apiUrl:
@@ -362,7 +362,7 @@ class SaveLessonProgressCall {
     String? clientWriteId = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","pathwayId":"${pathwayId}","lessonId":"${lessonId}","dayNumber":"${dayNumber}","reflectionText":"${reflectionText}","clientWriteId":"${clientWriteId}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'},"pathwayId":${pathwayId == null ? 'null' : '"${pathwayId}"'},"lessonId":${lessonId == null ? 'null' : '"${lessonId}"'},"dayNumber":${dayNumber == null ? 'null' : '"${dayNumber}"'},"reflectionText":${reflectionText == null ? 'null' : '"${reflectionText}"'},"clientWriteId":${clientWriteId == null ? 'null' : '"${clientWriteId}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'SaveLessonProgress',
       apiUrl:
@@ -390,7 +390,7 @@ class GetQuizCall {
     String? quizId = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","quizId":"${quizId}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'},"quizId":${quizId == null ? 'null' : '"${quizId}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetQuiz',
       apiUrl:
@@ -428,7 +428,7 @@ class SubmitQuizAttemptCall {
     String? q10 = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","quizId":"${quizId}","q1":"${q1}","q2":"${q2}","q3":"${q3}","q4":"${q4}","q5":"${q5}","q6":"${q6}","q7":"${q7}","q8":"${q8}","q9":"${q9}","q10":"${q10}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'},"quizId":${quizId == null ? 'null' : '"${quizId}"'},"q1":${q1 == null ? 'null' : '"${q1}"'},"q2":${q2 == null ? 'null' : '"${q2}"'},"q3":${q3 == null ? 'null' : '"${q3}"'},"q4":${q4 == null ? 'null' : '"${q4}"'},"q5":${q5 == null ? 'null' : '"${q5}"'},"q6":${q6 == null ? 'null' : '"${q6}"'},"q7":${q7 == null ? 'null' : '"${q7}"'},"q8":${q8 == null ? 'null' : '"${q8}"'},"q9":${q9 == null ? 'null' : '"${q9}"'},"q10":${q10 == null ? 'null' : '"${q10}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'SubmitQuizAttempt',
       apiUrl:
@@ -458,7 +458,7 @@ class ImportCurriculumCall {
     String? previewOnly = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","collection":"${collection}","csvText":"${csvText}","previewOnly":"${previewOnly}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'},"collection":${collection == null ? 'null' : '"${collection}"'},"csvText":${csvText == null ? 'null' : '"${csvText}"'},"previewOnly":${previewOnly == null ? 'null' : '"${previewOnly}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'ImportCurriculum',
       apiUrl:
@@ -487,7 +487,7 @@ class GetQuizV2Call {
     String? locale = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","quizId":"${quizId}","locale":"${locale}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'},"quizId":${quizId == null ? 'null' : '"${quizId}"'},"locale":${locale == null ? 'null' : '"${locale}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetQuizV2',
       apiUrl:
@@ -515,7 +515,7 @@ class GetQuizAttemptCall {
     String? quizId = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","quizId":"${quizId}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'},"quizId":${quizId == null ? 'null' : '"${quizId}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetQuizAttempt',
       apiUrl:
@@ -554,7 +554,7 @@ class SubmitQuizAttemptV2Call {
     String? q10 = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","quizId":"${quizId}","pathwayId":"${pathwayId}","q1":"${q1}","q2":"${q2}","q3":"${q3}","q4":"${q4}","q5":"${q5}","q6":"${q6}","q7":"${q7}","q8":"${q8}","q9":"${q9}","q10":"${q10}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'},"quizId":${quizId == null ? 'null' : '"${quizId}"'},"pathwayId":${pathwayId == null ? 'null' : '"${pathwayId}"'},"q1":${q1 == null ? 'null' : '"${q1}"'},"q2":${q2 == null ? 'null' : '"${q2}"'},"q3":${q3 == null ? 'null' : '"${q3}"'},"q4":${q4 == null ? 'null' : '"${q4}"'},"q5":${q5 == null ? 'null' : '"${q5}"'},"q6":${q6 == null ? 'null' : '"${q6}"'},"q7":${q7 == null ? 'null' : '"${q7}"'},"q8":${q8 == null ? 'null' : '"${q8}"'},"q9":${q9 == null ? 'null' : '"${q9}"'},"q10":${q10 == null ? 'null' : '"${q10}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'SubmitQuizAttemptV2',
       apiUrl:
@@ -581,7 +581,7 @@ class GetUserProfileV4Call {
     String? authToken = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetUserProfileV4',
       apiUrl:
@@ -618,7 +618,7 @@ class SubmitAssessmentCall {
     String? q10 = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","q1":"${q1}","q2":"${q2}","q3":"${q3}","q4":"${q4}","q5":"${q5}","q6":"${q6}","q7":"${q7}","q8":"${q8}","q9":"${q9}","q10":"${q10}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'},"q1":${q1 == null ? 'null' : '"${q1}"'},"q2":${q2 == null ? 'null' : '"${q2}"'},"q3":${q3 == null ? 'null' : '"${q3}"'},"q4":${q4 == null ? 'null' : '"${q4}"'},"q5":${q5 == null ? 'null' : '"${q5}"'},"q6":${q6 == null ? 'null' : '"${q6}"'},"q7":${q7 == null ? 'null' : '"${q7}"'},"q8":${q8 == null ? 'null' : '"${q8}"'},"q9":${q9 == null ? 'null' : '"${q9}"'},"q10":${q10 == null ? 'null' : '"${q10}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'SubmitAssessment',
       apiUrl:
@@ -647,7 +647,7 @@ class RagQueryHttpCall {
     String? locale = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","question":"${question}","locale":"${locale}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'},"question":${question == null ? 'null' : '"${question}"'},"locale":${locale == null ? 'null' : '"${locale}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'RagQueryHttp',
       apiUrl:
@@ -674,7 +674,7 @@ class GetAdminReportCall {
     String? authToken = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetAdminReport',
       apiUrl:
@@ -701,7 +701,7 @@ class GetAssessmentConfigCall {
     String? authToken = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetAssessmentConfig',
       apiUrl:
@@ -734,7 +734,7 @@ class UpdateAssessmentConfigCall {
     String? activate = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","assessmentVersion":"${assessmentVersion}","scoreBandsJson":"${scoreBandsJson}","overridesJson":"${overridesJson}","explanationsJson":"${explanationsJson}","pointMapJson":"${pointMapJson}","activate":"${activate}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'},"assessmentVersion":${assessmentVersion == null ? 'null' : '"${assessmentVersion}"'},"scoreBandsJson":${scoreBandsJson == null ? 'null' : '"${scoreBandsJson}"'},"overridesJson":${overridesJson == null ? 'null' : '"${overridesJson}"'},"explanationsJson":${explanationsJson == null ? 'null' : '"${explanationsJson}"'},"pointMapJson":${pointMapJson == null ? 'null' : '"${pointMapJson}"'},"activate":${activate == null ? 'null' : '"${activate}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'UpdateAssessmentConfig',
       apiUrl:
@@ -762,7 +762,7 @@ class GetAssessmentQuestionsCall {
     String? locale = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","locale":"${locale}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'},"locale":${locale == null ? 'null' : '"${locale}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetAssessmentQuestions',
       apiUrl:
@@ -789,7 +789,7 @@ class GetUserProfileV5Call {
     String? authToken = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetUserProfileV5',
       apiUrl:
@@ -826,7 +826,7 @@ class SubmitAssessmentV2Call {
     String? q10 = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","q1":"${q1}","q2":"${q2}","q3":"${q3}","q4":"${q4}","q5":"${q5}","q6":"${q6}","q7":"${q7}","q8":"${q8}","q9":"${q9}","q10":"${q10}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'},"q1":${q1 == null ? 'null' : '"${q1}"'},"q2":${q2 == null ? 'null' : '"${q2}"'},"q3":${q3 == null ? 'null' : '"${q3}"'},"q4":${q4 == null ? 'null' : '"${q4}"'},"q5":${q5 == null ? 'null' : '"${q5}"'},"q6":${q6 == null ? 'null' : '"${q6}"'},"q7":${q7 == null ? 'null' : '"${q7}"'},"q8":${q8 == null ? 'null' : '"${q8}"'},"q9":${q9 == null ? 'null' : '"${q9}"'},"q10":${q10 == null ? 'null' : '"${q10}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'SubmitAssessmentV2',
       apiUrl:
@@ -861,7 +861,7 @@ class PublishAnnouncementCall {
     String? sendPush = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","titleEn":"${titleEn}","titleEs":"${titleEs}","titleUr":"${titleUr}","bodyEn":"${bodyEn}","bodyEs":"${bodyEs}","bodyUr":"${bodyUr}","audience":"${audience}","sendPush":"${sendPush}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'},"titleEn":${titleEn == null ? 'null' : '"${titleEn}"'},"titleEs":${titleEs == null ? 'null' : '"${titleEs}"'},"titleUr":${titleUr == null ? 'null' : '"${titleUr}"'},"bodyEn":${bodyEn == null ? 'null' : '"${bodyEn}"'},"bodyEs":${bodyEs == null ? 'null' : '"${bodyEs}"'},"bodyUr":${bodyUr == null ? 'null' : '"${bodyUr}"'},"audience":${audience == null ? 'null' : '"${audience}"'},"sendPush":${sendPush == null ? 'null' : '"${sendPush}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'PublishAnnouncement',
       apiUrl:
@@ -889,7 +889,7 @@ class GenerateTranslationDraftsCall {
     String? target = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","target":"${target}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'},"target":${target == null ? 'null' : '"${target}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GenerateTranslationDrafts',
       apiUrl:
@@ -919,7 +919,7 @@ class LogAnalyticsEventCall {
     String? screen = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","eventName":"${eventName}","propsJson":"${propsJson}","screen":"${screen}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'},"eventName":${eventName == null ? 'null' : '"${eventName}"'},"propsJson":${propsJson == null ? 'null' : '"${propsJson}"'},"screen":${screen == null ? 'null' : '"${screen}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'LogAnalyticsEvent',
       apiUrl:
@@ -950,7 +950,7 @@ class SaveProfileDetailsCall {
     String? timezone = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","displayName":"${displayName}","country":"${country}","regionCity":"${regionCity}","timezone":"${timezone}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'},"displayName":${displayName == null ? 'null' : '"${displayName}"'},"country":${country == null ? 'null' : '"${country}"'},"regionCity":${regionCity == null ? 'null' : '"${regionCity}"'},"timezone":${timezone == null ? 'null' : '"${timezone}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'SaveProfileDetails',
       apiUrl:
@@ -979,7 +979,7 @@ class SaveOnboardingLanguageCall {
     String? surveyResponses = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","preferredLanguage":"${preferredLanguage}","surveyResponses":"${surveyResponses}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'},"preferredLanguage":${preferredLanguage == null ? 'null' : '"${preferredLanguage}"'},"surveyResponses":${surveyResponses == null ? 'null' : '"${surveyResponses}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'SaveOnboardingLanguage',
       apiUrl:
@@ -1011,7 +1011,7 @@ class SaveProfileDetailsV2Call {
     String? timezone = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","displayName":"${displayName}","phone":"${phone}","country":"${country}","regionCity":"${regionCity}","timezone":"${timezone}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'},"displayName":${displayName == null ? 'null' : '"${displayName}"'},"phone":${phone == null ? 'null' : '"${phone}"'},"country":${country == null ? 'null' : '"${country}"'},"regionCity":${regionCity == null ? 'null' : '"${regionCity}"'},"timezone":${timezone == null ? 'null' : '"${timezone}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'SaveProfileDetailsV2',
       apiUrl:
@@ -1038,7 +1038,7 @@ class GetTodayContentCall {
     String? authToken = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'GetTodayContent',
       apiUrl:
@@ -1068,7 +1068,7 @@ class SaveOnboardingSurveyCall {
     String? growthGoal = '',
   }) async {
     final ffApiRequestBody = '''
-{"authToken":"${authToken}","preferredLanguage":"${preferredLanguage}","hearAbout":"${hearAbout}","growthGoal":"${growthGoal}"}''';
+{"authToken":${authToken == null ? 'null' : '"${authToken}"'},"preferredLanguage":${preferredLanguage == null ? 'null' : '"${preferredLanguage}"'},"hearAbout":${hearAbout == null ? 'null' : '"${hearAbout}"'},"growthGoal":${growthGoal == null ? 'null' : '"${growthGoal}"'}}''';
     return ApiManager.instance.makeApiCall(
       callName: 'SaveOnboardingSurvey',
       apiUrl:
