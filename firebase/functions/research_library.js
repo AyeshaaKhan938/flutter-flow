@@ -122,6 +122,27 @@ function dropSentences(text, pattern) {
   return text.split(/(?<=[.!?])\s+/).filter((s) => !pattern.test(s)).join(" ");
 }
 
+// The model must not repeat or mix in any safety template (each answer
+// shows exactly one, added by the server), nor show internal source ids.
+const kTemplateSentences = [kCrisisTemplate, kMedicalTemplate, kLegalTemplate, kFinancialTemplate]
+  .flatMap((tpl) => tpl.split(/(?<=[.!?])\s+/))
+  .map((s) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim());
+function cleanAnswer(text) {
+  const kept = text
+    .replace(/\s*\((?:[a-z0-9]+(?:-[a-z0-9]+)*--\d{4}(?:,\s*)?)+\)/g, "")
+    .replace(/\b[a-z0-9]+(?:-[a-z0-9]+)*--\d{4}\b/g, "")
+    .split(/\n\n+/)
+    .map((para) => para.split(/(?<=[.!?])\s+/).filter((s) => {
+      const n = s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+      return n && !kTemplateSentences.some((tpl) => tpl.length > 20 && (n.includes(tpl) || tpl.includes(n) && n.length > 30));
+    }).join(" "))
+    .filter(Boolean);
+  return kept.join("\n\n").trim();
+}
+
+/** Safety & Boundaries describes the rules; it is not teaching to cite. */
+const isSafetyRules = (s) => s.sourceId === kAppHelpSourceId && s.chapterTitle === "Safety & Boundaries";
+
 // Requests for whole chapters or books get a policy answer, not the text.
 const kFullTextPattern = /(full|entire|whole|complete) (text|chapter|book)|word for word|verbatim|copy (the|this) (chapter|book)|download (the|this)? ?(book|manuscript)/i;
 const kFullTextAnswer =
@@ -303,7 +324,8 @@ async function generate(admin, question, hits, memberLanguage, safety) {
       contents: [{
         role: "user",
         parts: [{ text: `SOURCES:\n\n${sourcesBlock}\n\nQUESTION: ${question}\n\n(${languageRule.slice(3)})` +
-          (safety ? `\n(${kSafetyInstruction[safety]})` : "") }],
+          (safety ? `\n(${kSafetyInstruction[safety]} The required safety statement is already shown above your answer: do not repeat it or add any other disclaimer.)` : "") +
+          "\n(Never write source ids in the answer text; list them only in \"citations\".)" }],
       }],
       generationConfig: {
         temperature: 0.2,
@@ -418,7 +440,9 @@ async function answerQuestion({ db, admin, uid, email, question }) {
 
   const sections = await loadSections(db);
   const [qv] = await embed(admin, [q], "RETRIEVAL_QUERY");
-  const hits = boostAppHelp(search(sections, qv, kTopSections * 2), q).slice(0, kTopSections);
+  const hits = boostAppHelp(search(sections, qv, kTopSections * 2), q)
+    .filter((h) => !safety || !isSafetyRules(h.s))
+    .slice(0, kTopSections);
   if (hits.length === 0) {
     return safety ? safetyOnly() : { status: "not_found", answer: kNotFoundAnswer, citations: [] };
   }
@@ -435,7 +459,9 @@ async function answerQuestion({ db, admin, uid, email, question }) {
   // App Help is app instructions, not a book, so it may be quoted in full.
   let answer = limitVerbatim(String(parsed.answer || "").trim(),
     used.filter((s) => s.sourceId !== kAppHelpSourceId));
+  answer = cleanAnswer(answer);
   if (safety === "legal") answer = dropSentences(answer, kMedicalMention);
+  if (!answer) return safetyOnly();
   const questionLanguage = String(parsed.questionLanguage || "en").toLowerCase().slice(0, 2);
   const languageNotice = config.answerInMemberLanguage !== true && questionLanguage !== "en"
     ? kEnglishOnlyNotice : "";
