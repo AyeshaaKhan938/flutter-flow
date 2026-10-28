@@ -42,29 +42,85 @@ const kAppHelpSourceId = "kh-app-help";
 const kAppQuestionPattern = /\b(begin|start|first|order|sequence|pathways?|lock(ed)?|unlock|certificates?|commission(ing|ed)?|app)\b/i;
 const kAppHelpBoost = 0.08;
 
+// Safety boundaries (Kingdom Heirs, 28 October 2026). Each question is
+// checked before any retrieval, in this order, and only the first matching
+// category applies, so its template is never combined with another:
+//   crisis    -> the emergency response only (no retrieval, no AI answer)
+//   medical   -> medical template first, then what the resources teach
+//   legal     -> legal template first (never mentions doctors or medication)
+//   financial -> professional-advice template first
+// Members are never asked for personal medical, legal or crisis details.
 const kCrisisPattern = new RegExp(
   [
-    "kill(ing)? (myself|me)", "suicid", "end(ing)? my (own )?life", "end it all", "want to die",
+    "kill(ing)? (myself|me)\\b", "suicid", "end(ing)? my (own )?life", "end it all", "want to die",
     "don'?t want to (live|be alive)", "hurt(ing)? myself", "harm(ing)? myself", "self[- ]?harm",
-    "danger of (hurting|harming|killing)",
-    "cut(ting)? myself", "overdos", "being abused", "abusing me",
-    "not safe at home", "going to hurt (someone|him|her|them)",
+    "danger of (hurting|harming|killing)", "in (immediate )?danger", "not safe", "unsafe at home",
+    "cut(ting)? myself", "overdos",
+    "(kill|hurt|harm|attack|shoot|stab)(ing)? (someone|somebody|him|her|them|my (wife|husband|child|children|kids?|parents?|mother|father|mom|dad|family))",
+    "going to hurt", "want to hurt",
+    "(being|been|am|was|is|are) (being )?abused", "abus(ing|es) me", "domestic (abuse|violence)",
+    "sexual(ly)? abus", "molest", "raped?\\b", "beat(s|ing)? me", "hit(s|ting)? me", "threaten(s|ed|ing)? (me|to kill|to hurt)",
+    "violen(t|ce) (at home|toward me|towards me|against me)",
   ].join("|"),
   "i",
 );
 
-const kCrisisAnswer =
-  "I'm really sorry you're facing this, and I'm glad you reached out. " +
-  "If you are in immediate danger, please get help right now:\n\n" +
-  "• In the United States, call 911. You can also call or text 988 " +
-  "(Suicide & Crisis Lifeline) at any time, day or night.\n" +
-  "• Outside the United States, call your local emergency number or go to " +
-  "the nearest emergency room, and contact a crisis line in your country.\n\n" +
-  "Please also reach out to someone you trust nearby: a pastor, ministry " +
-  "leader, Recovery Mentor, or a qualified counselor. You do not have to " +
-  "carry this alone.\n\n" +
-  "\"The Lord is close to the brokenhearted and saves those who are " +
-  "crushed in spirit.\" (Psalm 34:18)";
+const kCrisisTemplate =
+  "If you are in immediate danger or may harm yourself or someone else, " +
+  "call emergency services now. In the United States, call or text 988 for " +
+  "the Suicide & Crisis Lifeline, or call 911. Outside the United States, " +
+  "contact your local emergency number, nearest emergency room, or a crisis " +
+  "service in your country. Please also contact a trusted person nearby who " +
+  "can stay with you.";
+const kCrisisAnswer = kCrisisTemplate + "\n\n" +
+  "When you are safe, please also reach out to a trusted pastor, " +
+  "safeguarding leader, counselor, or Recovery Mentor. You do not have to " +
+  "carry this alone.";
+
+const kMedicalPattern = /medic(ation|ine|al)|\bmeds\b|prescri|dosage|\bdose\b|\bpills?\b|diagnos|symptom|treatment|therap(y|ist)|psychiatr|psycholog|antidepress|mental[- ]health|mental illness|depress(ion|ed)|anxiety (disorder|attack)|panic attack|bipolar|schizo|\bptsd\b|eating disorder|counsel(l)?ing|counsel(l)?or|withdraw(al|ing)|detox|rehab|\bdoctor\b|hospital|surgery|chemo|cancer|insulin|vaccin/i;
+const kMedicalTemplate =
+  "Kingdom Heirs cannot provide medical or mental-health advice. Do not " +
+  "start, stop, or change medication or treatment without speaking with a " +
+  "licensed healthcare professional.";
+
+const kLegalPattern = /\blegal(ly)?\b|lawyer|attorney|\blaw\b|\bsue\b|suing|lawsuit|court|judge|criminal|crime|arrest|police|press charges|charges against|custody|divorce|immigra|visa\b|deport|asylum|contract|\bsign (the|this|a)\b|my rights|legal rights|\brights\b|report (him|her|them|it|this|abuse|to the)|testify|subpoena|will and testament|inherit(ance)?|evict|landlord/i;
+const kLegalTemplate =
+  "Kingdom Heirs cannot provide legal advice. Please speak with a licensed " +
+  "attorney in your state or country for advice about your situation.";
+
+const kFinancialPattern = /financ|\bmoney\b.*\b(invest|loan|debt)|invest(ing|ment)?|\bstocks?\b|crypto|bitcoin|retirement|pension|401k|\btax(es)?\b|insurance|\bloan\b|\bdebt\b|mortgage|bankrupt|credit (card|score)|employ(er|ment)|\bmy job\b|fired|salary|wage|business (plan|decision)/i;
+const kFinancialTemplate =
+  "Kingdom Heirs cannot provide financial, tax, insurance, employment, or " +
+  "other professional advice. Please speak with an appropriately licensed or " +
+  "qualified professional about your situation.";
+
+/** The single safety category for [q] (checked before retrieval). */
+function safetyCategory(q) {
+  if (kCrisisPattern.test(q)) return "crisis";
+  if (kMedicalPattern.test(q)) return "medical";
+  if (kLegalPattern.test(q)) return "legal";
+  if (kFinancialPattern.test(q)) return "financial";
+  return "";
+}
+const kSafetyTemplate = { medical: kMedicalTemplate, legal: kLegalTemplate, financial: kFinancialTemplate };
+// What follows the template when the resources have nothing to add.
+const kSafetyClosing = {
+  medical: "A trusted pastor or ministry leader can also pray with you and walk with you as you seek wise care.",
+  legal: "A trusted pastor or ministry leader can also pray with you and help you seek wisdom, truth, and safety.",
+  financial: "A trusted pastor or ministry leader can also pray with you as you seek wise counsel.",
+};
+// Extra instructions to the model per category.
+const kSafetyInstruction = {
+  medical: "This question involves medical or mental-health matters. Do NOT diagnose, do not tell the person what to do, and never tell anyone to start, stop, change, or reject medication or treatment, or to rely on prayer instead of medical care. Share only what the sources teach about faith, prayer, and wise care, and encourage qualified professional support. Do not ask for personal medical details.",
+  legal: "This question involves a legal matter. Do NOT give legal advice and do not say whether to sue, report, sign, testify, or take any legal action. Do NOT mention doctors, medication, or medical treatment. Share only what the sources teach about truth, forgiveness, boundaries, wisdom, safety, and seeking appropriate help. Do not ask for personal legal details.",
+  financial: "This question involves financial or other professional matters. Do NOT give financial, tax, insurance, employment, or professional advice and do not tell the person what decision to make. Share only what the sources teach about wisdom, stewardship, and trust, and encourage a qualified professional. Do not ask for personal details.",
+};
+// Sentences removed from legal answers (the legal template must not mention
+// medical care).
+const kMedicalMention = /doctor|physician|medicat|medical|treatment|prescri|therap/i;
+function dropSentences(text, pattern) {
+  return text.split(/(?<=[.!?])\s+/).filter((s) => !pattern.test(s)).join(" ");
+}
 
 // Requests for whole chapters or books get a policy answer, not the text.
 const kFullTextPattern = /(full|entire|whole|complete) (text|chapter|book)|word for word|verbatim|copy (the|this) (chapter|book)|download (the|this)? ?(book|manuscript)/i;
@@ -72,23 +128,6 @@ const kFullTextAnswer =
   "I can't share full chapters or the complete books, but I'm glad to " +
   "summarize a chapter, answer a question about it, or point you to the " +
   "pathway where it is taught. What would you like to know?";
-
-// Medication, diagnosis or legal questions always carry this reminder.
-const kProfessionalPattern = /medic(ation|ine)|prescri|dosage|diagnos|therap(y|ist)|psychiatr|antidepress|lawyer|attorney|legal|court|divorce|custody|\bsue\b|suing|lawsuit|press charges/i;
-const kProfessionalNote =
-  "\n\nPlease talk with your doctor or a qualified professional before " +
-  "making any decision about medication, treatment, or legal matters. " +
-  "Kingdom Heirs offers biblical discipleship support, not medical, " +
-  "mental-health, or legal advice.";
-
-// Legal or medical questions the library does not answer.
-const kProfessionalAnswer =
-  "Kingdom Heirs can't give legal, medical, or mental-health advice. For a " +
-  "decision like this, please talk with a licensed attorney, your doctor, or " +
-  "another qualified professional who can look at your situation. If you are " +
-  "in danger, call 911 in the United States or your local emergency number. " +
-  "A trusted pastor or ministry leader can also walk with you and pray with " +
-  "you as you decide.";
 
 // Questions in another language are answered in English until Kingdom
 // Heirs approves reviewed translations.
@@ -108,7 +147,7 @@ Rules you must always follow:
 3. Cite only the sources you actually drew from (at most ${kMaxCitations}), by id, in "citations". Never cite an id that is not in SOURCES.
 4. Summarize in your own words. You may quote at most two short excerpts, each under ${kMaxExcerptWords} words. Never reproduce whole sections, chapters, or long passages.
 5. When you mention Scripture, give the reference exactly as it appears in the SOURCES (for example "John 8:36") and do not quote more than one verse.
-6. Be gentle, pastoral, and Scripture-centered. Do not give medical, mental-health, legal, diagnostic, or emergency advice. Never tell anyone to start, stop, or change a medication or treatment; say that such decisions belong with their doctor or a qualified professional. Never pressure anyone to disclose trauma or to forgive on a timetable. For those needs, encourage a qualified professional or a trusted pastor.
+6. Be gentle, pastoral, and Scripture-centered. Do not give medical, mental-health, legal, diagnostic, or emergency advice. Never tell anyone to start, stop, or change a medication or treatment; say that such decisions belong with their doctor or a qualified professional. Never ask members to share personal medical, legal, or crisis details, and never pressure anyone to disclose trauma or to forgive on a timetable. For those needs, encourage a qualified professional or a trusted pastor.
 7. Keep answers under 200 words and conversational.
 8. A source titled "App Help" describes how the Kingdom Heirs app works (pathway order, locked pathways, certificates). For questions about the app, answer from App Help and cite it first.`;
 
@@ -249,7 +288,7 @@ function limitVerbatim(answer, sources) {
   return out.join(" ");
 }
 
-async function generate(admin, question, hits, memberLanguage, professional) {
+async function generate(admin, question, hits, memberLanguage, safety) {
   const sourcesBlock = hits.map(({ s }) =>
     `[${s.id}] ${citationLabel(s).replace(/^Source: /, "")}\n${s.text}`).join("\n\n---\n\n");
   const languageRule = kLanguageRule[memberLanguage ? "member" : "english"];
@@ -264,12 +303,7 @@ async function generate(admin, question, hits, memberLanguage, professional) {
       contents: [{
         role: "user",
         parts: [{ text: `SOURCES:\n\n${sourcesBlock}\n\nQUESTION: ${question}\n\n(${languageRule.slice(3)})` +
-          (professional
-            ? "\n(This question touches on medication, treatment, or legal matters. Do NOT tell the person " +
-              "what to do or not do about them, and do not begin with yes or no. Share only what the " +
-              "sources teach about faith and wise care, and encourage them to decide with their doctor " +
-              "or a qualified professional.)"
-            : "") }],
+          (safety ? `\n(${kSafetyInstruction[safety]})` : "") }],
       }],
       generationConfig: {
         temperature: 0.2,
@@ -348,9 +382,17 @@ async function answerQuestion({ db, admin, uid, email, question }) {
     };
   }
 
-  if (kCrisisPattern.test(q)) {
-    return { status: "crisis", answer: kCrisisAnswer, citations: [] };
+  // Safety boundaries come before any retrieval or citations.
+  const safety = safetyCategory(q);
+  if (safety === "crisis") {
+    return { status: "crisis", safety, answer: kCrisisAnswer, citations: [] };
   }
+  const safetyTemplate = kSafetyTemplate[safety] || "";
+  const safetyOnly = () => ({
+    status: safety, safety,
+    answer: `${safetyTemplate}\n\n${kSafetyClosing[safety]}`,
+    citations: [],
+  });
   if (kFullTextPattern.test(q)) {
     return { status: "policy", answer: kFullTextAnswer, citations: [] };
   }
@@ -378,30 +420,28 @@ async function answerQuestion({ db, admin, uid, email, question }) {
   const [qv] = await embed(admin, [q], "RETRIEVAL_QUERY");
   const hits = boostAppHelp(search(sections, qv, kTopSections * 2), q).slice(0, kTopSections);
   if (hits.length === 0) {
-    return { status: "not_found", answer: kNotFoundAnswer, citations: [] };
+    return safety ? safetyOnly() : { status: "not_found", answer: kNotFoundAnswer, citations: [] };
   }
 
   const { parsed, usage } = await generate(admin, q, hits,
-    config.answerInMemberLanguage === true, kProfessionalPattern.test(q));
+    config.answerInMemberLanguage === true, safety);
   const byId = new Map(hits.map(({ s }) => [s.id, s]));
   const cited = [...new Set((parsed.citations || []).filter((id) => byId.has(id)))]
     .slice(0, kMaxCitations);
   if (!parsed.found || cited.length === 0) {
-    if (kProfessionalPattern.test(q)) {
-      return { status: "professional", answer: kProfessionalAnswer, citations: [] };
-    }
-    return { status: "not_found", answer: kNotFoundAnswer, citations: [] };
+    return safety ? safetyOnly() : { status: "not_found", answer: kNotFoundAnswer, citations: [] };
   }
   const used = cited.map((id) => byId.get(id));
   // App Help is app instructions, not a book, so it may be quoted in full.
   let answer = limitVerbatim(String(parsed.answer || "").trim(),
     used.filter((s) => s.sourceId !== kAppHelpSourceId));
-  // Legal, medical or mental-health questions lead with the reminder.
-  if (kProfessionalPattern.test(q)) answer = `${kProfessionalNote.trim()}\n\n${answer}`;
+  if (safety === "legal") answer = dropSentences(answer, kMedicalMention);
   const questionLanguage = String(parsed.questionLanguage || "en").toLowerCase().slice(0, 2);
   const languageNotice = config.answerInMemberLanguage !== true && questionLanguage !== "en"
     ? kEnglishOnlyNotice : "";
   if (languageNotice) answer = `${languageNotice}\n\n${answer}`;
+  // The safety template always comes first.
+  if (safetyTemplate) answer = `${safetyTemplate}\n\n${answer}`;
   const shown = distinctSources(used);
 
   // Minimal, non-identifying usage record (no question text is stored).
@@ -415,6 +455,7 @@ async function answerQuestion({ db, admin, uid, email, question }) {
 
   return {
     status: "ok",
+    safety,
     answer,
     languageNotice,
     citations: shown.map((s, i) => ({
@@ -513,6 +554,7 @@ async function setSourceStatus({ db, sourceId, status }) {
 
 module.exports = {
   answerQuestion, ingest, setSourceStatus, citationLabel, limitVerbatim, search, kCrisisPattern,
+  safetyCategory,
 };
 
 // Firebase wiring (skipped when loaded by local tests).
