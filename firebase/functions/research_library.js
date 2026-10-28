@@ -118,6 +118,13 @@ const kSafetyInstruction = {
 // Sentences removed from legal answers (the legal template must not mention
 // medical care).
 const kMedicalMention = /doctor|physician|medicat|medical|treatment|prescri|therap/i;
+// Sentences that decide for the member are removed: Ask never tells anyone
+// what to do about medication, treatment, legal action or money.
+const kDecisionSentence = {
+  medical: /^(yes|no)\b|you (should|must|need to|can|may)( not|n't)? (stop|start|change|keep|continue|take|reduce|quit|come off|go off)/i,
+  legal: /^(yes|no)\b|\b(report|sue|suing|lawsuit|press(ing)? charges|testify|sign(ing)? (the|this|a) contract)/i,
+  financial: /^(yes|no)\b|you (should|must|need to)( not|n't)? (invest|buy|sell|borrow|lend|file|quit|sign)/i,
+};
 function dropSentences(text, pattern) {
   return text.split(/(?<=[.!?])\s+/).filter((s) => !pattern.test(s)).join(" ");
 }
@@ -324,7 +331,7 @@ async function generate(admin, question, hits, memberLanguage, safety) {
       contents: [{
         role: "user",
         parts: [{ text: `SOURCES:\n\n${sourcesBlock}\n\nQUESTION: ${question}\n\n(${languageRule.slice(3)})` +
-          (safety ? `\n(${kSafetyInstruction[safety]} The required safety statement is already shown above your answer: do not repeat it or add any other disclaimer.)` : "") +
+          (safety ? `\n(${kSafetyInstruction[safety]} The required safety statement is already shown above your answer: do not repeat it or add any other disclaimer. Do not begin with yes or no, and do not tell the person what to decide.)` : "") +
           "\n(Never write source ids in the answer text; list them only in \"citations\".)" }],
       }],
       generationConfig: {
@@ -461,6 +468,7 @@ async function answerQuestion({ db, admin, uid, email, question }) {
     used.filter((s) => s.sourceId !== kAppHelpSourceId));
   answer = cleanAnswer(answer);
   if (safety === "legal") answer = dropSentences(answer, kMedicalMention);
+  if (safety) answer = dropSentences(answer, kDecisionSentence[safety]);
   if (!answer) return safetyOnly();
   const questionLanguage = String(parsed.questionLanguage || "en").toLowerCase().slice(0, 2);
   const languageNotice = config.answerInMemberLanguage !== true && questionLanguage !== "en"
