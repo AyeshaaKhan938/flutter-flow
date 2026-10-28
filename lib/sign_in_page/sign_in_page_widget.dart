@@ -275,7 +275,9 @@ class _SignInPageWidgetState extends State<SignInPageWidget> {
                           safeSetState(() => _model.passwordFieldVisibility =
                               !_model.passwordFieldVisibility);
                         },
-                        focusNode: FocusNode(skipTraversal: true),
+                        focusNode:
+                            _model.passwordFieldPasswordVisibilityFocusNode
+                              ..skipTraversal = !(false),
                         child: Icon(
                           _model.passwordFieldVisibility
                               ? Icons.visibility_outlined
