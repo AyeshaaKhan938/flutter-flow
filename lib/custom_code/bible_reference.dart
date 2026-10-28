@@ -11,9 +11,9 @@ class BibleReference {
 
   static BibleReference? parse(String ref) {
     final match =
-        RegExp(r'^([1-3]?\s*[A-Za-z ]+?)\s+(\d+)(?::(\d+)(?:\s*-\s*(\d+))?)?')
+        RegExp(r'^([1-3]?\s*[A-Za-z ]+?)\s+(\d+)(?::(\d+))?(?:\s*-\s*(\d+))?')
             // Accept en/em dashes ("Matthew 4:12–17") as range separators.
-            .firstMatch(ref.trim().replaceAll(RegExp('[\u2013\u2014]'), '-'));
+            .firstMatch(ref.trim().replaceAll(RegExp('[–—]'), '-'));
     if (match == null) {
       return null;
     }
@@ -23,12 +23,52 @@ class BibleReference {
     if (book == null) {
       return null;
     }
-    return BibleReference(
-      book,
-      int.parse(match.group(2)!),
-      match.group(3) == null ? null : int.parse(match.group(3)!),
-      match.group(4) == null ? null : int.parse(match.group(4)!),
-    );
+    final first = int.parse(match.group(2)!);
+    final verse = match.group(3) == null ? null : int.parse(match.group(3)!);
+    final end = match.group(4) == null ? null : int.parse(match.group(4)!);
+    // One-chapter books are cited by verse alone: "Jude 20–21" is Jude 1:20-21.
+    if (verse == null && _singleChapterBooks.contains(book)) {
+      return BibleReference(book, 1, first, end);
+    }
+    // A chapter range without verses ("Psalm 23-24") opens the first chapter.
+    return BibleReference(book, first, verse, verse == null ? null : end);
+  }
+
+  /// Splits a list of references into single passages:
+  /// "John 1:1, 14" → ["John 1:1", "John 1:14"];
+  /// "Revelation 19:11,16" → ["Revelation 19:11", "Revelation 19:16"];
+  /// "Romans 8:1; Ephesians 2:4–10" → ["Romans 8:1", "Ephesians 2:4–10"].
+  /// A single reference is returned as it is.
+  static List<String> splitList(String ref) {
+    final parts = ref
+        .split(RegExp(r'\s*[;,]\s*'))
+        .map((p) => p.trim())
+        .where((p) => p.isNotEmpty)
+        .toList();
+    if (parts.length < 2) {
+      return [ref.trim()];
+    }
+    final out = <String>[];
+    String? book;
+    String? chapter;
+    for (final p in parts) {
+      final full = RegExp(r'^([1-3]?\s*[A-Za-z][A-Za-z ]*?)\s+\d').firstMatch(p);
+      final name = full?.group(1)!.toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+      if (name != null && _usfmBooks.containsKey(name.trim())) {
+        book = full!.group(1)!.trim();
+        chapter = RegExp(r'\s(\d+):').firstMatch(p)?.group(1);
+        out.add(p);
+      } else if (book != null && RegExp(r'^\d+:\d+').hasMatch(p)) {
+        chapter = p.split(':').first;
+        out.add('$book $p');
+      } else if (book != null &&
+          RegExp('^\\d+([-–—]\\d+)?\$').hasMatch(p)) {
+        out.add(chapter == null ? '$book $p' : '$book $chapter:$p');
+      } else {
+        return [ref.trim()];
+      }
+    }
+    return out;
   }
 
   /// API.Bible passage id, e.g. "JHN.3.16-JHN.3.17" or "PSA.23".
@@ -49,6 +89,8 @@ class BibleReference {
     return endVerse == null ? start : '$start-$endVerse';
   }
 }
+
+const _singleChapterBooks = {'OBA', 'PHM', '2JN', '3JN', 'JUD'};
 
 const _usfmBooks = {
   'genesis': 'GEN',

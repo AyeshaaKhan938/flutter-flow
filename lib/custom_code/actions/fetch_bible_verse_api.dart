@@ -119,6 +119,29 @@ Future<BiblePassage?> fetchBiblePassage(
   if (ref.isEmpty) {
     return null;
   }
+  // A list of verses ("John 1:1, 14") is fetched passage by passage and
+  // shown together, so every listed verse appears.
+  final parts = BibleReference.splitList(ref);
+  if (parts.length > 1) {
+    final passages = <BiblePassage>[];
+    for (final part in parts) {
+      final p = await fetchBiblePassage(part, languageCode);
+      if (p != null && p.text.isNotEmpty) {
+        passages.add(p);
+      }
+    }
+    if (passages.isEmpty) {
+      return null;
+    }
+    return BiblePassage(
+      reference: ref,
+      text: passages.map((p) => p.text).join('\n'),
+      version: passages.first.version,
+      copyright: passages.first.copyright,
+      fromCache: passages.every((p) => p.fromCache),
+      englishFallback: passages.any((p) => p.englishFallback),
+    );
+  }
   final requested = (languageCode ?? 'en').trim().toLowerCase();
   final bible = _bibleFor(requested.isEmpty ? 'en' : requested);
   final lang = bible.lang;

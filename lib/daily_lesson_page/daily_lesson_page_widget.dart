@@ -261,80 +261,128 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
     );
   }
 
-  /// Application and prayer sections, shown only when the lesson has them.
-  /// The lesson's teaching (body) and module, when the lesson has them.
-  /// Read from the document so lessons imported with these fields show them
-  /// without a schema change.
-  List<Widget> _buildTeaching(LessonsRecord lesson) {
+  /// The lesson as a devotional, top to bottom: module and title, the
+  /// teaching (headings, paragraphs, lists, Scripture), the lesson's
+  /// Scripture card, then Reflection, Application and Prayer as separate
+  /// labelled sections. Body and module are read from the document so
+  /// imported lessons show them without a schema change.
+  List<Widget> _buildLessonContent(LessonsRecord lesson) {
     final theme = FlutterFlowTheme.of(context);
+    final lang = _model.memberLanguage;
     final body = LocaleTextStruct.maybeFromMap(lesson.snapshotData['body']) ??
         LocaleTextStruct();
     final module = (lesson.snapshotData['module'] as String?)?.trim() ?? '';
+    final scripture = lesson.scriptureText.scriptureForLanguage(lang);
+    final reflection = lesson.reflectionPrompt.forLanguage(lang);
     return [
-      if (module.isNotEmpty)
-        Text(
-          '${_label('module')}: $module',
-          style: theme.labelMedium.override(
-            font: GoogleFonts.inter(),
-            color: theme.secondaryText,
-            letterSpacing: 0.0,
-          ),
-        ),
-      if (body.en.isNotEmpty)
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (module.isNotEmpty) ...[
             Text(
-              _label('teaching'),
-              style: theme.titleMedium.override(
-                font: GoogleFonts.inter(fontWeight: FontWeight.w600),
-                letterSpacing: 0.0,
+              module.toUpperCase(),
+              style: GoogleFonts.inter(
+                fontSize: 11.5,
+                letterSpacing: 1.4,
+                fontWeight: FontWeight.w700,
+                color: theme.secondary,
               ),
             ),
-            const SizedBox(height: 6.0),
-            Text(
-              body.forLanguage(_model.memberLanguage),
-              style: theme.bodyMedium.override(
-                font: GoogleFonts.inter(),
-                letterSpacing: 0.0,
-                lineHeight: 1.5,
-              ),
-            ),
+            const SizedBox(height: 8.0),
           ],
+          Semantics(
+            header: true,
+            child: Text(
+              lesson.title.forLanguage(lang),
+              style: GoogleFonts.lora(
+                fontSize: 28.0,
+                height: 1.2,
+                fontWeight: FontWeight.w700,
+                color: theme.primary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12.0),
+          Container(
+            width: 44.0,
+            height: 3.0,
+            decoration: BoxDecoration(
+              color: theme.secondary,
+              borderRadius: BorderRadius.circular(2.0),
+            ),
+          ),
+        ],
+      ),
+      if (body.en.isNotEmpty)
+        custom_widgets.LessonBody(text: body.forLanguage(lang)),
+      if (lesson.scriptureRef.isNotEmpty || scripture.isNotEmpty)
+        custom_widgets.ScriptureCard(
+          reference: lesson.scriptureRef,
+          text: scripture,
+          actionLabel: FFLocalizations.of(context).getText(
+            'ulfcisps' /* Tap to open full passage */,
+          ),
+          onAction: lesson.scriptureRef.isEmpty
+              ? null
+              : () => _openLessonScripture(lesson),
+        ),
+      if (reflection.isNotEmpty)
+        custom_widgets.LessonSection(
+          label: FFLocalizations.of(context).getText(
+            'a9sggm4d' /* Reflection */,
+          ),
+          icon: Icons.edit_note_rounded,
+          text: reflection,
+        ),
+      if (lesson.application.en.isNotEmpty)
+        custom_widgets.LessonSection(
+          label: _label('application'),
+          icon: Icons.directions_walk_rounded,
+          text: lesson.application.forLanguage(lang),
+        ),
+      if (lesson.prayer.en.isNotEmpty)
+        custom_widgets.LessonSection(
+          label: _label('prayer'),
+          icon: Icons.volunteer_activism_outlined,
+          text: lesson.prayer.forLanguage(lang),
+          prayer: true,
         ),
     ];
   }
 
-  List<Widget> _buildApplicationAndPrayer(LessonsRecord lesson) {
-    final theme = FlutterFlowTheme.of(context);
-    Widget section(String labelKey, LocaleTextStruct text) => Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _label(labelKey),
-              style: theme.titleMedium.override(
-                font: GoogleFonts.inter(fontWeight: FontWeight.w600),
-                letterSpacing: 0.0,
-              ),
-            ),
-            const SizedBox(height: 6.0),
-            Text(
-              text.forLanguage(_model.memberLanguage),
-              style: theme.bodyMedium.override(
-                font: GoogleFonts.inter(),
-                color: theme.secondaryText,
-                letterSpacing: 0.0,
-              ),
-            ),
-          ],
-        );
-    return [
-      if (lesson.application.en.isNotEmpty)
-        section('application', lesson.application),
-      if (lesson.prayer.en.isNotEmpty) section('prayer', lesson.prayer),
-    ];
+  /// Opens the lesson's full passage in the app, or the Bible app/website
+  /// when it cannot be loaded, and keeps an offline copy of the lesson.
+  Future<void> _openLessonScripture(LessonsRecord lesson) async {
+    final lang = _model.memberLanguage;
+    final passage = await actions.fetchBiblePassage(lesson.scriptureRef, lang);
+    if (passage != null) {
+      await _showPassageDialog(passage);
+      return;
+    }
+    _model.bibleOpenResult = await actions.openScriptureReferenceSafe(
+      lesson.scriptureRef,
+      lang ?? 'en',
+    );
+    if (!mounted) return;
+    final message = switch (_model.bibleOpenResult) {
+      'opened' => 'Opened Scripture passage.',
+      'empty' => 'No Scripture reference set.',
+      _ => 'Bible link unavailable. Read the Scripture text in this lesson.',
+    };
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(milliseconds: 4000),
+      ),
+    );
+    await actions.cacheLessonForOffline(
+      lesson.stableId,
+      lesson.title.forLanguage(lang),
+      lesson.scriptureRef,
+      lesson.scriptureText.scriptureForLanguage(lang),
+      lesson.reflectionPrompt.forLanguage(lang),
+    );
+    safeSetState(() {});
   }
 
   /// Full Scripture passage, kept visually apart from lesson commentary and
@@ -496,552 +544,7 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                                   ),
                                 if (_usesEnglishFallback(lessonsListItemItem))
                                   _buildFallbackNotice(),
-                                Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (!['es', 'ur']
-                                        .contains(_model.memberLanguage))
-                                      Text(
-                                        lessonsListItemItem.title
-                                            .forLanguage(_model.memberLanguage),
-                                        style: FlutterFlowTheme.of(context)
-                                            .headlineSmall
-                                            .override(
-                                              font: GoogleFonts.inter(
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .headlineSmall
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .headlineSmall
-                                                        .fontStyle,
-                                              ),
-                                              letterSpacing: 0.0,
-                                              fontWeight:
-                                                  FlutterFlowTheme.of(context)
-                                                      .headlineSmall
-                                                      .fontWeight,
-                                              fontStyle:
-                                                  FlutterFlowTheme.of(context)
-                                                      .headlineSmall
-                                                      .fontStyle,
-                                            ),
-                                      ),
-                                    if (_model.memberLanguage == 'es')
-                                      Text(
-                                        lessonsListItemItem.title
-                                            .forLanguage('es'),
-                                        style: FlutterFlowTheme.of(context)
-                                            .headlineSmall
-                                            .override(
-                                              font: GoogleFonts.inter(
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .headlineSmall
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .headlineSmall
-                                                        .fontStyle,
-                                              ),
-                                              letterSpacing: 0.0,
-                                              fontWeight:
-                                                  FlutterFlowTheme.of(context)
-                                                      .headlineSmall
-                                                      .fontWeight,
-                                              fontStyle:
-                                                  FlutterFlowTheme.of(context)
-                                                      .headlineSmall
-                                                      .fontStyle,
-                                            ),
-                                      ),
-                                    if (_model.memberLanguage == 'ur')
-                                      Text(
-                                        lessonsListItemItem.title
-                                            .forLanguage('ur'),
-                                        style: FlutterFlowTheme.of(context)
-                                            .headlineSmall
-                                            .override(
-                                              font: GoogleFonts.inter(
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .headlineSmall
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .headlineSmall
-                                                        .fontStyle,
-                                              ),
-                                              letterSpacing: 0.0,
-                                              fontWeight:
-                                                  FlutterFlowTheme.of(context)
-                                                      .headlineSmall
-                                                      .fontWeight,
-                                              fontStyle:
-                                                  FlutterFlowTheme.of(context)
-                                                      .headlineSmall
-                                                      .fontStyle,
-                                            ),
-                                      ),
-                                  ],
-                                ),
-                                ..._buildTeaching(lessonsListItemItem),
-                                InkWell(
-                                  splashColor: Colors.transparent,
-                                  focusColor: Colors.transparent,
-                                  hoverColor: Colors.transparent,
-                                  highlightColor: Colors.transparent,
-                                  onTap: () async {
-                                    final passage =
-                                        await actions.fetchBiblePassage(
-                                      lessonsListItemItem.scriptureRef,
-                                      _model.memberLanguage,
-                                    );
-                                    if (passage != null) {
-                                      await _showPassageDialog(passage);
-                                      return;
-                                    }
-                                    _model.bibleOpenResult = await actions
-                                        .openScriptureReferenceSafe(
-                                      lessonsListItemItem.scriptureRef,
-                                      _model.memberLanguage ?? 'en',
-                                    );
-                                    if (_model.bibleOpenResult == 'opened') {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Opened Scripture passage.',
-                                            style: TextStyle(),
-                                          ),
-                                          duration:
-                                              Duration(milliseconds: 4000),
-                                        ),
-                                      );
-                                      await actions.cacheLessonForOffline(
-                                        lessonsListItemItem.stableId,
-                                        lessonsListItemItem.title
-                                            .forLanguage(_model.memberLanguage),
-                                        lessonsListItemItem.scriptureRef,
-                                        lessonsListItemItem.scriptureText
-                                            .scriptureForLanguage(
-                                                _model.memberLanguage),
-                                        lessonsListItemItem.reflectionPrompt
-                                            .forLanguage(_model.memberLanguage),
-                                      );
-                                    } else if (_model.bibleOpenResult ==
-                                        'fallback') {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Bible link unavailable. Read the Scripture text in this lesson.',
-                                            style: TextStyle(),
-                                          ),
-                                          duration:
-                                              Duration(milliseconds: 4000),
-                                        ),
-                                      );
-                                      await actions.cacheLessonForOffline(
-                                        lessonsListItemItem.stableId,
-                                        lessonsListItemItem.title
-                                            .forLanguage(_model.memberLanguage),
-                                        lessonsListItemItem.scriptureRef,
-                                        lessonsListItemItem.scriptureText
-                                            .scriptureForLanguage(
-                                                _model.memberLanguage),
-                                        lessonsListItemItem.reflectionPrompt
-                                            .forLanguage(_model.memberLanguage),
-                                      );
-                                    } else if (_model.bibleOpenResult ==
-                                        'empty') {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'No Scripture reference set.',
-                                            style: TextStyle(),
-                                          ),
-                                          duration:
-                                              Duration(milliseconds: 4000),
-                                        ),
-                                      );
-                                      await actions.cacheLessonForOffline(
-                                        lessonsListItemItem.stableId,
-                                        lessonsListItemItem.title
-                                            .forLanguage(_model.memberLanguage),
-                                        lessonsListItemItem.scriptureRef,
-                                        lessonsListItemItem.scriptureText
-                                            .scriptureForLanguage(
-                                                _model.memberLanguage),
-                                        lessonsListItemItem.reflectionPrompt
-                                            .forLanguage(_model.memberLanguage),
-                                      );
-                                    } else {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Bible link unavailable. Read the Scripture text in this lesson.',
-                                            style: TextStyle(),
-                                          ),
-                                          duration:
-                                              Duration(milliseconds: 4000),
-                                        ),
-                                      );
-                                      await actions.cacheLessonForOffline(
-                                        lessonsListItemItem.stableId,
-                                        lessonsListItemItem.title
-                                            .forLanguage(_model.memberLanguage),
-                                        lessonsListItemItem.scriptureRef,
-                                        lessonsListItemItem.scriptureText
-                                            .scriptureForLanguage(
-                                                _model.memberLanguage),
-                                        lessonsListItemItem.reflectionPrompt
-                                            .forLanguage(_model.memberLanguage),
-                                      );
-                                    }
-
-                                    safeSetState(() {});
-                                  },
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: FlutterFlowTheme.of(context)
-                                          .alternate,
-                                      borderRadius: BorderRadius.circular(16.0),
-                                    ),
-                                    child: Padding(
-                                      padding: EdgeInsets.all(18.0),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            lessonsListItemItem.scriptureRef,
-                                            style: FlutterFlowTheme.of(context)
-                                                .labelMedium
-                                                .override(
-                                                  font: GoogleFonts.inter(
-                                                    fontWeight:
-                                                        FlutterFlowTheme.of(
-                                                                context)
-                                                            .labelMedium
-                                                            .fontWeight,
-                                                    fontStyle:
-                                                        FlutterFlowTheme.of(
-                                                                context)
-                                                            .labelMedium
-                                                            .fontStyle,
-                                                  ),
-                                                  color: FlutterFlowTheme.of(
-                                                          context)
-                                                      .secondaryText,
-                                                  letterSpacing: 0.0,
-                                                  fontWeight:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .labelMedium
-                                                          .fontWeight,
-                                                  fontStyle:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .labelMedium
-                                                          .fontStyle,
-                                                ),
-                                          ),
-                                          Text(
-                                            FFLocalizations.of(context).getText(
-                                              'ulfcisps' /* Tap to open full passage */,
-                                            ),
-                                            style: FlutterFlowTheme.of(context)
-                                                .labelSmall
-                                                .override(
-                                                  font: GoogleFonts.inter(
-                                                    fontWeight:
-                                                        FlutterFlowTheme.of(
-                                                                context)
-                                                            .labelSmall
-                                                            .fontWeight,
-                                                    fontStyle:
-                                                        FlutterFlowTheme.of(
-                                                                context)
-                                                            .labelSmall
-                                                            .fontStyle,
-                                                  ),
-                                                  color: FlutterFlowTheme.of(
-                                                          context)
-                                                      .primary,
-                                                  letterSpacing: 0.0,
-                                                  fontWeight:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .labelSmall
-                                                          .fontWeight,
-                                                  fontStyle:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .labelSmall
-                                                          .fontStyle,
-                                                ),
-                                          ),
-                                          Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.start,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              if (![
-                                                'es',
-                                                'ur'
-                                              ].contains(_model.memberLanguage))
-                                                Text(
-                                                  lessonsListItemItem
-                                                      .scriptureText
-                                                      .scriptureForLanguage(
-                                                          _model
-                                                              .memberLanguage),
-                                                  style: FlutterFlowTheme.of(
-                                                          context)
-                                                      .bodyLarge
-                                                      .override(
-                                                        font: GoogleFonts.lora(
-                                                          fontWeight:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .bodyLarge
-                                                                  .fontWeight,
-                                                          fontStyle:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .bodyLarge
-                                                                  .fontStyle,
-                                                        ),
-                                                        letterSpacing: 0.0,
-                                                        fontWeight:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .bodyLarge
-                                                                .fontWeight,
-                                                        fontStyle:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .bodyLarge
-                                                                .fontStyle,
-                                                      ),
-                                                ),
-                                              if (_model.memberLanguage == 'es')
-                                                Text(
-                                                  lessonsListItemItem
-                                                      .scriptureText
-                                                      .scriptureForLanguage(
-                                                          'es'),
-                                                  style: FlutterFlowTheme.of(
-                                                          context)
-                                                      .bodyLarge
-                                                      .override(
-                                                        font: GoogleFonts.lora(
-                                                          fontWeight:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .bodyLarge
-                                                                  .fontWeight,
-                                                          fontStyle:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .bodyLarge
-                                                                  .fontStyle,
-                                                        ),
-                                                        letterSpacing: 0.0,
-                                                        fontWeight:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .bodyLarge
-                                                                .fontWeight,
-                                                        fontStyle:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .bodyLarge
-                                                                .fontStyle,
-                                                      ),
-                                                ),
-                                              if (_model.memberLanguage == 'ur')
-                                                Text(
-                                                  lessonsListItemItem
-                                                      .scriptureText
-                                                      .scriptureForLanguage(
-                                                          'ur'),
-                                                  style: FlutterFlowTheme.of(
-                                                          context)
-                                                      .bodyLarge
-                                                      .override(
-                                                        font: GoogleFonts.lora(
-                                                          fontWeight:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .bodyLarge
-                                                                  .fontWeight,
-                                                          fontStyle:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .bodyLarge
-                                                                  .fontStyle,
-                                                        ),
-                                                        letterSpacing: 0.0,
-                                                        fontWeight:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .bodyLarge
-                                                                .fontWeight,
-                                                        fontStyle:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .bodyLarge
-                                                                .fontStyle,
-                                                      ),
-                                                ),
-                                            ],
-                                          ),
-                                        ].divide(SizedBox(height: 6.0)),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Text(
-                                  FFLocalizations.of(context).getText(
-                                    'a9sggm4d' /* Reflection */,
-                                  ),
-                                  style: FlutterFlowTheme.of(context)
-                                      .titleMedium
-                                      .override(
-                                        font: GoogleFonts.inter(
-                                          fontWeight:
-                                              FlutterFlowTheme.of(context)
-                                                  .titleMedium
-                                                  .fontWeight,
-                                          fontStyle:
-                                              FlutterFlowTheme.of(context)
-                                                  .titleMedium
-                                                  .fontStyle,
-                                        ),
-                                        letterSpacing: 0.0,
-                                        fontWeight: FlutterFlowTheme.of(context)
-                                            .titleMedium
-                                            .fontWeight,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .titleMedium
-                                            .fontStyle,
-                                      ),
-                                ),
-                                Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (!['es', 'ur']
-                                        .contains(_model.memberLanguage))
-                                      Text(
-                                        lessonsListItemItem.reflectionPrompt
-                                            .forLanguage(_model.memberLanguage),
-                                        style: FlutterFlowTheme.of(context)
-                                            .bodyMedium
-                                            .override(
-                                              font: GoogleFonts.inter(
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontStyle,
-                                              ),
-                                              color:
-                                                  FlutterFlowTheme.of(context)
-                                                      .secondaryText,
-                                              letterSpacing: 0.0,
-                                              fontWeight:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontWeight,
-                                              fontStyle:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontStyle,
-                                            ),
-                                      ),
-                                    if (_model.memberLanguage == 'es')
-                                      Text(
-                                        lessonsListItemItem.reflectionPrompt
-                                            .forLanguage('es'),
-                                        style: FlutterFlowTheme.of(context)
-                                            .bodyMedium
-                                            .override(
-                                              font: GoogleFonts.inter(
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontStyle,
-                                              ),
-                                              color:
-                                                  FlutterFlowTheme.of(context)
-                                                      .secondaryText,
-                                              letterSpacing: 0.0,
-                                              fontWeight:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontWeight,
-                                              fontStyle:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontStyle,
-                                            ),
-                                      ),
-                                    if (_model.memberLanguage == 'ur')
-                                      Text(
-                                        lessonsListItemItem.reflectionPrompt
-                                            .forLanguage('ur'),
-                                        style: FlutterFlowTheme.of(context)
-                                            .bodyMedium
-                                            .override(
-                                              font: GoogleFonts.inter(
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontStyle,
-                                              ),
-                                              color:
-                                                  FlutterFlowTheme.of(context)
-                                                      .secondaryText,
-                                              letterSpacing: 0.0,
-                                              fontWeight:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontWeight,
-                                              fontStyle:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontStyle,
-                                            ),
-                                      ),
-                                  ],
-                                ),
-                                ..._buildApplicationAndPrayer(
-                                    lessonsListItemItem),
+                                ..._buildLessonContent(lessonsListItemItem),
                               ].divide(SizedBox(height: 20.0)),
                             ),
                           );

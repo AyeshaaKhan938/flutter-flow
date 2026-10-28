@@ -7,7 +7,6 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/custom_code/actions/index.dart' as actions;
 import '/index.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -141,16 +140,13 @@ class _ProfilePageWidgetState extends State<ProfilePageWidget> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(32.0),
-                    child: CachedNetworkImage(
-                      fadeInDuration: Duration(milliseconds: 0),
-                      fadeOutDuration: Duration(milliseconds: 0),
-                      imageUrl:
-                          'https://storage.googleapis.com/kingdom-heirs-discipleshipapp.firebasestorage.app/branding/kingdom_heirs_crown_logo.png',
-                      width: 64.0,
-                      height: 224.79,
-                      fit: BoxFit.cover,
+                  // Approved Kingdom Heirs Foundation logo.
+                  Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 16.0),
+                    child: Image.asset(
+                      'assets/images/kh_logo_full.png',
+                      height: 120.0,
+                      fit: BoxFit.contain,
                     ),
                   ),
                   Container(

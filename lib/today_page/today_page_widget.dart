@@ -5,7 +5,7 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/custom_code/actions/index.dart' as actions;
-import '/custom_code/encouragement_rotation.dart';
+import '/custom_code/daily_encouragement.dart';
 import '/index.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -70,16 +70,9 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
         _model.memberLanguage =
             LanguageRegistry.resolveMemberLanguage(_model.memberLanguage);
         safeSetState(() {});
-        // The verse itself comes from API.Bible; the CMS text for the day is
+        // The verse itself comes from API.Bible (loaded with the day's
+        // record in _loadDailyExperience); the CMS text for the day is
         // Kingdom Heirs commentary and is shown separately as Daily Truth.
-        if ((_model.todayScriptureRef ?? '').isNotEmpty) {
-          _todayPassage = await actions.fetchBiblePassage(
-            _model.todayScriptureRef!,
-            _model.memberLanguage,
-          );
-          _todayPassageLoaded = true;
-          safeSetState(() {});
-        }
         _model.loadedAnnouncements = await queryAnnouncementsRecordOnce(
           limit: 20,
         );
@@ -133,8 +126,8 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
   bool _todayPassageLoaded = false;
 
   /// Today's Scripture Encounter (title, verse preview, Read in Context,
-  /// Bible Gateway link) from the CMS record for this day of the year, and
-  /// today's encouragement from the random rotation. Read from Firestore
+  /// Bible Gateway link) and today's encouragement, both from the CMS
+  /// records for the member's local date. Read from Firestore
   /// (cached), so this also works offline. Only published records show.
   DailyScriptureRecord? _encounter;
 
@@ -149,38 +142,35 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
             ? t.en
             : t.forLanguage(lang);
     try {
-      final now = DateTime.now();
       // The library has 365 days; 29 February shows 28 February.
-      final day = now.month == 2 && now.day == 29 ? 28 : now.day;
-      final date = '${now.month.toString().padLeft(2, '0')}-'
-          '${day.toString().padLeft(2, '0')}';
+      final date = DailyEncouragement.dateKey(DateTime.now());
       final records = await queryDailyScriptureRecordOnce(
         queryBuilder: (q) => q.where('date', isEqualTo: date),
       );
       _encounter = records.where((r) => r.status == 'published').firstOrNull;
       final encounter = _encounter;
+      // One day, one record: the verse, title, Daily Truth, Read in context
+      // and Bible Gateway link all come from the record for the member's
+      // own date. The backend picks "today" by server (UTC) time, which can
+      // already be tomorrow, so its verse and text are used only when there
+      // is no published record for this date.
       if (encounter != null) {
-        if ((_model.todayScriptureRef ?? '').isEmpty) {
+        if (encounter.verseRef.isNotEmpty) {
           _model.todayScriptureRef = encounter.verseRef;
         }
-        // The backend returns stored translations even while a language
-        // is in review, so the CMS text (gated by forLanguage) wins then.
-        if ((_model.todayScriptureText ?? '').isEmpty ||
-            !LanguageRegistry.instance.isReleased(lang)) {
-          _model.todayScriptureText = pick(encounter.text);
-        }
-        if (_todayPassage == null && encounter.verseRef.isNotEmpty) {
-          _todayPassage = await actions.fetchBiblePassage(
-            encounter.verseRef,
-            lang,
-          );
-        }
+        _model.todayScriptureText = pick(encounter.text);
+      }
+      if ((_model.todayScriptureRef ?? '').isNotEmpty) {
+        _todayPassage = await actions.fetchBiblePassage(
+          _model.todayScriptureRef!,
+          lang,
+        );
       }
       _todayPassageLoaded = true;
       safeSetState(() {});
     } catch (_) {}
     try {
-      final encouragement = await EncouragementRotation.today();
+      final encouragement = await DailyEncouragement.today();
       if (encouragement != null) {
         _model.todayEncouragementText = pick(encouragement.quote);
         _model.todayEncouragementRef = [
@@ -298,10 +288,10 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
     final commentary = _backendText(_model.todayScriptureText);
     final title = _localizedField('theme');
     // Licensed NIV preview: Scripture is never machine-translated.
-    final preview = LocaleTextStruct.maybeFromMap(
-                _encounter?.snapshotData['versePreview'])
-            ?.en ??
-        '';
+    final preview =
+        LocaleTextStruct.maybeFromMap(_encounter?.snapshotData['versePreview'])
+                ?.en ??
+            '';
     final readInContext =
         (_encounter?.snapshotData['readInContext'] as String?) ?? '';
     final gatewayUrl =
@@ -473,17 +463,12 @@ class _TodayPageWidgetState extends State<TodayPageWidget> {
                       borderRadius: BorderRadius.circular(12.0),
                     ),
                   ),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(32.0),
-                    child: CachedNetworkImage(
-                      fadeInDuration: Duration(milliseconds: 0),
-                      fadeOutDuration: Duration(milliseconds: 0),
-                      imageUrl:
-                          'https://storage.googleapis.com/kingdom-heirs-discipleshipapp.firebasestorage.app/branding/kingdom_heirs_crown_logo.png',
-                      width: 64.0,
-                      height: 64.0,
-                      fit: BoxFit.cover,
-                    ),
+                  // Approved Kingdom Heirs crown.
+                  Image.asset(
+                    'assets/images/kh_logo.png',
+                    width: 64.0,
+                    height: 64.0,
+                    fit: BoxFit.contain,
                   ),
                   Text(
                     FFLocalizations.of(context).getText(

@@ -17,7 +17,6 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import 'flutter_flow/flutter_flow_util.dart';
 import 'flutter_flow/internationalization.dart';
 import '/backend/mock/mock_debug_overlay.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
 import 'index.dart';
 // Hand edit (keep after FlutterFlow sync): CMS-managed languages.
 import '/custom_code/languages/language_app_support.dart';
@@ -236,59 +235,119 @@ class _NavBarPageState extends State<NavBarPage> {
     return Scaffold(
       resizeToAvoidBottomInset: !widget.disableResizeToAvoidBottomInset,
       body: _currentPage ?? tabs[_currentPageName],
+      // Simple four-tab bar (hand-written, per the approved home concept):
+      // icon over label, the active tab in Kingdom Heirs gold with a short
+      // underline.
       bottomNavigationBar: Container(
-        color: FlutterFlowTheme.of(context).secondaryBackground,
+        decoration: BoxDecoration(
+          color: FlutterFlowTheme.of(context).secondaryBackground,
+          border: Border(
+              top: BorderSide(color: FlutterFlowTheme.of(context).alternate)),
+        ),
         child: SafeArea(
-          child: GNav(
-            selectedIndex: currentIndex,
-            onTabChange: (i) => safeSetState(() {
-              _currentPage = null;
-              _currentPageName = tabs.keys.toList()[i];
-            }),
-            backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
-            color: FlutterFlowTheme.of(context).secondaryText,
-            activeColor: FlutterFlowTheme.of(context).secondary,
-            tabBackgroundColor: Color(0x22C4A35A),
-            tabBorderRadius: 24.0,
-            tabMargin: EdgeInsetsDirectional.fromSTEB(6.0, 8.0, 6.0, 22.0),
-            padding: EdgeInsetsDirectional.fromSTEB(18.0, 10.0, 18.0, 10.0),
-            gap: 8.0,
-            mainAxisAlignment: MainAxisAlignment.center,
-            duration: Duration(milliseconds: 500),
-            haptic: false,
-            tabs: [
-              GButton(
-                icon: Icons.home_outlined,
-                text: FFLocalizations.of(context).getText(
-                  'amxdvirb' /* Home */,
-                ),
-              ),
-              GButton(
-                icon: Icons.menu_book,
-                text: FFLocalizations.of(context).getText(
-                  '6248jqp7' /* Pathways */,
-                ),
-              ),
-              // Bible tab (hand-added): full Bible in the member's language.
-              GButton(
-                icon: Icons.auto_stories_outlined,
-                text: switch (LanguageRegistry.contentLanguage) {
-                  'es' => 'Biblia',
-                  'ur' => 'بائبل',
-                  'lg' => 'Baibuli',
-                  'en' => 'Bible',
-                  final lang =>
-                    TranslationService.instance.translate('Bible', lang),
-                },
-              ),
-              GButton(
-                icon: Icons.person,
-                text: FFLocalizations.of(context).getText(
-                  'zv6tqbs6' /* Profile */,
-                ),
-              )
-            ],
+          child: SizedBox(
+            height: 66.0,
+            child: Row(
+              children: [
+                for (final (i, tab) in [
+                  (
+                    Icons.home_rounded,
+                    FFLocalizations.of(context).getText('amxdvirb' /* Home */)
+                  ),
+                  (
+                    Icons.alt_route_rounded,
+                    FFLocalizations.of(context)
+                        .getText('6248jqp7' /* Pathways */)
+                  ),
+                  // Bible tab (hand-added): full Bible in the member's language.
+                  (
+                    Icons.auto_stories_outlined,
+                    switch (LanguageRegistry.contentLanguage) {
+                      'es' => 'Biblia',
+                      'ur' => 'بائبل',
+                      'lg' => 'Baibuli',
+                      'en' => 'Bible',
+                      final lang =>
+                        TranslationService.instance.translate('Bible', lang),
+                    }
+                  ),
+                  (
+                    Icons.person_outline_rounded,
+                    FFLocalizations.of(context)
+                        .getText('zv6tqbs6' /* Profile */)
+                  ),
+                ].indexed)
+                  Expanded(
+                    child: _NavTab(
+                      icon: tab.$1,
+                      label: tab.$2,
+                      selected: i == currentIndex,
+                      onTap: () => safeSetState(() {
+                        _currentPage = null;
+                        _currentPageName = tabs.keys.toList()[i];
+                      }),
+                    ),
+                  ),
+              ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// One bottom-bar tab: icon over label, gold with an underline when active.
+class _NavTab extends StatelessWidget {
+  const _NavTab({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+    final color = selected ? const Color(0xFF8A6D2B) : theme.secondaryText;
+    return Semantics(
+      selected: selected,
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 26.0, color: selected ? theme.secondary : color),
+            const SizedBox(height: 2.0),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12.0,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                color: color,
+              ),
+            ),
+            const SizedBox(height: 4.0),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: selected ? 26.0 : 0.0,
+              height: 3.0,
+              decoration: BoxDecoration(
+                color: theme.secondary,
+                borderRadius: BorderRadius.circular(2.0),
+              ),
+            ),
+          ],
         ),
       ),
     );

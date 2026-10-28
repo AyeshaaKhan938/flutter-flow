@@ -31,6 +31,10 @@ class _RagSearchPageWidgetState extends State<RagSearchPageWidget> {
   List<Map<String, dynamic>> _citations = [];
   bool _asking = false;
 
+  /// Shown above the answer when a question in another language is
+  /// answered in English (until reviewed translations are approved).
+  String _languageNotice = '';
+
   /// Asks the private Kingdom Heirs Research Library (askKingdomHeirs).
   /// Answers come only from approved sources and always cite them.
   Future<void> _ask() async {
@@ -43,6 +47,7 @@ class _RagSearchPageWidgetState extends State<RagSearchPageWidget> {
       _model.answerText = '';
       _model.fallbackText = '';
       _citations = [];
+      _languageNotice = '';
     });
     try {
       final result = await FirebaseFunctions.instance
@@ -51,11 +56,22 @@ class _RagSearchPageWidgetState extends State<RagSearchPageWidget> {
                   HttpsCallableOptions(timeout: const Duration(seconds: 120)))
           .call({'question': question});
       final data = Map<String, dynamic>.from(result.data as Map);
-      _model.answerText = '${data['answer'] ?? ''}';
+      _languageNotice = '${data['languageNotice'] ?? ''}'.trim();
+      var answer = '${data['answer'] ?? ''}';
+      if (_languageNotice.isNotEmpty && answer.startsWith(_languageNotice)) {
+        answer = answer.substring(_languageNotice.length).trimLeft();
+      }
+      _model.answerText = answer;
+      // One primary source and at most two supporting sources, each book
+      // once (the server already sends them this way).
+      final seen = <String>{};
       _citations = [
         for (final c in (data['citations'] as List? ?? const []))
           Map<String, dynamic>.from(c as Map),
-      ];
+      ]
+          .where((c) => seen.add('${c['sourceTitle'] ?? c['label'] ?? ''}'))
+          .take(3)
+          .toList();
     } on FirebaseFunctionsException catch (e) {
       final offline = e.code == 'unavailable';
       _model.fallbackText = offline
@@ -160,7 +176,7 @@ class _RagSearchPageWidgetState extends State<RagSearchPageWidget> {
 
   /// One cited source: cover, "Source: Title, Chapter n — ..." and a link
   /// to its pathway (the pathway page keeps locked pathways locked).
-  Widget _citationCard(Map<String, dynamic> c) {
+  Widget _citationCard(Map<String, dynamic> c, {required bool primary}) {
     final theme = FlutterFlowTheme.of(context);
     final pathwayId = '${c['pathwayId'] ?? ''}';
     return Container(
@@ -182,6 +198,15 @@ class _RagSearchPageWidgetState extends State<RagSearchPageWidget> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(
+                    primary ? 'PRIMARY SOURCE' : 'SUPPORTING SOURCE',
+                    style: theme.labelSmall.override(
+                      font: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                      color: theme.secondaryText,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                  const SizedBox(height: 2.0),
                   Text(
                     '${c['label'] ?? ''}',
                     style: theme.labelMedium.override(
@@ -422,6 +447,34 @@ class _RagSearchPageWidgetState extends State<RagSearchPageWidget> {
                               .fontStyle,
                         ),
                   ),
+                  if (_languageNotice.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(12.0),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3EBD7),
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.translate_rounded,
+                              size: 18.0, color: Color(0xFF8A6D2B)),
+                          const SizedBox(width: 8.0),
+                          Expanded(
+                            child: Text(
+                              _languageNotice,
+                              style: FlutterFlowTheme.of(context)
+                                  .bodySmall
+                                  .override(
+                                    font: GoogleFonts.inter(
+                                        fontWeight: FontWeight.w500),
+                                    color: const Color(0xFF5C4718),
+                                    letterSpacing: 0.0,
+                                  ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   Text(
                     _model.answerText!,
                     style: FlutterFlowTheme.of(context).bodyLarge.override(
@@ -440,12 +493,21 @@ class _RagSearchPageWidgetState extends State<RagSearchPageWidget> {
                               FlutterFlowTheme.of(context).bodyLarge.fontStyle,
                         ),
                   ),
-                  Text(
-                    FFLocalizations.of(context).getText(
-                      '70neur48' /* Citations */,
-                    ),
-                    style: FlutterFlowTheme.of(context).titleMedium.override(
-                          font: GoogleFonts.inter(
+                  if (_citations.isNotEmpty)
+                    Text(
+                      FFLocalizations.of(context).getText(
+                        '70neur48' /* Citations */,
+                      ),
+                      style: FlutterFlowTheme.of(context).titleMedium.override(
+                            font: GoogleFonts.inter(
+                              fontWeight: FlutterFlowTheme.of(context)
+                                  .titleMedium
+                                  .fontWeight,
+                              fontStyle: FlutterFlowTheme.of(context)
+                                  .titleMedium
+                                  .fontStyle,
+                            ),
+                            letterSpacing: 0.0,
                             fontWeight: FlutterFlowTheme.of(context)
                                 .titleMedium
                                 .fontWeight,
@@ -453,17 +515,10 @@ class _RagSearchPageWidgetState extends State<RagSearchPageWidget> {
                                 .titleMedium
                                 .fontStyle,
                           ),
-                          letterSpacing: 0.0,
-                          fontWeight: FlutterFlowTheme.of(context)
-                              .titleMedium
-                              .fontWeight,
-                          fontStyle: FlutterFlowTheme.of(context)
-                              .titleMedium
-                              .fontStyle,
-                        ),
-                  ),
+                    ),
                   if (_asking) const Center(child: CircularProgressIndicator()),
-                  for (final c in _citations) _citationCard(c),
+                  for (var i = 0; i < _citations.length; i++)
+                    _citationCard(_citations[i], primary: i == 0),
                   if ((_model.answerText ?? '').isNotEmpty && !_asking)
                     Align(
                       alignment: AlignmentDirectional.centerStart,

@@ -115,6 +115,16 @@ class _SignUpPageWidgetState extends State<SignUpPageWidget> {
                       fit: BoxFit.cover,
                     ),
                   ),
+                  // Approved Kingdom Heirs Foundation logo.
+                  Padding(
+                    padding:
+                        EdgeInsetsDirectional.fromSTEB(0.0, 20.0, 0.0, 8.0),
+                    child: Image.asset(
+                      'assets/images/kh_logo_full.png',
+                      height: 96.0,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
                   Text(
                     FFLocalizations.of(context).getText(
                       'a5147fnc' /* Create your account */,

@@ -104,28 +104,15 @@ class _SignInPageWidgetState extends State<SignInPageWidget> {
                       fit: BoxFit.cover,
                     ),
                   ),
-                  Text(
-                    FFLocalizations.of(context).getText(
-                      'q27e3qze' /* Kingdom Heirs */,
+                  // Approved Kingdom Heirs Foundation logo.
+                  Padding(
+                    padding:
+                        EdgeInsetsDirectional.fromSTEB(0.0, 20.0, 0.0, 8.0),
+                    child: Image.asset(
+                      'assets/images/kh_logo_full.png',
+                      height: 96.0,
+                      fit: BoxFit.contain,
                     ),
-                    style: FlutterFlowTheme.of(context).headlineMedium.override(
-                          font: GoogleFonts.inter(
-                            fontWeight: FlutterFlowTheme.of(context)
-                                .headlineMedium
-                                .fontWeight,
-                            fontStyle: FlutterFlowTheme.of(context)
-                                .headlineMedium
-                                .fontStyle,
-                          ),
-                          color: FlutterFlowTheme.of(context).primary,
-                          letterSpacing: 0.0,
-                          fontWeight: FlutterFlowTheme.of(context)
-                              .headlineMedium
-                              .fontWeight,
-                          fontStyle: FlutterFlowTheme.of(context)
-                              .headlineMedium
-                              .fontStyle,
-                        ),
                   ),
                   Text(
                     FFLocalizations.of(context).getText(
