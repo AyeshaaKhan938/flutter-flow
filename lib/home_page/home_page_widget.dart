@@ -30,6 +30,10 @@ const _kLocked = Color(0xFFE6E2DA);
 /// Kingdom Heirs giving page (same as the Profile support card).
 const _kGivingUrl = 'https://kingdomheirsfoundation.com/partner-with-us';
 
+/// Kingdom Heirs' YouTube channel (teaching library). Teachings open in
+/// YouTube or the browser; the app never hosts or downloads video.
+const _kYouTubeUrl = 'https://youtube.com/@kingdomheirsco';
+
 /// Approved Kingdom Heirs crown (from the Kingdom Heirs Foundation logo).
 const _kLogoAsset = 'assets/images/kh_logo.png';
 
@@ -320,6 +324,14 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     badge: _t('New'),
                     onTap: () =>
                         context.pushNamed(RagSearchPageWidget.routeName),
+                  ),
+                  _entryCard(
+                    icon: Icons.play_circle_outline,
+                    iconColor: _kNavy,
+                    title: _t('Kingdom Heirs Teachings'),
+                    subtitle: _t('Watch video teachings on YouTube.'),
+                    badge: _t('YouTube'),
+                    onTap: () => launchURL(_kYouTubeUrl),
                   ),
                   const SizedBox(height: 8),
                   _givingCard(),
