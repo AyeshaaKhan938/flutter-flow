@@ -108,6 +108,12 @@ service cloud.firestore {
       allow read: if true;
     }
 
+    // Quizzes imported by importContentCsv live at the top level.
+    match /quizzes/{document} {
+      allow read: if true;
+      allow write: if isContentAdmin();
+    }
+
 
     match /dailyScripture/{document} {
       allow create: if isContentAdmin();
