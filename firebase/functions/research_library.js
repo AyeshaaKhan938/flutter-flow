@@ -456,8 +456,21 @@ async function answerQuestion({ db, admin, uid, email, question }) {
     return safety ? safetyOnly() : { status: "not_found", answer: kNotFoundAnswer, citations: [] };
   }
 
-  const { parsed, usage } = await generate(admin, q, hits,
+  let { parsed, usage } = await generate(admin, q, hits,
     config.answerInMemberLanguage === true, safety);
+  // A question in another language (Luganda especially) is sometimes not
+  // understood on the first pass: retry once, understanding it in English.
+  const firstLanguage = String(parsed.questionLanguage || "en").toLowerCase().slice(0, 2);
+  if (!parsed.found && firstLanguage !== "en") {
+    const retry = await generate(admin,
+      `${q}\n(This question is written in another language, possibly Luganda, Urdu or Spanish. ` +
+      "First understand it in English, then answer it from the SOURCES.)",
+      hits, config.answerInMemberLanguage === true, safety);
+    if (retry.parsed.found) {
+      parsed = { ...retry.parsed, questionLanguage: firstLanguage };
+      usage = retry.usage;
+    }
+  }
   const byId = new Map(hits.map(({ s }) => [s.id, s]));
   const cited = [...new Set((parsed.citations || []).filter((id) => byId.has(id)))]
     .slice(0, kMaxCitations);
