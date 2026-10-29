@@ -58,12 +58,32 @@ const kCrisisPattern = new RegExp(
     "cut(ting)? myself", "overdos",
     "(kill|hurt|harm|attack|shoot|stab)(ing)? (someone|somebody|him|her|them|my (wife|husband|child|children|kids?|parents?|mother|father|mom|dad|family))",
     "going to hurt", "want to hurt",
-    "(being|been|am|was|is|are) (being )?abused", "abus(ing|es) me", "domestic (abuse|violence)",
-    "sexual(ly)? abus", "molest", "raped?\\b", "beat(s|ing)? me", "hit(s|ting)? me", "threaten(s|ed|ing)? (me|to kill|to hurt)",
-    "violen(t|ce) (at home|toward me|towards me|against me)",
   ].join("|"),
   "i",
 );
+
+// Abuse or domestic violence against the member has its own template.
+const kAbusePattern = new RegExp(
+  [
+    "(being|been|am|was|is|are) (being )?abused", "abus(ing|es|ed) me", "domestic (abuse|violence)",
+    "sexual(ly)? abus", "molest", "raped?\\b", "beat(s|ing)? me", "hit(s|ting)? me", "slap(s|ping|ped)? me",
+    "chok(es|ing|ed) me", "push(es|ing|ed)? me", "threaten(s|ed|ing)? (me|to kill|to hurt)",
+    "violen(t|ce) (at home|toward me|towards me|against me)", "afraid of my (husband|wife|partner|boyfriend|girlfriend|father|mother|parents?)",
+  ].join("|"),
+  "i",
+);
+const kAbuseAnswer =
+  "What is happening to you is not your fault, and you do not deserve to be " +
+  "hurt. Your safety comes first.\n\n" +
+  "If you are in danger right now, get to a safe place and call emergency " +
+  "services: 911 in the United States, or your local emergency number. In the " +
+  "United States you can also call the National Domestic Violence Hotline at " +
+  "1-800-799-7233, or text START to 88788. Outside the United States, contact " +
+  "a domestic-violence service in your country or a trusted, safe person. If " +
+  "you can, use a phone or device that the person hurting you cannot see.\n\n" +
+  "Please do not confront the person who is hurting you. When it is safe, a " +
+  "trusted pastor or safeguarding leader can help you find support and plan " +
+  "for your safety. You do not have to carry this alone.";
 
 const kCrisisTemplate =
   "If you are in immediate danger or may harm yourself or someone else, " +
@@ -83,6 +103,17 @@ const kMedicalTemplate =
   "start, stop, or change medication or treatment without speaking with a " +
   "licensed healthcare professional.";
 
+// Withdrawal can be a medical emergency: the medical statement is followed
+// by an urgent warning.
+const kWithdrawalPattern = /withdraw(al|ing|als)|detox|delirium|\bdts\b|(stop|stopping|quit|quitting|coming off|come off|get off) (drinking|alcohol|benzo|opioid|heroin|xanax|valium)|(alcohol|drinking|drug|benzo|opioid)s? .*\b(shak(e|es|ing)|seizure|sweat)/i;
+const kWithdrawalWarning =
+  "Alcohol withdrawal, and withdrawal from some other drugs, can be dangerous " +
+  "and even life-threatening. Please seek urgent medical help now, especially " +
+  "if there are seizures, confusion, hallucinations, severe shaking, a racing " +
+  "heart, or any danger: call 911 in the United States or your local emergency " +
+  "number, or go to the nearest emergency room. Please do not go through " +
+  "withdrawal alone.";
+
 const kLegalPattern = /\blegal(ly)?\b|lawyer|attorney|\blaw\b|\bsue\b|suing|lawsuit|court|judge|criminal|crime|arrest|police|press charges|charges against|custody|divorce|immigra|visa\b|deport|asylum|contract|\bsign (the|this|a)\b|my rights|legal rights|\brights\b|report (him|her|them|it|this|abuse|to the)|testify|subpoena|will and testament|inherit(ance)?|evict|landlord/i;
 const kLegalTemplate =
   "Kingdom Heirs cannot provide legal advice. Please speak with a licensed " +
@@ -97,7 +128,8 @@ const kFinancialTemplate =
 /** The single safety category for [q] (checked before retrieval). */
 function safetyCategory(q) {
   if (kCrisisPattern.test(q)) return "crisis";
-  if (kMedicalPattern.test(q)) return "medical";
+  if (kAbusePattern.test(q)) return "abuse";
+  if (kMedicalPattern.test(q) || kWithdrawalPattern.test(q)) return "medical";
   if (kLegalPattern.test(q)) return "legal";
   if (kFinancialPattern.test(q)) return "financial";
   return "";
@@ -131,7 +163,7 @@ function dropSentences(text, pattern) {
 
 // The model must not repeat or mix in any safety template (each answer
 // shows exactly one, added by the server), nor show internal source ids.
-const kTemplateSentences = [kCrisisTemplate, kMedicalTemplate, kLegalTemplate, kFinancialTemplate]
+const kTemplateSentences = [kCrisisTemplate, kMedicalTemplate, kLegalTemplate, kFinancialTemplate, kWithdrawalWarning]
   .flatMap((tpl) => tpl.split(/(?<=[.!?])\s+/))
   .map((s) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim());
 function cleanAnswer(text) {
@@ -318,6 +350,55 @@ function limitVerbatim(answer, sources) {
   return out.join(" ");
 }
 
+// Questions that are clearly English skip the translation step.
+const kEnglishWords = new Set(("the a an is are was what how why who when where which do does did can could should " +
+  "would will i my me you your to of in on for and or with about it this that be have has jesus god bible pray").split(" "));
+function looksEnglish(q) {
+  if (/[^\x00-\x7F\u2018\u2019\u201C\u201D\u2014\u2013]/.test(q)) return false;
+  const words = q.toLowerCase().match(/[a-z']+/g) || [];
+  if (!words.length) return true;
+  const hits = words.filter((w) => kEnglishWords.has(w)).length;
+  return hits >= 2 || hits / words.length >= 0.25;
+}
+
+/**
+ * For a question that is not clearly English (Luganda, Urdu, Spanish...):
+ * { language, english } so safety checks, search and the answer all work
+ * from the English meaning. Returns null for English questions.
+ */
+async function englishQuestion(admin, question) {
+  if (looksEnglish(question)) return null;
+  try {
+    const res = await vertexPost([
+      modelUrl(admin, kAnswerModel, "generateContent", "global"),
+      modelUrl(admin, kFallbackModel, "generateContent", "global"),
+    ], {
+      contents: [{ role: "user", parts: [{ text:
+        "Identify the language of this question (ISO 639-1 code; Luganda is \"lg\") and translate it " +
+        "into natural English, keeping its meaning exactly. Do not answer it.\n\nQUESTION: " + question }] }],
+      generationConfig: {
+        temperature: 0,
+        maxOutputTokens: 300,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "OBJECT",
+          properties: { language: { type: "STRING" }, english: { type: "STRING" } },
+          required: ["language", "english"],
+        },
+        thinkingConfig: { thinkingBudget: 0 },
+      },
+    });
+    const cand = res.data.candidates && res.data.candidates[0];
+    const text = cand && cand.content && cand.content.parts && cand.content.parts.map((p) => p.text || "").join("");
+    const out = JSON.parse(text || "{}");
+    const language = String(out.language || "").toLowerCase().slice(0, 2);
+    const english = String(out.english || "").trim();
+    return language && language !== "en" && english ? { language, english } : null;
+  } catch (_) {
+    return null;
+  }
+}
+
 async function generate(admin, question, hits, memberLanguage, safety) {
   const sourcesBlock = hits.map(({ s }) =>
     `[${s.id}] ${citationLabel(s).replace(/^Source: /, "")}\n${s.text}`).join("\n\n---\n\n");
@@ -414,11 +495,19 @@ async function answerQuestion({ db, admin, uid, email, question }) {
   }
 
   // Safety boundaries come before any retrieval or citations.
-  const safety = safetyCategory(q);
+  // Questions in another language are understood in English first, so the
+  // safety checks, search and answer all work from their meaning.
+  const translated = await englishQuestion(admin, q);
+  const qEnglish = translated ? translated.english : q;
+  const safety = safetyCategory(q) || safetyCategory(qEnglish);
   if (safety === "crisis") {
     return { status: "crisis", safety, answer: kCrisisAnswer, citations: [] };
   }
-  const safetyTemplate = kSafetyTemplate[safety] || "";
+  if (safety === "abuse") {
+    return { status: "abuse", safety, answer: kAbuseAnswer, citations: [] };
+  }
+  const withdrawal = safety === "medical" && (kWithdrawalPattern.test(q) || kWithdrawalPattern.test(qEnglish));
+  const safetyTemplate = (kSafetyTemplate[safety] || "") + (withdrawal ? `\n\n${kWithdrawalWarning}` : "");
   const safetyOnly = () => ({
     status: safety, safety,
     answer: `${safetyTemplate}\n\n${kSafetyClosing[safety]}`,
@@ -448,22 +537,23 @@ async function answerQuestion({ db, admin, uid, email, question }) {
   }
 
   const sections = await loadSections(db);
-  const [qv] = await embed(admin, [q], "RETRIEVAL_QUERY");
-  const hits = boostAppHelp(search(sections, qv, kTopSections * 2), q)
-    .filter((h) => !isSafetyRules(h.s) || (!safety && kBoundaryQuestion.test(q)))
+  const [qv] = await embed(admin, [qEnglish], "RETRIEVAL_QUERY");
+  const hits = boostAppHelp(search(sections, qv, kTopSections * 2), qEnglish)
+    .filter((h) => !isSafetyRules(h.s) || (!safety && kBoundaryQuestion.test(qEnglish)))
     .slice(0, kTopSections);
   if (hits.length === 0) {
     return safety ? safetyOnly() : { status: "not_found", answer: kNotFoundAnswer, citations: [] };
   }
 
-  let { parsed, usage } = await generate(admin, q, hits,
+  const asked = translated ? `${q}\n(In English: ${translated.english})` : q;
+  let { parsed, usage } = await generate(admin, asked, hits,
     config.answerInMemberLanguage === true, safety);
   // A question in another language (Luganda especially) is sometimes not
   // understood on the first pass: retry once, understanding it in English.
   const firstLanguage = String(parsed.questionLanguage || "en").toLowerCase().slice(0, 2);
   if (!parsed.found && firstLanguage !== "en") {
     const retry = await generate(admin,
-      `${q}\n(This question is written in another language, possibly Luganda, Urdu or Spanish. ` +
+      `${asked}\n(This question is written in another language, possibly Luganda, Urdu or Spanish. ` +
       "First understand it in English, then answer it from the SOURCES.)",
       hits, config.answerInMemberLanguage === true, safety);
     if (retry.parsed.found) {
@@ -485,7 +575,8 @@ async function answerQuestion({ db, admin, uid, email, question }) {
   if (safety === "legal") answer = dropSentences(answer, kMedicalMention);
   if (safety) answer = dropSentences(answer, kDecisionSentence[safety]);
   if (!answer) return safetyOnly();
-  const questionLanguage = String(parsed.questionLanguage || "en").toLowerCase().slice(0, 2);
+  const questionLanguage = translated ? translated.language
+    : String(parsed.questionLanguage || "en").toLowerCase().slice(0, 2);
   const languageNotice = config.answerInMemberLanguage !== true && questionLanguage !== "en"
     ? kEnglishOnlyNotice : "";
   if (languageNotice) answer = `${languageNotice}\n\n${answer}`;
