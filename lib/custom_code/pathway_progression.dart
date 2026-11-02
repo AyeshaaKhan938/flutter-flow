@@ -65,6 +65,42 @@ int passingScoreFor(PathwaysRecord pathway) {
   return v != null && v > 0 && v <= 100 ? v : kDefaultPassingScore;
 }
 
+/// A pathway is complete when every published lesson is finished and every
+/// required quiz is passed at [passingScore] (best attempt per quiz), or
+/// when its certificate was already issued.
+bool isPathwayComplete({
+  required int lessonsTotal,
+  required int lessonsDone,
+  required List<String> quizIds,
+  required Map<String, QuizScore> bestScores,
+  required int passingScore,
+  bool certificateIssued = false,
+}) {
+  if (certificateIssued) {
+    return true;
+  }
+  final passed =
+      quizIds.where((id) => bestScores[id]?.passes(passingScore) ?? false);
+  return lessonsTotal > 0 &&
+      lessonsDone >= lessonsTotal &&
+      passed.length == quizIds.length;
+}
+
+/// Which core pathways are open, in the required order: the first is
+/// always open, and each later one opens only when every one before it is
+/// complete.
+List<bool> coreUnlocks(List<bool> completedInOrder) {
+  var previousCompleted = true;
+  return [
+    for (final completed in completedInOrder)
+      () {
+        final unlocked = previousCompleted;
+        previousCompleted = previousCompleted && completed;
+        return unlocked;
+      }(),
+  ];
+}
+
 /// One quiz result as correct answers out of questions.
 class QuizScore {
   const QuizScore(this.correct, this.total);
@@ -579,8 +615,14 @@ class PathwayProgressionService {
           quizIds.where((id) => scores[id]?.passes(threshold) ?? false).length;
       // A certificate already issued means it was completed when issued;
       // content added later never takes that back.
-      final completed = issued.containsKey(p.stableId) ||
-          (input.total > 0 && input.lessonsDone && passed == quizIds.length);
+      final completed = isPathwayComplete(
+        lessonsTotal: input.total,
+        lessonsDone: input.done,
+        quizIds: quizIds,
+        bestScores: scores,
+        passingScore: threshold,
+        certificateIssued: issued.containsKey(p.stableId),
+      );
       final track = trackOf(p);
       if (track == 'core') {
         // Unpublished core pathways are skipped: the next published one

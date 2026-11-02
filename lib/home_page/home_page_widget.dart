@@ -28,7 +28,8 @@ const _kMuted = Color(0xFF5E584F);
 const _kLocked = Color(0xFFE6E2DA);
 
 /// Kingdom Heirs giving page (same as the Profile support card).
-const _kGivingUrl = 'https://kingdomheirsfoundation.com/partner-with-us';
+/// Kingdom Heirs' Givebutter donation page (linked from their website).
+const _kGivingUrl = 'https://givebutter.com/kingdom-heirs-foundation-100-pzxizs';
 
 /// Kingdom Heirs' YouTube channel (teaching library). Teachings open in
 /// YouTube or the browser; the app never hosts or downloads video.
