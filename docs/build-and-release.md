@@ -19,8 +19,7 @@ flutter run
 
 ## Build commands
 
-Always pass the key file, or the Bible integration falls back
-(see the [README](../README.md#api-keys)):
+The app needs no build-time keys (see the [README](../README.md#api-keys)):
 
 ```sh
 flutter build apk        --release   # sideload / testing
@@ -87,34 +86,40 @@ passwords, in the Kingdom Heirs password manager, with an offline backup.
 
 ## iOS signing and TestFlight
 
-Identifiers in the Xcode project:
-- App: **`com.kingdomheirs.discipleship`**
-- Notification service extension (rich push images): **`com.kingdomheirs.discipleship.ImageNotification`**
+The iOS app uses the bundle id of the existing App Store Connect record
+**Kingdom Heirs Discipleship** (Apple ID 6807216829): **`com.kingdomheirsfoundation.kingdomheirs`**.
+Never create another app record or bundle id. The Android application id stays
+`com.kingdomheirs.discipleship`. The Firebase iOS app for this bundle id is
+"Kingdom Heirs Discipleship App Store", and `ios/Runner/GoogleService-Info.plist` comes
+from it.
+
+Capabilities: **Push Notifications** (on the App ID) and **Background Modes → Remote
+notifications** (set in `Info.plist`). Nothing else: no Sign in with Apple (email login
+only), Associated Domains, App Groups or iCloud. The project has one target, Runner; the
+image notification extension was removed for Phase 1.
 
 Steps:
-1. Apple Developer (Kingdom Heirs team) → Identifiers: register both bundle ids. Enable
-   **Push Notifications** on the app id.
+1. Apple Developer (Kingdom Heirs team) → Identifiers: enable **Push Notifications** on
+   `com.kingdomheirsfoundation.kingdomheirs`.
 2. **APNs key**: Keys → create a key with Apple Push Notifications service. Download the
    `.p8` file (you can download it only once). Store it with its Key ID and your Team ID in
    the password manager. Upload it in Firebase console → Project settings → Cloud Messaging
    → Apple app configuration.
-3. Open `ios/Runner.xcworkspace` in Xcode. For the **Runner** and **ImageNotification**
-   targets, go to Signing & Capabilities and choose the Kingdom Heirs Team. Signing is set
-   to Automatic, and no `DEVELOPMENT_TEAM` is committed, so each developer chooses the team
-   locally. Confirm the **Push Notifications** and **Background Modes → Remote
-   notifications** capabilities.
+3. Signing is manual. Kingdom Heirs creates an **Apple Distribution** certificate from the
+   build Mac's CSR and an App Store profile named **Kingdom Heirs Discipleship App Store**,
+   and sends the `.cer` and `.mobileprovision` files. The private key never leaves the
+   build Mac. No App Store Connect API key is used.
 4. `ios/Runner/Runner.entitlements` has `aps-environment = development`. When you archive
    with App Store distribution, Xcode sets it to `production` in the exported build. If
    push works in debug but not in TestFlight, check this setting and the APNs key upload
    first.
-5. App Store Connect → **My Apps → +**. Create the app with bundle id
-   `com.kingdomheirs.discipleship`, name "Kingdom Heirs", and primary language English.
+5. The App Store Connect record already exists. Upload to it; do not create a new one.
 6. Build and upload: run `flutter build ipa --release`,
    then upload `build/ios/ipa/*.ipa` with **Transporter** or `xcrun altool`. You can also
    archive in Xcode (Product → Archive → Distribute App → App Store Connect).
-7. TestFlight: when processing finishes, answer the export-compliance question. The app
-   uses only standard HTTPS, so choose "None of the algorithms mentioned" if that is true.
-   Add internal testers (team members) right away. **External** testers require Beta App
+7. TestFlight: `Info.plist` sets `ITSAppUsesNonExemptEncryption = false` (standard HTTPS
+   only), so there is no export-compliance question. Keep builds in **internal** testing
+   until Kingdom Heirs approves a release in writing. Add internal testers (team members) right away. **External** testers require Beta App
    Review.
 8. For App Store submission you also need screenshots, a privacy policy URL, App Privacy
    answers, a **demo account** for Apple review (email and password for a test member), and
@@ -125,8 +130,7 @@ Steps:
 
 - [ ] `git pull`. If a FlutterFlow sync landed, re-apply the hand edits ([architecture.md](architecture.md#flutterflow-sync-caveat))
 - [ ] Bump `version` in `pubspec.yaml`
-- [ ] `api_keys.json` is present and valid
-- [ ] Release `signingConfig` is `signingConfigs.release`
+- [ ] `android/key.properties` exists, so release builds use the upload key
 - [ ] Smoke test in all four languages (Urdu RTL), and test offline mode
 - [ ] Build the `.aab` and `.ipa`, then upload to Internal Testing and TestFlight
 - [ ] Tag the commit

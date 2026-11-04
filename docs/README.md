@@ -9,6 +9,12 @@ about what that code does.
 Start with the repository [README](../README.md). It covers the build-time API keys
 (none in the app; API.Bible key in Secret Manager) and the Bible integration.
 
+**Phase 1 handover (November 2026):** start with the [handover/](handover/) folder:
+[BUILD_AND_DEPLOY.md](handover/BUILD_AND_DEPLOY.md), [ADMIN_GUIDE.md](handover/ADMIN_GUIDE.md),
+[SERVICES_AND_COSTS.md](handover/SERVICES_AND_COSTS.md) and
+[OWNERSHIP_CHECKLIST.md](handover/OWNERSHIP_CHECKLIST.md). Where they disagree with the
+older docs below, the handover docs are newer.
+
 | Doc | Audience | What it covers |
 |---|---|---|
 | [architecture.md](architecture.md) | Developers | App structure, pages, data flow, **FlutterFlow sync caveat** |
@@ -26,7 +32,7 @@ Start with the repository [README](../README.md). It covers the build-time API k
 |---|---|
 | Firebase / GCP project | `kingdom-heirs-discipleshipapp` (region `us-central1`) |
 | Android application id | `com.kingdomheirs.discipleship` |
-| iOS bundle id | `com.kingdomheirs.discipleship` (plus `com.kingdomheirs.discipleship.ImageNotification` extension) |
+| iOS bundle id | `com.kingdomheirsfoundation.kingdomheirs` (the existing App Store Connect record, Apple ID 6807216829) |
 | App display name | Kingdom Heirs |
 | Languages | English `en`, Spanish `es`, Urdu `ur` (RTL), Luganda `lg` |
 | Current version | `1.0.0+1` (`pubspec.yaml`) |

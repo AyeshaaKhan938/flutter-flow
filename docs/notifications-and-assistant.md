@@ -18,9 +18,11 @@
 
 Ways to create an `ff_push_notifications` document:
 - **FlutterFlow → Push Notifications** tab (the simplest option for staff with FlutterFlow access).
-- **Admin page → Publish + notify members**, which calls `publishAnnouncement`. Whether
-  that function writes to `ff_push_notifications` or calls FCM directly is **server-side
-  (needs backend owner)**.
+- **Admin → Notifications** page (`/admin/notifications`, bell icon on the Pathways admin
+  page). Content admins enter a title and message, optionally target by device, language
+  or pathway, and send now or schedule. It lists recent notifications with their status
+  and number of devices reached. Firestore rules let content admins create and read
+  `ff_push_notifications`; only the send functions update them.
 - Manually, in the Firebase console, using the fields below.
 
 ### `ff_push_notifications` fields
@@ -30,7 +32,7 @@ Standard FlutterFlow fields:
 | Field | Meaning |
 |---|---|
 | `notification_title`, `notification_text` | Required. Plain-text title and body |
-| `notification_image_url` | Optional image (iOS needs the `ImageNotification` extension, which is included) |
+| `notification_image_url` | Optional image. Shown on Android only; iOS shows text (see [Future enhancement](#future-enhancement-image-notifications)) |
 | `notification_sound` | Optional |
 | `target_audience` | `All`, `ios`, or `android` (matched against `device_type`) |
 | `user_refs` | Optional comma-separated `users/<uid>` paths. When set, only these users receive it |
@@ -71,6 +73,14 @@ Example of a localized morning reminder for the "come-and-see" pathway at 7 am l
 ```
 
 (The exact `initial_page_name` values are the `routeName`s in `lib/flutter_flow/nav/nav.dart`.)
+
+### Future enhancement: image notifications
+Phase 1 sends standard text notifications. Pictures inside iOS notifications need a
+Notification Service Extension, which Apple treats as a second identifier
+(`com.kingdomheirsfoundation.kingdomheirs.ImageNotification`) with its own provisioning
+profile. It was removed for Phase 1 at Kingdom Heirs' request (November 2026). To add it
+later: register that identifier, create its App Store profile, and restore the
+`ImageNotification` target and Podfile entry (git history before the removal commit).
 
 ### Configuration checklist
 - **Android:** FCM works through `google-services.json`. On Android 13+, the permission
