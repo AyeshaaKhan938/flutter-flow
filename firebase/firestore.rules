@@ -180,6 +180,22 @@ service cloud.firestore {
       allow write: if isContentAdmin();
     }
 
+    // Push notification queue. Content admins create notifications on the
+    // Notifications admin page; the send functions (Admin SDK) write the
+    // status back. Nobody edits or deletes a notification from the app.
+    match /ff_push_notifications/{document} {
+      allow read: if isContentAdmin();
+      allow create: if isContentAdmin()
+        && request.resource.data.notification_title is string
+        && request.resource.data.notification_title.size() > 0
+        && request.resource.data.notification_text is string
+        && request.resource.data.notification_text.size() > 0
+        && request.resource.data.created_by == request.auth.uid
+        && !('status' in request.resource.data)
+        && !('user_refs' in request.resource.data);
+      allow update, delete: if false;
+    }
+
     // CSV import reports. Written only by the importContentCsv function
     // (Admin SDK); content admins can read them on the Import page.
     match /importJobs/{document} {

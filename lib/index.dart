@@ -12,6 +12,8 @@ export '/admin_content_page/admin_content_page_widget.dart'
     show AdminContentPageWidget;
 export '/admin_languages_page/admin_languages_page_widget.dart'
     show AdminLanguagesPageWidget;
+export '/admin_notifications_page/admin_notifications_page_widget.dart'
+    show AdminNotificationsPageWidget;
 export '/admin_import_page/admin_import_page_widget.dart'
     show AdminImportPageWidget;
 export '/profile_page/profile_page_widget.dart' show ProfilePageWidget;

@@ -186,6 +186,15 @@ class _AdminPathwaysPageWidgetState extends State<AdminPathwaysPageWidget> {
               onPressed: () =>
                   context.pushNamed(AdminContentPageWidget.routeName),
             ),
+            IconButton(
+              tooltip: 'Send notifications',
+              icon: Icon(
+                Icons.notifications_active_outlined,
+                color: FlutterFlowTheme.of(context).primaryText,
+              ),
+              onPressed: () =>
+                  context.pushNamed(AdminNotificationsPageWidget.routeName),
+            ),
           ],
           centerTitle: true,
           elevation: 0.0,

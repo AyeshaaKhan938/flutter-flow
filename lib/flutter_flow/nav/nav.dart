@@ -152,6 +152,14 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
                   page: AdminImportPageWidget(),
                 )),
         FFRoute(
+            name: AdminNotificationsPageWidget.routeName,
+            path: AdminNotificationsPageWidget.routePath,
+            requireAuth: true,
+            builder: (context, params) => NavBarPage(
+                  initialPage: '',
+                  page: AdminNotificationsPageWidget(),
+                )),
+        FFRoute(
             name: AdminLanguagesPageWidget.routeName,
             path: AdminLanguagesPageWidget.routePath,
             requireAuth: true,
