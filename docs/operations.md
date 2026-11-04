@@ -54,6 +54,9 @@ are a second, human-readable backup (see [import-templates.md](import-templates.
 
 ## Third-party services and costs
 
+Superseded by [handover/SERVICES_AND_COSTS.md](handover/SERVICES_AND_COSTS.md), which
+was written from the current code. The table below is kept for history.
+
 | Service | Used for | Cost | Owner / account | Notes |
 |---|---|---|---|---|
 | Firebase / Google Cloud (`kingdom-heirs-discipleshipapp`) | Auth, Firestore, Functions, FCM, Performance | Blaze pay-as-you-go. Likely low at launch scale; **set a budget alert** | **Unknown**. Confirm the billing account belongs to Kingdom Heirs | FCM is free; backups and PITR add storage cost |
