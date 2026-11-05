@@ -62,6 +62,8 @@ Future<String> saveLessonProgressSmart(String? authToken, String? pathwayId,
 
     progress.add({
       'userId': FirebaseAuth.instance.currentUser?.uid,
+      // Lets the server ignore a completion it has already recorded.
+      'clientWriteId': clientWriteId,
       'pathwayId': pathwayId,
       'currentDay': int.tryParse(day) ?? 0,
       'completedLessons': [lessonId],

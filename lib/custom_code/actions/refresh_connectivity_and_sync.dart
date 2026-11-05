@@ -42,7 +42,22 @@ Future<void> _syncPendingLanguage(String authToken) async {
   } catch (_) {}
 }
 
-Future<String> refreshConnectivityAndSync(String authToken) async {
+/// The sync in progress, if any. Reconnecting, opening a lesson and saving
+/// can all start a sync at once; they share one run, so the same queue is
+/// never sent twice.
+Future<String>? _syncInFlight;
+
+Future<String> refreshConnectivityAndSync(String authToken) {
+  final running = _syncInFlight;
+  if (running != null) {
+    return running;
+  }
+  final run = _refreshConnectivityAndSync(authToken);
+  _syncInFlight = run;
+  return run.whenComplete(() => _syncInFlight = null);
+}
+
+Future<String> _refreshConnectivityAndSync(String authToken) async {
   final results = await Connectivity().checkConnectivity();
   final offline =
       results.isEmpty || results.every((r) => r == ConnectivityResult.none);
@@ -101,10 +116,20 @@ Future<String> refreshConnectivityAndSync(String authToken) async {
   }
 
   if (response.statusCode >= 200 && response.statusCode < 300) {
+    // Remove only what was sent: work queued while the request was in
+    // flight stays for the next sync.
+    final sent = {...reflections, ...progress}.map(jsonEncode).toSet();
+    final now = FFAppState().pendingOfflineWrites;
+    final latest = now is Map
+        ? Map<String, dynamic>.from(now)
+        : <String, dynamic>{'reflections': [], 'progress': []};
+    bool unsent(dynamic e) => !sent.contains(jsonEncode(e));
     FFAppState().update(() {
       FFAppState().pendingOfflineWrites = {
-        'reflections': allReflections.where((e) => !mine(e)).toList(),
-        'progress': allProgress.where((e) => !mine(e)).toList(),
+        'reflections':
+            List<dynamic>.from(latest['reflections'] ?? const []).where(unsent).toList(),
+        'progress':
+            List<dynamic>.from(latest['progress'] ?? const []).where(unsent).toList(),
       };
     });
     return 'synced';

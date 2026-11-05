@@ -785,7 +785,7 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                         currentJwtToken,
                         widget.pathwayId,
                         widget.lessonId,
-                        '0',
+                        '${_model.lessonsList.where((l) => l.stableId == widget.lessonId).firstOrNull?.dayNumber ?? 0}',
                         _model.reflectionInput,
                       );
                       if (_model.saveSmartResult == 'queued') {
