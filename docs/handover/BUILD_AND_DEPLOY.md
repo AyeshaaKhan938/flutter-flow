@@ -8,7 +8,7 @@ Phase 1 handover, Kingdom Heirs Discipleship app. Written 2 November 2026 from t
 | Android application id | `com.kingdomheirs.discipleship` |
 | iOS bundle id | `com.kingdomheirsfoundation.kingdomheirs` (existing App Store Connect record, Apple ID 6807216829) |
 | Firebase / Google Cloud project | `kingdom-heirs-discipleshipapp`, region `us-central1` |
-| Version | `pubspec.yaml` → `version: 1.0.0+1` |
+| Version | Release candidate **1.0.6 (8)**. `pubspec.yaml` still says `1.0.0+1`, so pass `--build-name 1.0.6 --build-number 8` (raise the number for every upload) |
 | Repository | `github.com/AyeshaaKhan938/flutter-flow` (public; must move to Kingdom Heirs, see [OWNERSHIP_CHECKLIST.md](OWNERSHIP_CHECKLIST.md)) |
 
 ## 1. Prerequisites
@@ -125,13 +125,14 @@ Play Console setup and Internal Testing steps:
    and that the APNs key is uploaded in Firebase → Project settings → Cloud Messaging.
 3. Build:
    ```sh
-   flutter build ipa --release
+   flutter build ipa --release --build-name 1.0.6 --build-number 8
    ```
    Output: `build/ios/ipa/*.ipa`.
 4. Upload with Apple's **Transporter** app, or archive in Xcode (Product → Archive →
    Distribute App → App Store Connect).
-5. In App Store Connect → TestFlight, answer the export compliance question, then add
-   internal testers. External testers need Beta App Review.
+5. In App Store Connect → TestFlight, add internal testers. `Info.plist` already declares
+   standard encryption only, so there is no export compliance question. Builds stay in
+   **internal** testing until Kingdom Heirs approves a release in writing.
 
 Full steps (bundle ids, APNs key, App Store review needs):
 [../build-and-release.md](../build-and-release.md#ios-signing-and-testflight).
@@ -178,6 +179,12 @@ runs 22 older functions (v2, Node 20), most of which the app still calls, for ex
 must be obtained from whoever wrote them (see [OWNERSHIP_CHECKLIST.md](OWNERSHIP_CHECKLIST.md)).
 Deploying by name, as above, never touches them. Do **not** run a bare
 `firebase deploy --only functions`.
+
+**Runtime risk.** All 22 of these run on Node.js 20, which Google decommissioned for Cloud
+Functions on 30 October 2026. They were still deployed on 5 November 2026, but they cannot
+be changed or redeployed on Node 20, and Google may stop running them. Recovering their
+source and moving them to Node 22 (or replacing them with functions in this repo) is the
+most important follow-up after Phase 1.
 
 ## 7. Firestore rules and indexes
 

@@ -125,13 +125,24 @@ languages for review (section 7).
 
 ## 8. Push notifications
 
-- **Simple announcement with a push:** Manage Pathways → **Publish + notify members**.
-- **Targeted or scheduled pushes** (by language, pathway or time zone, or at 7 am in each
-  member's time zone) have no admin page. Create a document in the
-  **`ff_push_notifications`** collection in Firebase console, or use FlutterFlow's Push
-  Notifications tab. The fields are listed in
+- **Send a notification:** Manage Pathways → bell icon (top right) opens **Notifications**.
+  1. Enter a **Title** and **Message**. Members receive exactly this text.
+  2. Optionally choose **Devices** (iPhone or Android), **Language** and **Pathway**.
+     Leave them on "All" to reach every member who allowed notifications.
+  3. Choose **Send now**, or **Schedule…** and pick a date and time. Scheduled
+     notifications go out within an hour after that time.
+  4. Tap **Send notification** and confirm.
+  **Recent notifications** shows each one with its status and how many devices it reached.
+  Tapping a notification opens the app on the Today page.
+- **Announcement on the Today page with a push:** Manage Pathways →
+  **Publish + notify members**.
+- **Advanced** (each member's local time, e.g. 7 am everywhere): create a document in
+  **`ff_push_notifications`** in Firebase console. The fields are listed in
   [../notifications-and-assistant.md](../notifications-and-assistant.md#push-notifications).
-  Scheduled pushes can arrive up to an hour late.
+- Notifications are text only. Pictures in notifications are a possible future
+  enhancement.
+- iPhones receive notifications only after the APNs key is uploaded in Firebase →
+  Project settings → Cloud Messaging.
 
 ## 9. Ask Kingdom Heirs
 

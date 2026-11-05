@@ -12,7 +12,8 @@ Start with the repository [README](../README.md). It covers the build-time API k
 **Phase 1 handover (November 2026):** start with the [handover/](handover/) folder:
 [BUILD_AND_DEPLOY.md](handover/BUILD_AND_DEPLOY.md), [ADMIN_GUIDE.md](handover/ADMIN_GUIDE.md),
 [SERVICES_AND_COSTS.md](handover/SERVICES_AND_COSTS.md) and
-[OWNERSHIP_CHECKLIST.md](handover/OWNERSHIP_CHECKLIST.md). Where they disagree with the
+[OWNERSHIP_CHECKLIST.md](handover/OWNERSHIP_CHECKLIST.md), plus the release
+[TEST_CHECKLIST.md](handover/TEST_CHECKLIST.md). Where they disagree with the
 older docs below, the handover docs are newer.
 
 | Doc | Audience | What it covers |
