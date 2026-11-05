@@ -14,6 +14,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'profile_page_model.dart';
 import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/custom_code/languages/language_registry.dart';
+import '/custom_code/delete_account.dart';
 export 'profile_page_model.dart';
 
 /// Member profile: name, role, preferred language, sign-out, and an
@@ -570,6 +571,19 @@ class _ProfilePageWidgetState extends State<ProfilePageWidget> {
                         width: 1.0,
                       ),
                       borderRadius: BorderRadius.circular(16.0),
+                    ),
+                  ),
+                  Center(
+                    child: TextButton.icon(
+                      onPressed: () => deleteMyAccountFlow(context),
+                      icon: Icon(Icons.delete_outline_rounded,
+                          size: 18.0,
+                          color: FlutterFlowTheme.of(context).error),
+                      label: Text(
+                        FFLocalizations.of(context).getText('khdel003'),
+                        style: TextStyle(
+                            color: FlutterFlowTheme.of(context).error),
+                      ),
                     ),
                   ),
                 ].divide(SizedBox(height: 20.0)),

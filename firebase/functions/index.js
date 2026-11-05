@@ -8,6 +8,7 @@ const kPushNotificationsCollection = "ff_push_notifications";
 // Scheduled notifications go out within this many minutes of their time.
 const kSchedulerIntervalMinutes = 5;
 const firestore = admin.firestore();
+const deleteAccount = require("./delete_account");
 
 const kPushNotificationRuntimeOpts = {
   timeoutSeconds: 540,
@@ -757,11 +758,15 @@ exports.getBiblePassage = functions
     };
   });
 
+// Also covers accounts deleted from the Firebase console: the member's
+// profile, its subcollections and their other personal records go too.
 exports.onUserDeleted = functions.auth.user().onDelete(async (user) => {
-  let firestore = admin.firestore();
-  let userRef = firestore.doc("users/" + user.uid);
-  await firestore.collection("users").doc(user.uid).delete();
+  const firestore = admin.firestore();
+  await deleteAccount.deleteMemberDocuments(firestore, user.uid);
+  await firestore.recursiveDelete(firestore.doc("users/" + user.uid));
 });
+
+exports.deleteMyAccount = deleteAccount.deleteMyAccount;
 
 // CMS CSV importer (Admin > Import page). Source: content_import.js
 exports.importContentCsv = require("./content_import").importContentCsv;

@@ -1443,6 +1443,62 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
       'lg': 'Ebibuuzo',
       'ur': 'کوئز',
     },
+    'khdel001': {
+      'en': 'Delete your account?',
+      'es': '¿Eliminar tu cuenta?',
+      'lg': 'Delete your account?',
+      'ur': 'کیا آپ اپنا اکاؤنٹ حذف کرنا چاہتے ہیں؟',
+    },
+    'khdel002': {
+      'en':
+          'This permanently deletes your account and your data: profile, progress, quiz scores, reflections, certificates and notification settings. It cannot be undone.',
+      'es':
+          'Esto elimina para siempre tu cuenta y tus datos: perfil, progreso, resultados de cuestionarios, reflexiones, certificados y ajustes de notificaciones. No se puede deshacer.',
+      'lg':
+          'This permanently deletes your account and your data: profile, progress, quiz scores, reflections, certificates and notification settings. It cannot be undone.',
+      'ur':
+          'اس سے آپ کا اکاؤنٹ اور آپ کا ڈیٹا ہمیشہ کے لیے حذف ہو جائے گا: پروفائل، پیش رفت، کوئز کے نتائج، غور و فکر، سرٹیفکیٹ اور اطلاعات کی ترتیبات۔ اسے واپس نہیں کیا جا سکتا۔',
+    },
+    'khdel003': {
+      'en': 'Delete my account',
+      'es': 'Eliminar mi cuenta',
+      'lg': 'Delete my account',
+      'ur': 'میرا اکاؤنٹ حذف کریں',
+    },
+    'khdel004': {
+      'en': 'Confirm with your password',
+      'es': 'Confirma con tu contraseña',
+      'lg': 'Confirm with your password',
+      'ur': 'اپنے پاس ورڈ سے تصدیق کریں',
+    },
+    'khdel005': {
+      'en': 'Password',
+      'es': 'Contraseña',
+      'lg': 'Password',
+      'ur': 'پاس ورڈ',
+    },
+    'khdel006': {
+      'en': 'That password is not correct. Your account was not deleted.',
+      'es': 'La contraseña no es correcta. Tu cuenta no se eliminó.',
+      'lg': 'That password is not correct. Your account was not deleted.',
+      'ur': 'پاس ورڈ درست نہیں۔ آپ کا اکاؤنٹ حذف نہیں ہوا۔',
+    },
+    'khdel007': {
+      'en':
+          'Your account could not be deleted. Check your connection and try again.',
+      'es':
+          'No se pudo eliminar tu cuenta. Revisa tu conexión e inténtalo de nuevo.',
+      'lg':
+          'Your account could not be deleted. Check your connection and try again.',
+      'ur':
+          'آپ کا اکاؤنٹ حذف نہیں ہو سکا۔ اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔',
+    },
+    'khdel008': {
+      'en': 'Your account and data have been deleted.',
+      'es': 'Tu cuenta y tus datos se han eliminado.',
+      'lg': 'Your account and data have been deleted.',
+      'ur': 'آپ کا اکاؤنٹ اور ڈیٹا حذف کر دیا گیا ہے۔',
+    },
     'khntallw': {
       'en': 'Notifications are on.',
       'es': 'Las notificaciones están activadas.',
