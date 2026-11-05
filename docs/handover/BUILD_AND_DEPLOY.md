@@ -8,7 +8,7 @@ Phase 1 handover, Kingdom Heirs Discipleship app. Written 2 November 2026 from t
 | Android application id | `com.kingdomheirs.discipleship` |
 | iOS bundle id | `com.kingdomheirsfoundation.kingdomheirs` (existing App Store Connect record, Apple ID 6807216829) |
 | Firebase / Google Cloud project | `kingdom-heirs-discipleshipapp`, region `us-central1` |
-| Version | Release candidate **1.0.6 (8)**. `pubspec.yaml` still says `1.0.0+1`, so pass `--build-name 1.0.6 --build-number 8` (raise the number for every upload) |
+| Version | Release candidate **1.0.6 (9)**. `pubspec.yaml` still says `1.0.0+1`, so pass `--build-name 1.0.6 --build-number 9` (raise the number for every upload) |
 | Repository | `github.com/AyeshaaKhan938/flutter-flow` (public; must move to Kingdom Heirs, see [OWNERSHIP_CHECKLIST.md](OWNERSHIP_CHECKLIST.md)) |
 
 ## 1. Prerequisites
@@ -125,7 +125,7 @@ Play Console setup and Internal Testing steps:
    and that the APNs key is uploaded in Firebase → Project settings → Cloud Messaging.
 3. Build:
    ```sh
-   flutter build ipa --release --build-name 1.0.6 --build-number 8
+   flutter build ipa --release --build-name 1.0.6 --build-number 9
    ```
    Output: `build/ios/ipa/*.ipa`.
 4. Upload with Apple's **Transporter** app, or archive in Xcode (Product → Archive →
@@ -159,8 +159,8 @@ Functions in this repo (all deployed as of 2 November 2026):
 |---|---|---|
 | `addFcmToken` | callable | Saves a device's push token |
 | `sendPushNotificationsTrigger` | Firestore trigger on `ff_push_notifications` | Sends a push (with language, pathway and timezone targeting) |
-| `sendScheduledPushNotifications` | scheduled, hourly | Sends scheduled pushes |
-| `onUserDeleted` | Auth trigger | Deletes `users/{uid}` when an account is deleted |
+| `sendScheduledPushNotifications` | scheduled, every 5 minutes | Sends scheduled pushes |
+| `onUserDeleted` | Auth trigger | Deletes `users/{uid}`, its subcollections and the member's other records when an account is deleted |
 | `getBiblePassage` | callable | Fetches Scripture from API.Bible using `API_BIBLE_KEY` |
 | `importContentCsv` | callable | CMS import (CSV, Excel, ZIP) |
 | `translateTexts` | callable | Machine translation via Google Cloud Translation |
@@ -169,6 +169,7 @@ Functions in this repo (all deployed as of 2 November 2026):
 | `setResearchSourceStatus` | callable, admin only | Approves or withdraws a library source |
 | `askConfig` | callable, admin only | Reads or changes `config/askKingdomHeirs` |
 | `reportAskIssue` | callable | Saves a member's "Report an issue" to `askReports` |
+| `deleteMyAccount` | callable | Profile → Delete my account: removes the member's data and Authentication account |
 | `onAskBudgetAlert` | Pub/Sub `ask-kingdom-heirs-budget` | Pauses Ask when the budget is reached |
 
 **Other functions in the same project are not in this repo.** The Firebase project also
@@ -184,7 +185,8 @@ Deploying by name, as above, never touches them. Do **not** run a bare
 Functions on 30 October 2026. They were still deployed on 5 November 2026, but they cannot
 be changed or redeployed on Node 20, and Google may stop running them. Recovering their
 source and moving them to Node 22 (or replacing them with functions in this repo) is the
-most important follow-up after Phase 1.
+most important follow-up after Phase 1. Recovery investigation, dependency inventory and
+migration plan: [NODE20_FUNCTIONS.md](NODE20_FUNCTIONS.md).
 
 ## 7. Firestore rules and indexes
 

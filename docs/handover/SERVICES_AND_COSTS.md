@@ -16,7 +16,7 @@ actual spend in Google Cloud console → Billing.
 | Firebase Authentication | Email and password sign-in | `lib/auth/firebase_auth/` | Free for email sign-in |
 | Cloud Firestore | All content and member data (pathways, lessons, progress, reflections, certificates, imports, Ask library and settings) | `lib/backend/`, `firebase/firestore.rules` | Pay-as-you-go; free daily quota. Backups and point-in-time recovery cost extra if turned on |
 | Cloud Functions | Server logic: Bible, import, translation, push, Ask Kingdom Heirs, plus 22 older functions not in this repo | `firebase/functions/`, `lib/backend/api_requests/api_calls.dart` | Pay-as-you-go; free monthly quota |
-| Cloud Scheduler | Runs `sendScheduledPushNotifications` hourly | `firebase/functions/index.js:130` | Pay-as-you-go; a few jobs are free per billing account |
+| Cloud Scheduler | Runs `sendScheduledPushNotifications` every 5 minutes | `firebase/functions/index.js:130` | Pay-as-you-go; a few jobs are free per billing account |
 | Pub/Sub | Budget alert topic `ask-kingdom-heirs-budget` → `onAskBudgetAlert` | `firebase/functions/research_library.js:799` | Pay-as-you-go; negligible |
 | Firebase Cloud Messaging | Push notifications | `lib/backend/push_notifications/`, `firebase/functions/index.js` | Free |
 | Cloud Storage for Firebase | Branding photos and the country/city list the app downloads (bucket `kingdom-heirs-discipleshipapp.firebasestorage.app`) | `lib/today_page/today_page_widget.dart:524`, `lib/custom_code/widgets/country_city_picker.dart:16` | Pay-as-you-go; small |

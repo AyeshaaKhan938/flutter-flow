@@ -1,0 +1,460 @@
+{
+  "generated": "2026-11-05 13:13 UTC",
+  "counts": {
+    "pathways": 13,
+    "lessons": 446,
+    "quizzes": 78
+  },
+  "expected": {
+    "pathways": 13,
+    "lessons": 446,
+    "quizzes": 78
+  },
+  "foundations": {
+    "kingdom-heirs-foundations": 20
+  },
+  "comeAndSeeQuizUnlocks": [
+    [
+      1,
+      "LESSON-COME-007",
+      7
+    ],
+    [
+      2,
+      "LESSON-COME-014",
+      14
+    ]
+  ],
+  "findings": [
+    {
+      "severity": "warning",
+      "where": "pathways/a-letter-to-my-catholic-family/lessons/KH-CF-L019",
+      "issue": "body may be truncated (ends: …'onclusion\\nA Letter to My Catholic Family')"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/counterfeit-gospels/lessons/KH-CG-L001",
+      "issue": "empty English prayer"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/counterfeit-gospels/lessons/KH-CG-L003",
+      "issue": "empty English prayer"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/counterfeit-gospels/lessons/KH-CG-L005",
+      "issue": "empty English prayer"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/counterfeit-gospels/lessons/KH-CG-L007",
+      "issue": "empty English prayer"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/counterfeit-gospels/lessons/KH-CG-L009",
+      "issue": "empty English prayer"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/counterfeit-gospels/lessons/KH-CG-L011",
+      "issue": "empty English prayer"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/counterfeit-gospels/lessons/KH-CG-L013",
+      "issue": "empty English prayer"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/counterfeit-gospels/lessons/KH-CG-L015",
+      "issue": "empty English prayer"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/counterfeit-gospels/lessons/KH-CG-L016",
+      "issue": "empty English prayer"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/counterfeit-gospels/lessons/KH-CG-L018",
+      "issue": "empty English prayer"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/counterfeit-gospels/lessons/KH-CG-L019",
+      "issue": "empty English prayer"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/counterfeit-gospels/lessons/KH-CG-L020",
+      "issue": "empty English prayer"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/counterfeit-gospels/lessons/KH-CG-L021",
+      "issue": "empty English prayer"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/counterfeit-gospels/lessons/KH-CG-L022",
+      "issue": "empty English prayer"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/counterfeit-gospels/lessons/KH-CG-L024",
+      "issue": "empty English prayer"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/counterfeit-gospels/lessons/KH-CG-L025",
+      "issue": "empty English prayer"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/counterfeit-gospels/lessons/KH-CG-L026",
+      "issue": "empty English prayer"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/counterfeit-gospels/lessons/KH-CG-L028",
+      "issue": "empty English prayer"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/counterfeit-gospels/lessons/KH-CG-L030",
+      "issue": "empty English prayer"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/counterfeit-gospels/lessons/KH-CG-L034",
+      "issue": "empty English prayer"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/counterfeit-gospels/lessons/KH-CG-L036",
+      "issue": "empty English prayer"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/counterfeit-gospels/lessons/KH-CG-L038",
+      "issue": "empty English prayer"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/inner-healing-and-deliverance/lessons/IHD-L001",
+      "issue": "body may be truncated (ends: …'## A Kingdom Heirs Discipleship Resource')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/inner-healing-and-deliverance/lessons/IHD-L002",
+      "issue": "body may be truncated (ends: …'## A Kingdom Heirs Discipleship Resource')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/inner-healing-and-deliverance/lessons/IHD-L003",
+      "issue": "body may be truncated (ends: …'## A Kingdom Heirs Discipleship Resource')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/inner-healing-and-deliverance/lessons/IHD-L004",
+      "issue": "body may be truncated (ends: …'## A Kingdom Heirs Discipleship Resource')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/inner-healing-and-deliverance/lessons/IHD-L005",
+      "issue": "body may be truncated (ends: …'## A Kingdom Heirs Discipleship Resource')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/inner-healing-and-deliverance/lessons/IHD-L006",
+      "issue": "body may be truncated (ends: …'## A Kingdom Heirs Discipleship Resource')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/inner-healing-and-deliverance/lessons/IHD-L007",
+      "issue": "body may be truncated (ends: …'## A Kingdom Heirs Discipleship Resource')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/inner-healing-and-deliverance/lessons/IHD-L008",
+      "issue": "body may be truncated (ends: …'## A Kingdom Heirs Discipleship Resource')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/inner-healing-and-deliverance/lessons/IHD-L009",
+      "issue": "body may be truncated (ends: …'## A Kingdom Heirs Discipleship Resource')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/inner-healing-and-deliverance/lessons/IHD-L010",
+      "issue": "body may be truncated (ends: …'## A Kingdom Heirs Discipleship Resource')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/inner-healing-and-deliverance/lessons/IHD-L011",
+      "issue": "body may be truncated (ends: …'## A Kingdom Heirs Discipleship Resource')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/inner-healing-and-deliverance/lessons/IHD-L012",
+      "issue": "body may be truncated (ends: …'## A Kingdom Heirs Discipleship Resource')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/inner-healing-and-deliverance/lessons/IHD-L013",
+      "issue": "body may be truncated (ends: …'## A Kingdom Heirs Discipleship Resource')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/inner-healing-and-deliverance/lessons/IHD-L014",
+      "issue": "body may be truncated (ends: …'## A Kingdom Heirs Discipleship Resource')"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/joseph-the-dreamer-and-the-holy-spirit/lessons/KH-JD-L001",
+      "issue": "empty scriptureRef"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/joseph-the-dreamer-and-the-holy-spirit/lessons/KH-JD-L008",
+      "issue": "empty scriptureRef"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/joseph-the-dreamer-and-the-holy-spirit/lessons/KH-JD-L015",
+      "issue": "empty scriptureRef"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/joseph-the-dreamer-and-the-holy-spirit/lessons/KH-JD-L015",
+      "issue": "body may be truncated (ends: …'Spirit opens doors that no man can close')"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/joseph-the-dreamer-and-the-holy-spirit/lessons/KH-JD-L018",
+      "issue": "empty scriptureRef"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/joseph-the-dreamer-and-the-holy-spirit/lessons/KH-JD-L018",
+      "issue": "body may be truncated (ends: …' His promptings and acts with discipline')"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/joseph-the-dreamer-and-the-holy-spirit/lessons/KH-JD-L022",
+      "issue": "empty scriptureRef"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/journey-into-discipleship-evangelism/lessons/KH-JDE-L036",
+      "issue": "empty English prayer"
+    },
+    {
+      "severity": "error",
+      "where": "pathways/shepherds-lantern-allegory/lessons/KH-SL-L001",
+      "issue": "empty English reflectionPrompt"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L001",
+      "issue": "body may be truncated (ends: …'aped the psalmist, the king, and the man')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L002",
+      "issue": "body may be truncated (ends: …':8 — Power comes through the Holy Spirit')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L003",
+      "issue": "body may be truncated (ends: …'EW 18:6 — Responsibility toward children')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L004",
+      "issue": "body may be truncated (ends: …'LESIASTES 10:18 — Neglect leads to decay')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L005",
+      "issue": "body may be truncated (ends: …'fession and accountability bring healing')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L006",
+      "issue": "body may be truncated (ends: …' — Walking in the light brings cleansing')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L007",
+      "issue": "body may be truncated (ends: …' ● EZEKIEL 36:26 — God gives a new heart')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L008",
+      "issue": "body may be truncated (ends: …'ALM 66:18 — The danger of cherishing sin')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L009",
+      "issue": "body may be truncated (ends: …'12:9–10 — Strength perfected in weakness')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L010",
+      "issue": "body may be truncated (ends: …'hough he falls, he will not be cast down')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L011",
+      "issue": "body may be truncated (ends: …' Worship keeps us filled with the Spirit')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L012",
+      "issue": "body may be truncated (ends: …'ETER 5:10 — God restores after suffering')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L013",
+      "issue": "body may be truncated (ends: …'LM 75:6–7 — God alone exalts and humbles')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L014",
+      "issue": "body may be truncated (ends: …'Y 2:2 — Entrusting truth to faithful men')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L015",
+      "issue": "body may be truncated (ends: …'–2 — Endurance in the race set before us')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L016",
+      "issue": "body may be truncated (ends: …'PIANS 1:6 — God completes what He begins')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L017",
+      "issue": "body may be truncated (ends: …' 41:10 — God upholds those who trust Him')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L018",
+      "issue": "body may be truncated (ends: …'1 PETER 2:23 — Entrusting justice to God')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L019",
+      "issue": "body may be truncated (ends: …'nner renewal through eternal perspective')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L020",
+      "issue": "body may be truncated (ends: …'e Good Shepherd holds His sheep securely')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L021",
+      "issue": "body may be truncated (ends: …' JAMES 1:5 — God gives wisdom generously')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L022",
+      "issue": "body may be truncated (ends: …' — Suffering produces character and hope')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L023",
+      "issue": "body may be truncated (ends: …'Desire gives birth to sin when unchecked')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L024",
+      "issue": "body may be truncated (ends: …'N 5:19 — Jesus’ submission to the Father')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L025",
+      "issue": "body may be truncated (ends: …'S 4:6–10 — God gives grace to the humble')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L026",
+      "issue": "body may be truncated (ends: …'EWS 13:8 — God’s unchanging faithfulness')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L027",
+      "issue": "body may be truncated (ends: …'is responses, and leaned more heavily on')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L028",
+      "issue": "body may be truncated (ends: …'fe ➢ 1 JOHN 3:2–3 — We shall be like Him')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-heart-of-a-king/lessons/KH-HK-L029",
+      "issue": "body may be truncated (ends: …'➢ 2 TIMOTHY 4:7–8 — Finishing with faith')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/the-new-man/lessons/KH-NM-L047",
+      "issue": "body may be truncated (ends: …'________________________________________')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/who-is-isa-al-masih/lessons/KH-ISA-L001",
+      "issue": "body may be truncated (ends: …'Koran.\\n\\nPART I | A RESPECTFUL INVITATION')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/who-is-isa-al-masih/lessons/KH-ISA-L002",
+      "issue": "body may be truncated (ends: …'Koran.\\n\\nPART I | A RESPECTFUL INVITATION')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/who-is-isa-al-masih/lessons/KH-ISA-L003",
+      "issue": "body may be truncated (ends: …' Koran.\\n\\nPART II | HEARING THE WITNESSES')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/who-is-isa-al-masih/lessons/KH-ISA-L015",
+      "issue": "body may be truncated (ends: …' life.\\n\\nPART IV | QUESTIONS OF THE HEART')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/who-is-isa-al-masih/lessons/KH-ISA-L016",
+      "issue": "body may be truncated (ends: …' sent.\\n\\nPART IV | QUESTIONS OF THE HEART')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/who-is-isa-al-masih/lessons/KH-ISA-L017",
+      "issue": "body may be truncated (ends: …'ldren.\\n\\nPART IV | QUESTIONS OF THE HEART')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/who-is-isa-al-masih/lessons/KH-ISA-L018",
+      "issue": "body may be truncated (ends: …'afety.\\n\\nPART IV | QUESTIONS OF THE HEART')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/who-is-isa-al-masih/lessons/KH-ISA-L019",
+      "issue": "body may be truncated (ends: …'denial of Yeshua.\\n\\nPART V | COME AND SEE')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/who-is-isa-al-masih/lessons/KH-ISA-L020",
+      "issue": "body may be truncated (ends: …'scious community.\\n\\nPART V | COME AND SEE')"
+    },
+    {
+      "severity": "warning",
+      "where": "pathways/who-is-isa-al-masih/lessons/KH-ISA-L021",
+      "issue": "body may be truncated (ends: …'rter invitation.\\n\\nWHO IS ISA AL-MASIH? |')"
+    }
+  ]
+}

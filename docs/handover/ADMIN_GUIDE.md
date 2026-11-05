@@ -130,7 +130,7 @@ languages for review (section 7).
   2. Optionally choose **Devices** (iPhone or Android), **Language** and **Pathway**.
      Leave them on "All" to reach every member who allowed notifications.
   3. Choose **Send now**, or **Schedule…** and pick a date and time. Scheduled
-     notifications go out within an hour after that time.
+     notifications go out within about 5 minutes of that time.
   4. Tap **Send notification** and confirm.
   **Recent notifications** shows each one with its status and how many devices it reached.
   Tapping a notification opens the app on the Today page.
