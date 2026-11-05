@@ -129,13 +129,16 @@ class _NotificationPermissionPrimerPageWidgetState
                   onPressed: () async {
                     _model.notifPermissionResult =
                         await actions.requestNotificationPermission();
+                    final allowed = ['authorized', 'provisional']
+                        .contains(_model.notifPermissionResult);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          'Notification preference updated.',
+                          FFLocalizations.of(context)
+                              .getText(allowed ? 'khntallw' : 'khntdeny'),
                           style: TextStyle(),
                         ),
-                        duration: Duration(milliseconds: 4000),
+                        duration: Duration(milliseconds: 6000),
                       ),
                     );
 

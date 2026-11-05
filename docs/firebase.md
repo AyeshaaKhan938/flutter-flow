@@ -156,7 +156,7 @@ generated push and auth functions:
 |---|---|---|
 | `addFcmToken` | callable | Saves the device token to `users/{uid}/fcm_tokens`, removing the same token from other users |
 | `sendPushNotificationsTrigger` | Firestore onCreate `ff_push_notifications/{id}` | Sends immediately unless `scheduled_time` is set |
-| `sendScheduledPushNotifications` | Pub/Sub, every 60 min | Sends docs whose `scheduled_time` fell in the last hour |
+| `sendScheduledPushNotifications` | Pub/Sub, every 5 min | Sends docs whose `scheduled_time` fell in the last 5 minutes |
 | `onUserDeleted` | Auth user delete | Deletes `users/{uid}` (other user data such as reflections is **not** deleted) |
 
 `firebase/functions/api_manager.js` is FlutterFlow's private-API proxy, and its call map is

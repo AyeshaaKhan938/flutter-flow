@@ -5,7 +5,8 @@ admin.initializeApp();
 
 const kFcmTokensCollection = "fcm_tokens";
 const kPushNotificationsCollection = "ff_push_notifications";
-const kSchedulerIntervalMinutes = 60;
+// Scheduled notifications go out within this many minutes of their time.
+const kSchedulerIntervalMinutes = 5;
 const firestore = admin.firestore();
 
 const kPushNotificationRuntimeOpts = {

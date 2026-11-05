@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
+import '/backend/push_notifications/push_notifications_util.dart';
+
 Future<String> requestNotificationPermission() async {
   if (kIsWeb) {
     return 'web_skipped';
@@ -21,5 +23,12 @@ Future<String> requestNotificationPermission() async {
     badge: true,
     sound: true,
   );
+  if (notificationsAllowed(settings.authorizationStatus)) {
+    try {
+      await registerCurrentDeviceToken();
+    } catch (_) {
+      // Registered again on the next sign-in or token refresh.
+    }
+  }
   return settings.authorizationStatus.name;
 }

@@ -6,6 +6,7 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '../../flutter_flow/flutter_flow_util.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 
 
@@ -30,11 +31,53 @@ class _PushNotificationsHandlerState extends State<PushNotificationsHandler> {
       return;
     }
 
+    // iOS shows the system banner while the app is open; Android does not,
+    // so an in-app banner is shown there instead.
+    await FirebaseMessaging.instance
+        .setForegroundNotificationPresentationOptions(
+            alert: true, badge: true, sound: true);
+    FirebaseMessaging.onMessage.listen(_showForegroundNotification);
+
     final notification = await FirebaseMessaging.instance.getInitialMessage();
     if (notification != null) {
       await _handlePushNotification(notification);
     }
     FirebaseMessaging.onMessageOpenedApp.listen(_handlePushNotification);
+  }
+
+  void _showForegroundNotification(RemoteMessage message) {
+    final notification = message.notification;
+    if (notification == null ||
+        defaultTargetPlatform == TargetPlatform.iOS) {
+      return;
+    }
+    final ctx = appNavigatorKey.currentContext ?? context;
+    final messenger = ScaffoldMessenger.maybeOf(ctx);
+    if (messenger == null) {
+      return;
+    }
+    final title = notification.title ?? '';
+    final body = notification.body ?? '';
+    messenger.showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 8),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (title.isNotEmpty)
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+            if (body.isNotEmpty) Text(body),
+          ],
+        ),
+        action: (message.data['initialPageName'] ?? '').toString().isEmpty
+            ? null
+            : SnackBarAction(
+                label: FFLocalizations.of(ctx).getText('khntopen'),
+                onPressed: () => _handlePushNotification(message),
+              ),
+      ),
+    );
   }
 
   Future _handlePushNotification(RemoteMessage message) async {

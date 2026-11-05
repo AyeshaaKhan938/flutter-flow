@@ -9,9 +9,11 @@
    device token in `users/{uid}/fcm_tokens/{id}` (`fcm_token`, `device_type`, `created_at`).
 3. To send a notification, write a document to the **`ff_push_notifications`**
    collection. `sendPushNotificationsTrigger` (onCreate) sends it immediately.
-   `sendScheduledPushNotifications` runs every 60 minutes and sends documents whose
-   `scheduled_time` fell in the last hour, so scheduled pushes can arrive up to about an
-   hour late.
+   `sendScheduledPushNotifications` runs every 5 minutes and sends documents whose
+   `scheduled_time` fell in the last 5 minutes, so scheduled pushes arrive within about
+   5 minutes of their time. Local-time sends (`local_send_hour`) reach each time zone
+   within about 5 minutes after the hour; `sent_timezones` is claimed in a transaction,
+   so a zone is never sent twice.
 4. The function writes back `status` (`succeeded` / `failed`), `num_sent`, and `error`.
 5. When a member taps a notification, the app opens `initial_page_name` with
    `parameter_data` (`push_notifications_handler.dart`).

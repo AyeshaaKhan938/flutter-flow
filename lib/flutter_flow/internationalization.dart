@@ -1443,6 +1443,28 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
       'lg': 'Ebibuuzo',
       'ur': 'کوئز',
     },
+    'khntallw': {
+      'en': 'Notifications are on.',
+      'es': 'Las notificaciones están activadas.',
+      'lg': 'Notifications are on.',
+      'ur': 'اطلاعات آن ہیں۔',
+    },
+    'khntdeny': {
+      'en':
+          'Notifications are off. You can turn them on later in your phone\'s Settings.',
+      'es':
+          'Las notificaciones están desactivadas. Puedes activarlas más tarde en los Ajustes del teléfono.',
+      'lg':
+          'Notifications are off. You can turn them on later in your phone\'s Settings.',
+      'ur':
+          'اطلاعات بند ہیں۔ آپ انہیں بعد میں اپنے فون کی سیٹنگز میں آن کر سکتے ہیں۔',
+    },
+    'khntopen': {
+      'en': 'Open',
+      'es': 'Abrir',
+      'lg': 'Open',
+      'ur': 'کھولیں',
+    },
     'khqzlck1': {
       'en': 'This quiz opens after you complete Lesson {n}.',
       'es': 'Este cuestionario se abre cuando completes la lección {n}.',

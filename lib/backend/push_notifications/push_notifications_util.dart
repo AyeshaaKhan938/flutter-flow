@@ -15,6 +15,31 @@ class UserTokenInfo {
   final String fcmToken;
 }
 
+/// Authorized, or iOS provisional (delivered quietly to Notification Centre).
+bool notificationsAllowed(AuthorizationStatus status) =>
+    status == AuthorizationStatus.authorized ||
+    status == AuthorizationStatus.provisional;
+
+/// Registers this device for the signed-in member. Used after the member
+/// allows notifications on the permission screen, since the sign-in stream
+/// has already run by then.
+Future<void> registerCurrentDeviceToken() async {
+  final userPath = currentUserReference?.path;
+  if (kIsWeb || userPath == null) {
+    return;
+  }
+  final token = await FirebaseMessaging.instance.getToken();
+  if (token == null || token.isEmpty) {
+    return;
+  }
+  await makeCloudCall('addFcmToken', {
+    'userDocPath': userPath,
+    'fcmToken': token,
+    'deviceType':
+        defaultTargetPlatform == TargetPlatform.iOS ? 'iOS' : 'Android',
+  });
+}
+
 Stream<UserTokenInfo> getFcmTokenStream(String userPath) => Stream.value(
         !kIsWeb &&
             (defaultTargetPlatform == TargetPlatform.iOS ||
@@ -24,7 +49,7 @@ Stream<UserTokenInfo> getFcmTokenStream(String userPath) => Stream.value(
       final settings = shouldRequestPermission
           ? await FirebaseMessaging.instance.requestPermission()
           : await FirebaseMessaging.instance.getNotificationSettings();
-      return settings.authorizationStatus == AuthorizationStatus.authorized
+      return notificationsAllowed(settings.authorizationStatus)
           ? FirebaseMessaging.instance.getToken()
           : null;
     })

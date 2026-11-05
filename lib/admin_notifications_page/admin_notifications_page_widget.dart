@@ -26,7 +26,7 @@ const _kLanguages = {
 /// Writes a document to `ff_push_notifications`. The
 /// `sendPushNotificationsTrigger` function sends it immediately, or
 /// `sendScheduledPushNotifications` sends it at `scheduled_time` (checked
-/// every 60 minutes). Optional targeting by device, language and pathway
+/// every 5 minutes). Optional targeting by device, language and pathway
 /// uses the fields documented in docs/notifications-and-assistant.md.
 ///
 /// Gated on `users/{uid}.role` in [kContentAdminRoles]; Firestore rules
@@ -343,7 +343,7 @@ class _AdminNotificationsPageWidgetState
         if (_model.scheduledTime != null) ...[
           const SizedBox(height: 4.0),
           Text(
-            'Scheduled notifications go out within an hour after the '
+            'Scheduled notifications go out within about 5 minutes of the '
             'chosen time.',
             style: hint,
           ),
