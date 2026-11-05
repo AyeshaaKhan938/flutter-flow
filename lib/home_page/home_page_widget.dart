@@ -31,6 +31,15 @@ const _kLocked = Color(0xFFE6E2DA);
 /// Kingdom Heirs' Givebutter donation page (linked from their website).
 const _kGivingUrl = 'https://givebutter.com/kingdom-heirs-foundation-100-pzxizs';
 
+/// The Givebutter page with the member's choice pre-selected. Givebutter
+/// reads `amount` (dollars) and `frequency`; a one-time gift sends no
+/// frequency. Both must match options enabled on the campaign.
+String givingUrl(int amount, {required bool monthly}) => Uri.parse(_kGivingUrl)
+    .replace(queryParameters: {
+      'amount': '$amount',
+      if (monthly) 'frequency': 'monthly',
+    }).toString();
+
 /// Kingdom Heirs' YouTube channel (teaching library). Teachings open in
 /// YouTube or the browser; the app never hosts or downloads video.
 const _kYouTubeUrl = 'https://youtube.com/@kingdomheirsco';
@@ -768,7 +777,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
           SizedBox(
             width: double.infinity,
             child: TextButton.icon(
-              onPressed: () => launchURL(_kGivingUrl),
+              onPressed: () =>
+                  launchURL(givingUrl(_giftAmount, monthly: _giftMonthly)),
               style: TextButton.styleFrom(
                 backgroundColor: _kNavy,
                 foregroundColor: Colors.white,
