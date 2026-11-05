@@ -1443,6 +1443,18 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
       'lg': 'Ebibuuzo',
       'ur': 'کوئز',
     },
+    'khqzlck1': {
+      'en': 'This quiz opens after you complete Lesson {n}.',
+      'es': 'Este cuestionario se abre cuando completes la lección {n}.',
+      'lg': 'This quiz opens after you complete Lesson {n}.',
+      'ur': 'یہ کوئز سبق {n} مکمل کرنے کے بعد کھلے گا۔',
+    },
+    'khqzlck2': {
+      'en': 'Quiz locked',
+      'es': 'Cuestionario bloqueado',
+      'lg': 'Quiz locked',
+      'ur': 'کوئز بند ہے',
+    },
     'tk5n04z3': {
       'en': 'Quiz 1 after Lesson 7 · Quiz 2 after Lesson 14 · 80% to pass',
       'es':

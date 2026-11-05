@@ -121,4 +121,13 @@ void main() {
           contains('certifies that Joel is commissioned'));
     });
   });
+
+  group('percentage-only attempts', () {
+    test('79.9% fails and 80% passes', () {
+      expect(scoreFromPercentage(79.9, 10).passes(80), isFalse);
+      expect(scoreFromPercentage(80, 10).passes(80), isTrue);
+      expect(scoreFromPercentage(100, 10).correct, 10);
+      expect(scoreFromPercentage(70, 10).correct, 7);
+    });
+  });
 }

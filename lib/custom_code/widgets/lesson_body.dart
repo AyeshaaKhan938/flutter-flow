@@ -144,6 +144,17 @@ String _joinLines(Iterable<String> lines) {
   return out.toString();
 }
 
+/// Section text (Reflection, Application, Prayer) with PDF hard wraps
+/// joined. Blank lines still separate paragraphs.
+String reflowLessonText(String raw) => raw
+    .replaceAll('\r\n', '\n')
+    .replaceAll('\r', '\n')
+    .trim()
+    .split(RegExp(r'\n\s*\n'))
+    .map((p) => _joinLines(p.split('\n')))
+    .where((p) => p.isNotEmpty)
+    .join('\n\n');
+
 /// A short stand-alone line written as a title: a section heading.
 bool isLessonHeading(String s) {
   final t = s.trim();
@@ -436,7 +447,7 @@ class LessonSection extends StatelessWidget {
           if (text.trim().isNotEmpty) ...[
             const SizedBox(height: 10.0),
             Text(
-              text.trim(),
+              reflowLessonText(text),
               style: GoogleFonts.lora(
                 fontSize: 17.0,
                 height: 1.6,

@@ -186,6 +186,17 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
     return null;
   }
 
+  /// Come & See quizzes open only after their gating lesson is complete.
+  static const _kComeAndSeeQuizLessons = {
+    'come-and-see-quiz-1': 'LESSON-COME-007',
+    'come-and-see-quiz-2': 'LESSON-COME-014',
+  };
+
+  bool _quizUnlocked(String quizId) =>
+      functions.isLessonComplete(
+          _model.completedLessonsCsv, _kComeAndSeeQuizLessons[quizId]!) ??
+      false;
+
   bool get _isLocked =>
       (_status?.isCore ?? false) && !(_status?.unlocked ?? true);
 
@@ -700,21 +711,26 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
                               ),
                         ),
                         FFButtonWidget(
-                          onPressed: () async {
-                            context.pushNamed(
-                              QuizPageWidget.routeName,
-                              queryParameters: {
-                                'pathwayId': serializeParam(
-                                  widget.pathwayId,
-                                  ParamType.String,
-                                ),
-                                'quizId': serializeParam(
-                                  'come-and-see-quiz-1',
-                                  ParamType.String,
-                                ),
-                              }.withoutNulls,
-                            );
-                          },
+                          onPressed: !_quizUnlocked('come-and-see-quiz-1')
+                              ? null
+                              : () async {
+                                  context.pushNamed(
+                                    QuizPageWidget.routeName,
+                                    queryParameters: {
+                                      'pathwayId': serializeParam(
+                                        widget.pathwayId,
+                                        ParamType.String,
+                                      ),
+                                      'quizId': serializeParam(
+                                        'come-and-see-quiz-1',
+                                        ParamType.String,
+                                      ),
+                                    }.withoutNulls,
+                                  );
+                                },
+                          icon: _quizUnlocked('come-and-see-quiz-1')
+                              ? null
+                              : Icon(Icons.lock_outline_rounded, size: 18.0),
                           text: FFLocalizations.of(context).getText(
                             'cp7vkmln' /* Take Come & See Quiz 1 */,
                           ),
@@ -728,25 +744,34 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
                             textStyle: TextStyle(
                               color: FlutterFlowTheme.of(context).primaryText,
                             ),
+                            disabledColor:
+                                FlutterFlowTheme.of(context).alternate,
+                            disabledTextColor:
+                                FlutterFlowTheme.of(context).secondaryText,
                             borderRadius: BorderRadius.circular(12.0),
                           ),
                         ),
                         FFButtonWidget(
-                          onPressed: () async {
-                            context.pushNamed(
-                              QuizPageWidget.routeName,
-                              queryParameters: {
-                                'pathwayId': serializeParam(
-                                  widget.pathwayId,
-                                  ParamType.String,
-                                ),
-                                'quizId': serializeParam(
-                                  'come-and-see-quiz-2',
-                                  ParamType.String,
-                                ),
-                              }.withoutNulls,
-                            );
-                          },
+                          onPressed: !_quizUnlocked('come-and-see-quiz-2')
+                              ? null
+                              : () async {
+                                  context.pushNamed(
+                                    QuizPageWidget.routeName,
+                                    queryParameters: {
+                                      'pathwayId': serializeParam(
+                                        widget.pathwayId,
+                                        ParamType.String,
+                                      ),
+                                      'quizId': serializeParam(
+                                        'come-and-see-quiz-2',
+                                        ParamType.String,
+                                      ),
+                                    }.withoutNulls,
+                                  );
+                                },
+                          icon: _quizUnlocked('come-and-see-quiz-2')
+                              ? null
+                              : Icon(Icons.lock_outline_rounded, size: 18.0),
                           text: FFLocalizations.of(context).getText(
                             'm9uk4ao4' /* Take Come & See Quiz 2 */,
                           ),
@@ -760,6 +785,10 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
                             textStyle: TextStyle(
                               color: FlutterFlowTheme.of(context).primaryText,
                             ),
+                            disabledColor:
+                                FlutterFlowTheme.of(context).alternate,
+                            disabledTextColor:
+                                FlutterFlowTheme.of(context).secondaryText,
                             borderRadius: BorderRadius.circular(12.0),
                           ),
                         ),

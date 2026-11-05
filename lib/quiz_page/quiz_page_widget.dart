@@ -8,6 +8,7 @@ import '/backend/schema/structs/index.dart';
 import '/custom_code/actions/index.dart' as actions;
 import '/custom_code/offline_submissions.dart';
 import '/custom_code/pathway_progression.dart';
+import '/flutter_flow/custom_functions.dart' as functions;
 import '/index.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -42,6 +43,93 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
+  /// Come & See quizzes whose gating lesson is not in the CMS quiz record.
+  static const _kComeAndSeeQuizLessons = {
+    'come-and-see-quiz-1': 'LESSON-COME-007',
+    'come-and-see-quiz-2': 'LESSON-COME-014',
+  };
+
+  /// A quiz opens only after its gating lesson is complete: on the server,
+  /// in the saved local progress, or queued offline. Otherwise explains why
+  /// and leaves the page.
+  Future<bool> _gatingLessonComplete() async {
+    var lessonId = _kComeAndSeeQuizLessons[widget.quizId];
+    if (lessonId == null && (widget.quizId ?? '').isNotEmpty) {
+      try {
+        final quiz = await queryQuizzesRecordOnce(
+          queryBuilder: (q) => q.where('stableId', isEqualTo: widget.quizId),
+          singleRecord: true,
+        );
+        lessonId = quiz.firstOrNull?.lessonId;
+      } catch (_) {
+        lessonId = null; // Offline without a cached quiz record.
+      }
+    }
+    if (lessonId == null || lessonId.isEmpty) {
+      return true;
+    }
+
+    final done = <String>[FFAppState().localProgressCsv];
+    try {
+      final progress = await GetPathwayProgressCall.call(
+        authToken: currentJwtToken,
+        pathwayId: widget.pathwayId,
+      );
+      if (progress.succeeded) {
+        done.add(PathwayProgressResponseStruct.maybeFromMap(progress.jsonBody)
+                ?.completedLessonsCsv ??
+            '');
+      }
+    } catch (_) {}
+    final pending = FFAppState().pendingOfflineWrites;
+    if (pending is Map) {
+      for (final item in (pending['progress'] as List? ?? const [])) {
+        if (item is Map && item['userId'] == currentUserUid) {
+          done.addAll((item['completedLessons'] as List? ?? const [])
+              .map((e) => '$e'));
+        }
+      }
+    }
+    if (functions.isLessonComplete(done.join(','), lessonId) ?? false) {
+      return true;
+    }
+    if (!mounted) {
+      return false;
+    }
+
+    int? lessonNumber;
+    try {
+      final lesson = await queryLessonsRecordOnce(
+        queryBuilder: (q) => q.where('stableId', isEqualTo: lessonId),
+        singleRecord: true,
+      );
+      lessonNumber = lesson.firstOrNull?.dayNumber;
+    } catch (_) {}
+    lessonNumber ??= int.tryParse(RegExp(r'(\d+)$').firstMatch(lessonId)?.group(1) ?? '');
+    if (!mounted) {
+      return false;
+    }
+    await showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(FFLocalizations.of(context).getText('khqzlck2')),
+        content: Text(FFLocalizations.of(context)
+            .getText('khqzlck1')
+            .replaceAll('{n}', '${lessonNumber ?? ''}')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(MaterialLocalizations.of(context).okButtonLabel),
+          ),
+        ],
+      ),
+    );
+    if (mounted) {
+      context.safePop();
+    }
+    return false;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -49,6 +137,9 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
 
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
+      if (!await _gatingLessonComplete()) {
+        return;
+      }
       _model.quizLangProfileResult = await GetUserProfileV3Call.call(
         authToken: currentJwtToken,
       );

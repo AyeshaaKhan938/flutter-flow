@@ -28,6 +28,16 @@ void main() {
     expect(_blockWords(blocks).contains('30'), isFalse);
   });
 
+  test('section text joins PDF line breaks and keeps paragraphs', () {
+    const prayer = 'Father, reveal Yourself through Your Son. Guard\n'
+        'my heart from deception, pride, and self-\n'
+        'reliance.\n\n'
+        'In Jesus\' name, Amen.';
+    expect(reflowLessonText(prayer),
+        'Father, reveal Yourself through Your Son. Guard my heart from '
+        'deception, pride, and self-reliance.\n\nIn Jesus\' name, Amen.');
+  });
+
   test('stand-alone title lines become headings', () {
     final blocks = parseLessonText('The Invitation Has Reached You\n\n'
         'Every human soul is searching. It does not matter where you were born.\n\n'

@@ -65,6 +65,13 @@ int passingScoreFor(PathwaysRecord pathway) {
   return v != null && v > 0 && v <= 100 ? v : kDefaultPassingScore;
 }
 
+/// Correct answers implied by a percentage-only attempt, rounded down so
+/// that 79.9% never becomes a pass.
+QuizScore scoreFromPercentage(num percentage, int questions) {
+  final pct = percentage.clamp(0, 100);
+  return QuizScore(((pct * questions / 100) + 1e-9).floor(), questions);
+}
+
 /// A pathway is complete when every published lesson is finished and every
 /// required quiz is passed at [passingScore] (best attempt per quiz), or
 /// when its certificate was already issued.
@@ -693,11 +700,10 @@ class PathwayProgressionService {
         return QuizScore(
             attempt.correctCount.clamp(0, attempt.total), attempt.total);
       }
-      // Percentage only: correct = round(pct x questions / 100). Quizzes
-      // have at most 10 questions in the app, used when the count is unknown.
+      // Percentage only. Quizzes have at most 10 questions in the app,
+      // used when the count is unknown.
       final questions = _questionCount(quiz) > 0 ? _questionCount(quiz) : 10;
-      final pct = attempt.percentage.clamp(0, 100);
-      return QuizScore((pct * questions / 100).round(), questions);
+      return scoreFromPercentage(attempt.percentage, questions);
     } catch (_) {
       return null;
     }
