@@ -1,6 +1,6 @@
 # Phase 1 acceptance checklist
 
-Kingdom Heirs Discipleship app, release candidate 1.0.6 (9), Android and iPhone.
+Kingdom Heirs Discipleship app, release candidate 1.0.6 (10), Android and iPhone.
 
 **How to use it**
 - Run every item on **both** an Android phone and an iPhone (TestFlight), unless the
@@ -10,9 +10,9 @@ Kingdom Heirs Discipleship app, release candidate 1.0.6 (9), Android and iPhone.
   `C3_android.mp4`, and put it in the shared evidence folder.
 - If anything fails, write down the device, the app language, the account used and
   what happened, and attach the screenshot or recording.
-- Use a fresh test member account unless an item asks for an admin account.
+- Use a fresh test member account unless an item asks for an admin account. For B1 (one lesson from every pathway), use a `content_reviewer` account (D6) so all pathways open.
 
-**Changes in 1.0.6 (9)**
+**Changes in 1.0.6 (9) and (10)**
 - Quiz locking is now enforced (C2).
 - Percentage-only quiz scores round down (C4).
 - Reflection, Application and Prayer join broken PDF lines (B2).
@@ -22,6 +22,7 @@ Kingdom Heirs Discipleship app, release candidate 1.0.6 (9), Android and iPhone.
 - The giving card passes the chosen amount and frequency to Givebutter (H2).
 - Offline sync no longer sends duplicates or loses queued work (G3, G4).
 - Profile has Delete my account (L).
+- Build 10: the long blank space above and below lesson text and between lesson cards is removed (D7), and content reviewers can open every pathway (D6).
 
 ---
 
@@ -66,7 +67,8 @@ Kingdom Heirs Discipleship app, release candidate 1.0.6 (9), Android and iPhone.
 | D3 | 12 Steps to Healing and Recovery | Shown as Coming Soon, cannot be opened | S |
 | D4 | Pathway Certificate for each completed pathway | Shows the member's name, pathway, completion date, certificate id and grade. No commissioning wording | S per pathway tested |
 | D5 | Commissioning Certificate after all seven core pathways | Issued only after the seventh; carries the approved commissioning wording and the member's name | S |
-| D6 | A test account with progress set by an admin is acceptable for D4 and D5 | Kingdom Heirs agrees how the full journey is tested | Note |
+| D6 | Review mode: an account with role `content_reviewer` | Every core pathway, lesson and quiz opens without completing the earlier ones; no admin pages. A member account is still locked | S |
+| D7 | No blank space in lessons or lesson lists | The title follows the header image directly; the reflection box and Mark Complete follow the last section; lesson cards in a pathway list are evenly spaced | S per pathway |
 
 ## E. Onboarding recommendation
 
@@ -153,7 +155,7 @@ Use the admin **Notifications** page (Manage Pathways, bell icon).
 
 | Id | Check | Expected |
 |---|---|---|
-| M1 | Android 1.0.6 (9) and TestFlight 1.0.6 (9) pass sections B to L | Kingdom Heirs sign-off |
+| M1 | Android 1.0.6 (10) and TestFlight 1.0.6 (10) pass sections B to L | Kingdom Heirs sign-off |
 | M2 | All source code in a Kingdom Heirs-owned repository | Kingdom Heirs confirms access |
 | M3 | Handover documents delivered: build and deploy, admin guide, services and costs, ownership checklist, this checklist with evidence | Kingdom Heirs confirms |
 | M4 | Legacy Node.js 20 functions: recovery investigation, dependency inventory and migration plan delivered ([NODE20_FUNCTIONS.md](NODE20_FUNCTIONS.md)); decision on path A or B recorded | Kingdom Heirs decision |

@@ -21,6 +21,14 @@ Two places are used:
 `admin` and `ministry_reviewer` currently have **the same powers**, including
 publishing. If reviewers should not publish, a developer must change the code and rules.
 
+**Content reviewers (review mode).** To let someone check every pathway without
+completing the earlier ones, set their `role` to **`content_reviewer`** in the same way.
+They can then open every core pathway, every lesson in any order and every quiz. They
+have no admin rights and cannot change content. Admins and ministry reviewers have review
+mode too. Progress, completion and certificates are still earned the normal way. Remove
+the role (set it to empty) when the review is finished. Ask the member to close and
+reopen the app after a role change.
+
 ## 2. Where the admin pages are
 
 | Page | How to get there | What it is for |
