@@ -1,3 +1,4 @@
+import '/custom_code/review_access.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/api_requests/api_calls.dart';
 import '/backend/backend.dart';
@@ -168,6 +169,9 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
   /// or null when [lesson] may be opened. Members may finish several
   /// lessons a day, but always in order.
   LessonsRecord? _firstIncompleteBefore(LessonsRecord lesson) {
+    if (ReviewAccess.isReviewer) {
+      return null;
+    }
     final earlier = _model.lessonsList
         .where((l) =>
             l.pathwayId == widget.pathwayId &&
@@ -193,9 +197,10 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
   };
 
   bool _quizUnlocked(String quizId) =>
-      functions.isLessonComplete(
-          _model.completedLessonsCsv, _kComeAndSeeQuizLessons[quizId]!) ??
-      false;
+      ReviewAccess.isReviewer ||
+      (functions.isLessonComplete(
+              _model.completedLessonsCsv, _kComeAndSeeQuizLessons[quizId]!) ??
+          false);
 
   bool get _isLocked =>
       (_status?.isCore ?? false) && !(_status?.unlocked ?? true);
@@ -797,7 +802,11 @@ class _PathwayOverviewPageWidgetState extends State<PathwayOverviewPageWidget> {
                   if (_progressionLoaded && !_isLocked)
                     Builder(
                       builder: (context) {
-                        final lessonsListItem = _model.lessonsList.toList()
+                        // Only this pathway's lessons. Hiding the others
+                        // left their separators as blank space in the list.
+                        final lessonsListItem = _model.lessonsList
+                            .where((l) => l.pathwayId == widget.pathwayId)
+                            .toList()
                           ..sort((a, b) => a.dayNumber.compareTo(b.dayNumber));
 
                         return ListView.separated(

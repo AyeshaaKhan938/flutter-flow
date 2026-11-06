@@ -517,7 +517,12 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                   ),
                   Builder(
                     builder: (context) {
-                      final lessonsListItem = _model.lessonsList.toList();
+                      // Only this lesson. Building every lesson and hiding
+                      // the others left their separators as blank space.
+                      final lessonsListItem = _model.lessonsList
+                          .where((l) => l.stableId == widget.lessonId)
+                          .take(1)
+                          .toList();
 
                       return ListView.separated(
                         padding: EdgeInsets.zero,

@@ -7,6 +7,7 @@ import '/auth/firebase_auth/auth_util.dart';
 import '/backend/api_requests/api_calls.dart';
 import '/backend/backend.dart';
 import '/custom_code/certificate_pdf.dart';
+import '/custom_code/review_access.dart';
 import '/custom_code/languages/translation_service.dart';
 
 /// The Kingdom Heirs core journey, in order (pathway `stableId`s). Used when a
@@ -459,12 +460,16 @@ class PathwayProgressionService {
       queryQuizzesRecordOnce().catchError((_) => <QuizzesRecord>[]),
       _issuedCertificates(uid),
       _QuizBestScores.load(uid),
+      ReviewAccess.load(),
     ]);
     final pathways = (results[0] as List).cast<PathwaysRecord>();
     final lessons = (results[1] as List).cast<LessonsRecord>();
     final quizzes = (results[2] as List).cast<QuizzesRecord>();
     final issued = results[3] as Map<String, Map<String, dynamic>>;
     final localBest = results[4] as Map<String, QuizScore>;
+    // Content reviewers can open every core pathway; completion and
+    // certificates are still earned the normal way.
+    final reviewer = results[5] as bool;
 
     // Best scores already recorded on issued certificates.
     final storedBest = <String, QuizScore>{};
@@ -634,7 +639,7 @@ class PathwayProgressionService {
       if (track == 'core') {
         // Unpublished core pathways are skipped: the next published one
         // follows the last published one before it.
-        final unlocked = previousCompleted;
+        final unlocked = previousCompleted || reviewer;
         core.add(PathwayStatus(
           pathway: p,
           track: track,

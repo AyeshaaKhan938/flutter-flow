@@ -8,6 +8,7 @@ import '/backend/schema/structs/index.dart';
 import '/custom_code/actions/index.dart' as actions;
 import '/custom_code/offline_submissions.dart';
 import '/custom_code/pathway_progression.dart';
+import '/custom_code/review_access.dart';
 import '/flutter_flow/custom_functions.dart' as functions;
 import '/index.dart';
 import 'package:flutter/material.dart';
@@ -53,6 +54,9 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
   /// in the saved local progress, or queued offline. Otherwise explains why
   /// and leaves the page.
   Future<bool> _gatingLessonComplete() async {
+    if (await ReviewAccess.load()) {
+      return true;
+    }
     var lessonId = _kComeAndSeeQuizLessons[widget.quizId];
     if (lessonId == null && (widget.quizId ?? '').isNotEmpty) {
       try {
