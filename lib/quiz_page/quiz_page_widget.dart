@@ -8,6 +8,7 @@ import '/backend/schema/structs/index.dart';
 import '/custom_code/actions/index.dart' as actions;
 import '/custom_code/offline_submissions.dart';
 import '/custom_code/pathway_progression.dart';
+import '/custom_code/quiz_review.dart';
 import '/custom_code/review_access.dart';
 import '/flutter_flow/custom_functions.dart' as functions;
 import '/index.dart';
@@ -375,6 +376,7 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
           _model.q10D = QuizResponseStruct.maybeFromMap(
                   (_model.quizResult?.jsonBody ?? ''))
               ?.q10D;
+          _normalizeOptionLabels();
           safeSetState(() {});
           _model.priorAttemptResult = await GetQuizAttemptCall.call(
             authToken: currentJwtToken,
@@ -406,6 +408,7 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
               safeSetState(() {});
               final priorAttempt = QuizAttemptResponseStruct.maybeFromMap(
                   (_model.priorAttemptResult?.jsonBody ?? ''));
+              _serverCorrectCount = priorAttempt?.correctCount;
               // Keep the best score for certificate grades.
               await PathwayProgressionService.recordQuizScore(
                 widget.quizId,
@@ -463,6 +466,54 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
   /// review after a quiz is submitted). Read from Firestore, cached offline.
   List<LocaleTextStruct> _explanations = [];
 
+  /// Correct letter per question from the CMS quiz record. Shown only after
+  /// the quiz is submitted, and only when it agrees with the server's score.
+  List<String> _correctAnswers = [];
+  int? _serverCorrectCount;
+
+  void _normalizeOptionLabels() {
+    _model.q1A = optionWithSingleLabel('A', _model.q1A);
+    _model.q1B = optionWithSingleLabel('B', _model.q1B);
+    _model.q1C = optionWithSingleLabel('C', _model.q1C);
+    _model.q1D = optionWithSingleLabel('D', _model.q1D);
+    _model.q2A = optionWithSingleLabel('A', _model.q2A);
+    _model.q2B = optionWithSingleLabel('B', _model.q2B);
+    _model.q2C = optionWithSingleLabel('C', _model.q2C);
+    _model.q2D = optionWithSingleLabel('D', _model.q2D);
+    _model.q3A = optionWithSingleLabel('A', _model.q3A);
+    _model.q3B = optionWithSingleLabel('B', _model.q3B);
+    _model.q3C = optionWithSingleLabel('C', _model.q3C);
+    _model.q3D = optionWithSingleLabel('D', _model.q3D);
+    _model.q4A = optionWithSingleLabel('A', _model.q4A);
+    _model.q4B = optionWithSingleLabel('B', _model.q4B);
+    _model.q4C = optionWithSingleLabel('C', _model.q4C);
+    _model.q4D = optionWithSingleLabel('D', _model.q4D);
+    _model.q5A = optionWithSingleLabel('A', _model.q5A);
+    _model.q5B = optionWithSingleLabel('B', _model.q5B);
+    _model.q5C = optionWithSingleLabel('C', _model.q5C);
+    _model.q5D = optionWithSingleLabel('D', _model.q5D);
+    _model.q6A = optionWithSingleLabel('A', _model.q6A);
+    _model.q6B = optionWithSingleLabel('B', _model.q6B);
+    _model.q6C = optionWithSingleLabel('C', _model.q6C);
+    _model.q6D = optionWithSingleLabel('D', _model.q6D);
+    _model.q7A = optionWithSingleLabel('A', _model.q7A);
+    _model.q7B = optionWithSingleLabel('B', _model.q7B);
+    _model.q7C = optionWithSingleLabel('C', _model.q7C);
+    _model.q7D = optionWithSingleLabel('D', _model.q7D);
+    _model.q8A = optionWithSingleLabel('A', _model.q8A);
+    _model.q8B = optionWithSingleLabel('B', _model.q8B);
+    _model.q8C = optionWithSingleLabel('C', _model.q8C);
+    _model.q8D = optionWithSingleLabel('D', _model.q8D);
+    _model.q9A = optionWithSingleLabel('A', _model.q9A);
+    _model.q9B = optionWithSingleLabel('B', _model.q9B);
+    _model.q9C = optionWithSingleLabel('C', _model.q9C);
+    _model.q9D = optionWithSingleLabel('D', _model.q9D);
+    _model.q10A = optionWithSingleLabel('A', _model.q10A);
+    _model.q10B = optionWithSingleLabel('B', _model.q10B);
+    _model.q10C = optionWithSingleLabel('C', _model.q10C);
+    _model.q10D = optionWithSingleLabel('D', _model.q10D);
+  }
+
   // Retake settings from the CMS quiz (retakeAllowed, maxAttempts; blank
   // = unlimited). Attempts so far come from the quiz attempt record.
   bool _retakeAllowed = true;
@@ -487,6 +538,10 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
                 ? LocaleTextStruct.maybeFromMap(q['explanation']) ??
                     LocaleTextStruct()
                 : LocaleTextStruct())
+            .toList();
+        _correctAnswers = questions
+            .map((q) =>
+                q is Map ? (q['correctAnswer'] ?? '').toString().trim() : '')
             .toList();
         safeSetState(() {});
       }
@@ -569,16 +624,76 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
         ),
       ];
 
-  /// Read-only list of the member's submitted answers, behind a toggle.
+  /// Review labels in the member's language.
+  String _rt(String key) {
+    const t = {
+      'review': {
+        'en': 'Review my answers',
+        'es': 'Revisar mis respuestas',
+        'ur': 'اپنے جوابات دیکھیں',
+        'lg': 'Kebera by\'oddamu',
+      },
+      'hide': {
+        'en': 'Hide my answers',
+        'es': 'Ocultar mis respuestas',
+        'ur': 'جوابات چھپائیں',
+        'lg': 'Kweka by\'oddamu',
+      },
+      'yours': {
+        'en': 'Your answer',
+        'es': 'Tu respuesta',
+        'ur': 'آپ کا جواب',
+        'lg': 'Ky\'oddamu',
+      },
+      'none': {
+        'en': 'Not answered',
+        'es': 'Sin responder',
+        'ur': 'جواب نہیں دیا',
+        'lg': 'Tekiddiddwamu',
+      },
+      'correct': {
+        'en': 'Correct',
+        'es': 'Correcta',
+        'ur': 'درست',
+        'lg': 'Kituufu',
+      },
+      'incorrect': {
+        'en': 'Incorrect',
+        'es': 'Incorrecta',
+        'ur': 'غلط',
+        'lg': 'Si kituufu',
+      },
+      'answer': {
+        'en': 'Correct answer',
+        'es': 'Respuesta correcta',
+        'ur': 'درست جواب',
+        'lg': 'Eky\'okuddamu ekituufu',
+      },
+    };
+    final m = t[key]!;
+    return m[_model.memberLanguage] ?? m['en']!;
+  }
+
+  /// The member's submitted answers, shown only after the quiz is
+  /// submitted: each question, the chosen answer, whether it was correct,
+  /// the correct answer and the explanation when the quiz record has one.
   Widget _buildAnswerReview(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
     final answers = _answers();
     final questions = _questions();
+    final showCorrect = canShowCorrectAnswers(
+      answers: answers,
+      correct: _correctAnswers,
+      serverCorrectCount: _serverCorrectCount,
+    );
+    const green = Color(0xFF2E7D32);
+    final red = theme.error;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         TextButton.icon(
+          key: const ValueKey('quizReviewToggle'),
           onPressed: () => safeSetState(
               () => _model.showAnswerReview = !_model.showAnswerReview),
           icon: Icon(
@@ -586,7 +701,7 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
             color: theme.primaryText,
           ),
           label: Text(
-            _model.showAnswerReview ? 'Hide my answers' : 'Review my answers',
+            _model.showAnswerReview ? _rt('hide') : _rt('review'),
             style: theme.bodyMedium.override(
               font: GoogleFonts.inter(fontWeight: FontWeight.w600),
               color: theme.primaryText,
@@ -597,43 +712,98 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
         if (_model.showAnswerReview)
           for (var i = 0; i < questions.length; i++)
             if ((questions[i].$1 ?? '').isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${i + 1}. ${questions[i].$1}',
-                      style: theme.bodyMedium.override(
-                        font: GoogleFonts.inter(fontWeight: FontWeight.w600),
-                        letterSpacing: 0.0,
-                      ),
+              Builder(builder: (context) {
+                final chosen = answers[i];
+                final correctLetter = showCorrect && i < _correctAnswers.length
+                    ? _correctAnswers[i].toUpperCase()
+                    : '';
+                final isCorrect = correctLetter.isNotEmpty &&
+                    chosen.toUpperCase() == correctLetter;
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12.0),
+                  padding: const EdgeInsets.all(12.0),
+                  decoration: BoxDecoration(
+                    color: theme.secondaryBackground,
+                    borderRadius: BorderRadius.circular(10.0),
+                    border: Border.all(
+                      color: correctLetter.isEmpty
+                          ? theme.alternate
+                          : (isCorrect ? green : red),
                     ),
-                    const SizedBox(height: 4.0),
-                    Text(
-                      answers[i].isEmpty
-                          ? 'Not answered'
-                          : '${answers[i]}. ${questions[i].$2[answers[i]] ?? ''}',
-                      style: theme.bodyMedium.override(
-                        font: GoogleFonts.inter(),
-                        color: theme.secondaryText,
-                        letterSpacing: 0.0,
-                      ),
-                    ),
-                    if (i < _explanations.length &&
-                        _explanations[i].en.isNotEmpty) ...[
-                      const SizedBox(height: 4.0),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        _explanations[i].forLanguage(_model.memberLanguage),
-                        style: theme.bodySmall.override(
-                          font: GoogleFonts.inter(fontStyle: FontStyle.italic),
+                        '${i + 1}. ${questions[i].$1}',
+                        style: theme.bodyMedium.override(
+                          font: GoogleFonts.inter(fontWeight: FontWeight.w600),
                           letterSpacing: 0.0,
                         ),
                       ),
+                      const SizedBox(height: 6.0),
+                      Text(
+                        '${_rt('yours')}: ' +
+                            (chosen.isEmpty
+                                ? _rt('none')
+                                : optionWithSingleLabel(
+                                    chosen, questions[i].$2[chosen])),
+                        style: theme.bodyMedium.override(
+                          font: GoogleFonts.inter(),
+                          color: theme.secondaryText,
+                          letterSpacing: 0.0,
+                        ),
+                      ),
+                      if (correctLetter.isNotEmpty) ...[
+                        const SizedBox(height: 4.0),
+                        Row(children: [
+                          Icon(
+                            isCorrect ? Icons.check_circle : Icons.cancel,
+                            size: 18.0,
+                            color: isCorrect ? green : red,
+                          ),
+                          const SizedBox(width: 6.0),
+                          Text(
+                            isCorrect ? _rt('correct') : _rt('incorrect'),
+                            style: theme.bodyMedium.override(
+                              font: GoogleFonts.inter(
+                                  fontWeight: FontWeight.w600),
+                              color: isCorrect ? green : red,
+                              letterSpacing: 0.0,
+                            ),
+                          ),
+                        ]),
+                        if (!isCorrect) ...[
+                          const SizedBox(height: 4.0),
+                          Text(
+                            '${_rt('answer')}: ' +
+                                optionWithSingleLabel(correctLetter,
+                                    questions[i].$2[correctLetter]),
+                            style: theme.bodyMedium.override(
+                              font: GoogleFonts.inter(
+                                  fontWeight: FontWeight.w600),
+                              color: green,
+                              letterSpacing: 0.0,
+                            ),
+                          ),
+                        ],
+                      ],
+                      if (i < _explanations.length &&
+                          _explanations[i].en.isNotEmpty) ...[
+                        const SizedBox(height: 6.0),
+                        Text(
+                          _explanations[i].forLanguage(_model.memberLanguage),
+                          style: theme.bodySmall.override(
+                            font:
+                                GoogleFonts.inter(fontStyle: FontStyle.italic),
+                            letterSpacing: 0.0,
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
-                ),
-              ),
+                  ),
+                );
+              }),
       ],
     );
   }
@@ -8625,7 +8795,7 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
                                   _answers(),
                                 );
                                 _model.submitted = true;
-                                _model.showAnswerReview = false;
+                                _model.showAnswerReview = true;
                                 _model.attemptCount =
                                     (_model.attemptCount ?? 0) + 1;
                                 await _loadExplanations();
@@ -8645,6 +8815,8 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
                                 final scored =
                                     SubmitQuizResponseStruct.maybeFromMap(
                                         (_model.submitResult?.jsonBody ?? ''));
+                                _serverCorrectCount = scored?.correctCount;
+                                safeSetState(() {});
                                 // Keep the best score for certificate grades.
                                 await PathwayProgressionService.recordQuizScore(
                                   widget.quizId,
@@ -8905,6 +9077,7 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
                                     onPressed: () async {
                                       _model.submitted = false;
                                       _model.showAnswerReview = false;
+                                      _serverCorrectCount = null;
                                       safeSetState(() {});
                                       _model.passed = false;
                                       safeSetState(() {});

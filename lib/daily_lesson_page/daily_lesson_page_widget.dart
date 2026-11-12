@@ -339,6 +339,7 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
           label: _label('application'),
           icon: Icons.directions_walk_rounded,
           text: lesson.application.forLanguage(lang),
+          action: true,
         ),
       if (lesson.prayer.en.isNotEmpty)
         custom_widgets.LessonSection(

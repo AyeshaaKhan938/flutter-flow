@@ -155,6 +155,89 @@ String reflowLessonText(String raw) => raw
     .where((p) => p.isNotEmpty)
     .join('\n\n');
 
+/// Headings inside a lesson that introduce what the member is encouraged
+/// to do. The heading and the text under it (up to the next heading) are
+/// shown in the same action card as the Application section.
+const _kActionHeadings = {
+  'application',
+  'application for today',
+  'practical application',
+  'action step',
+  'action steps',
+  'next step',
+  'next steps',
+  'personal response',
+  'your response',
+  "the disciple's response",
+  "this week's practice",
+  'reflection practice',
+  'responding to the gospel',
+  'truth stick challenge',
+  'applying the truth stick to ourselves',
+};
+
+bool isActionHeading(String s) => _kActionHeadings.contains(s
+    .trim()
+    .toLowerCase()
+    .replaceAll(RegExp(r'[\u2018\u2019]'), "'")
+    .replaceAll(RegExp(r':$'), '')
+    .trim());
+
+/// Section text (Reflection, Application, Prayer) as paragraphs and lists.
+///
+/// Lines starting with "1." / "1)" or a bullet start a list item; the lines
+/// after it, up to the next item or blank line, are joined into that item.
+/// Other lines are joined into paragraphs. No words are changed.
+List<LessonBlock> parseSectionText(String raw) {
+  final text = raw.replaceAll('\r\n', '\n').replaceAll('\r', '\n').trim();
+  if (text.isEmpty) return const [];
+  final blocks = <LessonBlock>[];
+  for (final chunk in text.split(RegExp(r'\n\s*\n'))) {
+    final para = <String>[];
+    LessonBlockKind? listKind;
+    var items = <String>[];
+    void flushPara() {
+      if (para.isNotEmpty) {
+        blocks.add(LessonBlock(LessonBlockKind.paragraph, [_joinLines(para)]));
+        para.clear();
+      }
+    }
+
+    void flushList() {
+      if (listKind != null && items.isNotEmpty) {
+        blocks.add(LessonBlock(listKind!, items));
+      }
+      listKind = null;
+      items = <String>[];
+    }
+
+    for (final line in chunk.split('\n')) {
+      if (line.trim().isEmpty || _kPageNumber.hasMatch(line)) continue;
+      final kind = _kNumbered.hasMatch(line)
+          ? LessonBlockKind.numbered
+          : _kBullet.hasMatch(line)
+              ? LessonBlockKind.bullets
+              : null;
+      if (kind != null) {
+        flushPara();
+        if (listKind != kind) flushList();
+        listKind = kind;
+        items.add(line
+            .replaceFirst(
+                kind == LessonBlockKind.numbered ? _kNumbered : _kBullet, '')
+            .trim());
+      } else if (listKind != null) {
+        items[items.length - 1] = _joinLines([items.last, line]);
+      } else {
+        para.add(line);
+      }
+    }
+    flushPara();
+    flushList();
+  }
+  return blocks;
+}
+
 /// A short stand-alone line written as a title: a section heading.
 bool isLessonHeading(String s) {
   final t = s.trim();
@@ -227,6 +310,23 @@ class LessonBody extends StatelessWidget {
                   ? 10.0
                   : 16.0;
       if (spaceBefore > 0) children.add(SizedBox(height: spaceBefore));
+      if (b.kind == LessonBlockKind.heading && isActionHeading(b.lines.first)) {
+        // Heading plus everything up to the next heading, in an action card.
+        final inner = <Widget>[];
+        var j = i + 1;
+        for (; j < blocks.length; j++) {
+          if (blocks[j].kind == LessonBlockKind.heading) break;
+          if (inner.isNotEmpty) inner.add(const SizedBox(height: 12.0));
+          inner.add(_block(context, blocks[j], body));
+        }
+        children.add(LessonActionCard(
+          label: b.lines.first,
+          icon: Icons.directions_walk_rounded,
+          children: inner,
+        ));
+        i = j - 1;
+        continue;
+      }
       children.add(_block(context, b, body));
     }
     return Column(
@@ -255,30 +355,7 @@ class LessonBody extends StatelessWidget {
         return Text(b.lines.first, style: body);
       case LessonBlockKind.bullets:
       case LessonBlockKind.numbered:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (var i = 0; i < b.lines.length; i++)
-              Padding(
-                padding: EdgeInsets.only(top: i == 0 ? 0 : 8.0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 28.0,
-                      child: Text(
-                        b.kind == LessonBlockKind.numbered ? '${i + 1}.' : '•',
-                        style: body.copyWith(
-                            color: theme.secondary,
-                            fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    Expanded(child: Text(b.lines[i], style: body)),
-                  ],
-                ),
-              ),
-          ],
-        );
+        return lessonList(context, b, body);
       case LessonBlockKind.scripture:
         return ScriptureCard(text: b.lines.first);
       case LessonBlockKind.references:
@@ -304,6 +381,106 @@ class LessonBody extends StatelessWidget {
           ],
         );
     }
+  }
+}
+
+/// A numbered or bulleted list with hanging markers.
+Widget lessonList(BuildContext context, LessonBlock b, TextStyle body) {
+  final theme = FlutterFlowTheme.of(context);
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      for (var i = 0; i < b.lines.length; i++)
+        Padding(
+          padding: EdgeInsets.only(top: i == 0 ? 0 : 10.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 28.0,
+                child: Text(
+                  b.kind == LessonBlockKind.numbered ? '${i + 1}.' : '•',
+                  style: body.copyWith(
+                      color: theme.secondary, fontWeight: FontWeight.w700),
+                ),
+              ),
+              Expanded(child: Text(b.lines[i], style: body)),
+            ],
+          ),
+        ),
+    ],
+  );
+}
+
+/// What the member is encouraged to do: the Application section and
+/// action headings inside the teaching ("This Week's Practice", "Personal
+/// Response"...). A warm card with a gold bar on the leading edge, so these
+/// steps stand apart from the teaching in every lesson.
+class LessonActionCard extends StatelessWidget {
+  const LessonActionCard({
+    super.key,
+    required this.label,
+    required this.icon,
+    required this.children,
+  });
+
+  final String label;
+  final IconData icon;
+  final List<Widget> children;
+
+  static const background = Color(0xFFFBF5E6);
+  static const borderColor = Color(0xFFE8D9B0);
+  static const accent = Color(0xFFC9A227);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+    return Container(
+      key: const ValueKey('lessonActionCard'),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(16.0),
+        border: Border.all(color: borderColor),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(width: 5.0, color: accent),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 18, 18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(children: [
+                      Icon(icon, size: 20.0, color: const Color(0xFF8A6D1B)),
+                      const SizedBox(width: 8.0),
+                      Expanded(
+                        child: Semantics(
+                          header: true,
+                          child: Text(
+                            label,
+                            style: GoogleFonts.lora(
+                              fontSize: 19.0,
+                              fontWeight: FontWeight.w700,
+                              color: theme.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ]),
+                    if (children.isNotEmpty) const SizedBox(height: 10.0),
+                    ...children,
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -393,6 +570,9 @@ class ScriptureCard extends StatelessWidget {
 }
 
 /// A labelled closing section (Reflection, Application, Prayer).
+///
+/// [action] shows it as a [LessonActionCard] (used for Application).
+/// Numbered and bulleted steps in the text are shown as lists.
 class LessonSection extends StatelessWidget {
   const LessonSection({
     super.key,
@@ -400,6 +580,7 @@ class LessonSection extends StatelessWidget {
     required this.icon,
     required this.text,
     this.prayer = false,
+    this.action = false,
     this.child,
   });
 
@@ -407,11 +588,32 @@ class LessonSection extends StatelessWidget {
   final IconData icon;
   final String text;
   final bool prayer;
+  final bool action;
   final Widget? child;
 
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
+    final style = GoogleFonts.lora(
+      fontSize: 17.0,
+      height: 1.6,
+      fontStyle: prayer ? FontStyle.italic : FontStyle.normal,
+      color: theme.primaryText,
+    );
+    final content = <Widget>[];
+    for (final b in parseSectionText(text)) {
+      if (content.isNotEmpty) content.add(const SizedBox(height: 12.0));
+      content.add(b.kind == LessonBlockKind.paragraph
+          ? Text(b.lines.first, style: style)
+          : lessonList(context, b, style));
+    }
+    if (child != null) {
+      content.add(const SizedBox(height: 12.0));
+      content.add(child!);
+    }
+    if (action) {
+      return LessonActionCard(label: label, icon: icon, children: content);
+    }
     return Container(
       padding: const EdgeInsets.all(18.0),
       decoration: BoxDecoration(
@@ -444,22 +646,8 @@ class LessonSection extends StatelessWidget {
               ),
             ],
           ),
-          if (text.trim().isNotEmpty) ...[
-            const SizedBox(height: 10.0),
-            Text(
-              reflowLessonText(text),
-              style: GoogleFonts.lora(
-                fontSize: 17.0,
-                height: 1.6,
-                fontStyle: prayer ? FontStyle.italic : FontStyle.normal,
-                color: theme.primaryText,
-              ),
-            ),
-          ],
-          if (child != null) ...[
-            const SizedBox(height: 12.0),
-            child!,
-          ],
+          if (content.isNotEmpty) const SizedBox(height: 10.0),
+          ...content,
         ],
       ),
     );

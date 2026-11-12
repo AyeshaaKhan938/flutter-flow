@@ -28,6 +28,13 @@ const kCorePathwayIds = [
 const kCoreCertificateId = 'core-discipleship';
 const kCoreCertificateTitle = 'Kingdom Heirs Commissioning Certificate';
 
+/// Shown on Home so new members know about the certificate from the start.
+/// Kingdom Heirs wording (12 Nov 2026). A ministry certificate, not an
+/// academic degree or professional licence.
+const kCertificateInvitation = 'Complete all seven required discipleship '
+    'pathways to earn a Kingdom Heirs School of Ministry Commissioning '
+    'Certificate.';
+
 /// Title of the certificate earned for every required or optional pathway.
 const kPathwayCertificateTitle = 'Pathway Certificate of Completion';
 

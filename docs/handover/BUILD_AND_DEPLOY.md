@@ -8,7 +8,7 @@ Phase 1 handover, Kingdom Heirs Discipleship app. Written 2 November 2026 from t
 | Android application id | `com.kingdomheirs.discipleship` |
 | iOS bundle id | `com.kingdomheirsfoundation.kingdomheirs` (existing App Store Connect record, Apple ID 6807216829) |
 | Firebase / Google Cloud project | `kingdom-heirs-discipleshipapp`, region `us-central1` |
-| Version | Release candidate **1.0.6 (10)**. `pubspec.yaml` still says `1.0.0+1`, so pass `--build-name 1.0.6 --build-number 10` (raise the number for every upload) |
+| Version | Release candidate **1.0.6 (11)**. `pubspec.yaml` still says `1.0.0+1`, so pass `--build-name 1.0.6 --build-number 11` (raise the number for every upload) |
 | Repository | `github.com/AyeshaaKhan938/flutter-flow` (public; must move to Kingdom Heirs, see [OWNERSHIP_CHECKLIST.md](OWNERSHIP_CHECKLIST.md)) |
 
 ## 1. Prerequisites

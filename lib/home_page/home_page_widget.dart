@@ -584,6 +584,32 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                 ),
             ],
           ),
+          const SizedBox(height: 14),
+          // Certificate opportunity, shown from the first visit. Wording
+          // from Kingdom Heirs (12 Nov 2026); not an academic award.
+          Container(
+            key: const ValueKey('homeCertificateNote'),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: _kGoldSoft,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.workspace_premium_outlined,
+                    color: _kGoldText, size: 22),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    _t(kCertificateInvitation),
+                    style: GoogleFonts.inter(
+                        fontSize: 13.5, height: 1.45, color: _kNavy),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

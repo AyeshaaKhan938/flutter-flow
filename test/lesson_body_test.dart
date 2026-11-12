@@ -93,4 +93,61 @@ void main() {
         '- One item\n- Two items';
     expect(_blockWords(parseLessonText(text)), _words(text));
   });
+
+  group('Application and action steps', () {
+    test('numbered steps in a section become a list', () {
+      const raw = '1. Listen for His Voice. The world is full of noise but the\n'
+          'Shepherd’s voice cuts through it all.\n'
+          '2. Stay Close to His Presence.\n'
+          'Walk beside Him.\n'
+          '3. Rest in His Care.';
+      final blocks = parseSectionText(raw);
+      expect(blocks.length, 1);
+      expect(blocks.first.kind, LessonBlockKind.numbered);
+      expect(blocks.first.lines, [
+        'Listen for His Voice. The world is full of noise but the '
+            'Shepherd’s voice cuts through it all.',
+        'Stay Close to His Presence. Walk beside Him.',
+        'Rest in His Care.',
+      ]);
+    });
+
+    test('a paragraph before the steps stays a paragraph', () {
+      final blocks =
+          parseSectionText('This week, practise these:\n- Pray daily\n- Serve');
+      expect(blocks.map((b) => b.kind),
+          [LessonBlockKind.paragraph, LessonBlockKind.bullets]);
+      expect(blocks.last.lines, ['Pray daily', 'Serve']);
+    });
+
+    test('plain application text is one paragraph, words unchanged', () {
+      const raw = 'Read the Scripture reference in your own Bible. Write one\n'
+          'honest question.';
+      final blocks = parseSectionText(raw);
+      expect(blocks.single.kind, LessonBlockKind.paragraph);
+      expect(blocks.single.lines.single,
+          'Read the Scripture reference in your own Bible. Write one honest question.');
+    });
+
+    test('a book name with a number is not a list item', () {
+      final blocks = parseSectionText('Read\n1 Corinthians 13 tonight.');
+      expect(blocks.single.kind, LessonBlockKind.paragraph);
+    });
+
+    test('action headings used in the lessons are recognised', () {
+      for (final h in [
+        'Application for Today',
+        'Personal Response',
+        'This Week’s Practice',
+        'The Disciple’s Response',
+        'Truth Stick Challenge',
+        'Application:',
+      ]) {
+        expect(isActionHeading(h), isTrue, reason: h);
+      }
+      expect(isActionHeading('The Ache Beneath the Practice'), isFalse);
+      expect(isActionHeading('Reflection'), isFalse);
+    });
+  });
 }
+

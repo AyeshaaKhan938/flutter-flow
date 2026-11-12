@@ -1,6 +1,6 @@
 # Phase 1 acceptance checklist
 
-Kingdom Heirs Discipleship app, release candidate 1.0.6 (10), Android and iPhone.
+Kingdom Heirs Discipleship app, release candidate 1.0.6 (11), Android and iPhone.
 
 **How to use it**
 - Run every item on **both** an Android phone and an iPhone (TestFlight), unless the
@@ -12,7 +12,7 @@ Kingdom Heirs Discipleship app, release candidate 1.0.6 (10), Android and iPhone
   what happened, and attach the screenshot or recording.
 - Use a fresh test member account unless an item asks for an admin account. For B1 (one lesson from every pathway), use a `content_reviewer` account (D6) so all pathways open.
 
-**Changes in 1.0.6 (9) and (10)**
+**Changes in 1.0.6 (9) to (11)**
 - Quiz locking is now enforced (C2).
 - Percentage-only quiz scores round down (C4).
 - Reflection, Application and Prayer join broken PDF lines (B2).
@@ -23,6 +23,11 @@ Kingdom Heirs Discipleship app, release candidate 1.0.6 (10), Android and iPhone
 - Offline sync no longer sends duplicates or loses queued work (G3, G4).
 - Profile has Delete my account (L).
 - Build 10: the long blank space above and below lesson text and between lesson cards is removed (D7), and content reviewers can open every pathway (D6).
+- Build 11 (tester feedback): after a quiz is submitted, a review shows each question,
+  the member's answer, correct or incorrect, the correct answer and the explanation
+  (C8); each choice shows one letter only (C9); Application and action steps are shown
+  in their own card, with numbered steps as a list (B5); Home explains the
+  Commissioning Certificate (D8, for approval).
 
 ---
 
@@ -34,7 +39,7 @@ Kingdom Heirs Discipleship app, release candidate 1.0.6 (10), Android and iPhone
 | A2 | Kingdom Heirs Foundations lesson count | Exactly 20 | Auto: A1 report |
 | A3 | No empty records | No published lesson without English title, body, Reflection or Application, and no quiz without questions. Prayer and Scripture reference gaps are listed in A1 for a content decision | Auto: A1 report |
 | A4 | Come & See quiz unlock points in the data | Quiz 1 after LESSON-COME-007, Quiz 2 after LESSON-COME-014 | Auto: A1 report |
-| A5 | Unit tests: passing standard, best score, completion, core order, grading, lesson formatting | All pass, including 79.9% fails / 80% passes | Auto: `flutter test` output in [evidence/](evidence/) |
+| A5 | Unit tests: passing standard, best score, completion, core order, grading, lesson formatting, quiz choice labels, quiz review answers, Application steps | All pass, including 79.9% fails / 80% passes | Auto: `flutter test` output in [evidence/](evidence/) |
 | A6 | Static analysis of the release code | No errors | Auto: `flutter analyze` output |
 
 ## B. Lessons and formatting
@@ -45,6 +50,7 @@ Kingdom Heirs Discipleship app, release candidate 1.0.6 (10), Android and iPhone
 | B2 | In each lesson from B1, read Scripture, Reflection, Application and Prayer | All present where the source has them. No PDF page numbers, running headers or footers, lines broken mid-sentence, missing text or truncated endings | S |
 | B3 | Tap the Scripture card ("Tap to open full passage") | The full passage opens in the member's language, with its translation name | S |
 | B4 | Check the lessons listed under "Content findings" in A1 | Each one is corrected or accepted by Kingdom Heirs | Kingdom Heirs sign-off |
+| B5 | Application and action steps: one lesson each from The Shepherd's Lantern, Inner Healing & Deliverance, Kingdom Heirs Foundations and Counterfeit Gospels | The Application section, and headings such as "This Week's Practice", "Personal Response" or "Application for Today" inside the teaching, are in a gold-edged card. Numbered steps show as a numbered list, one step per line. Wording unchanged | S per pathway |
 
 ## C. Quizzes and progression
 
@@ -57,6 +63,8 @@ Kingdom Heirs Discipleship app, release candidate 1.0.6 (10), Android and iPhone
 | C5 | Pass a quiz, then retake it and score lower | The best score is kept. The pathway and certificate use the best score | S |
 | C6 | Finish every lesson of a pathway but leave one quiz unpassed | The pathway is **not** complete and no certificate is issued | S |
 | C7 | Pass the last quiz | The pathway is complete and its Pathway Certificate is issued | S |
+| C8 | Submit a quiz with some wrong answers. Then open the same quiz again later | Before submitting, no answers are shown. After submitting, "Review my answers" lists each question, your answer, Correct or Incorrect, the correct answer when yours was wrong, and the explanation when the quiz has one. Retake still works and the best score is kept (C5) | S |
+| C9 | Look at the choices of quizzes in at least three pathways | Each choice shows one letter only ("A. text"), never "A. A." | S per pathway |
 
 ## D. Pathways and certificates
 
@@ -69,6 +77,7 @@ Kingdom Heirs Discipleship app, release candidate 1.0.6 (10), Android and iPhone
 | D5 | Commissioning Certificate after all seven core pathways | Issued only after the seventh; carries the approved commissioning wording and the member's name | S |
 | D6 | Review mode: an account with role `content_reviewer` | Every core pathway, lesson and quiz opens without completing the earlier ones; no admin pages. A member account is still locked | S |
 | D7 | No blank space in lessons or lesson lists | The title follows the header image directly; the reflection box and Mark Complete follow the last section; lesson cards in a pathway list are evenly spaced | S per pathway |
+| D8 | New account, first visit to Home | The journey card says: "Complete all seven required discipleship pathways to earn a Kingdom Heirs School of Ministry Commissioning Certificate." No mention of a degree or licence | S, for Kingdom Heirs approval |
 
 ## E. Onboarding recommendation
 
@@ -155,7 +164,7 @@ Use the admin **Notifications** page (Manage Pathways, bell icon).
 
 | Id | Check | Expected |
 |---|---|---|
-| M1 | Android 1.0.6 (10) and TestFlight 1.0.6 (10) pass sections B to L | Kingdom Heirs sign-off |
+| M1 | Android 1.0.6 (11) and TestFlight 1.0.6 (11) pass sections B to L | Kingdom Heirs sign-off |
 | M2 | All source code in a Kingdom Heirs-owned repository | Kingdom Heirs confirms access |
 | M3 | Handover documents delivered: build and deploy, admin guide, services and costs, ownership checklist, this checklist with evidence | Kingdom Heirs confirms |
 | M4 | Legacy Node.js 20 functions: recovery investigation, dependency inventory and migration plan delivered ([NODE20_FUNCTIONS.md](NODE20_FUNCTIONS.md)); decision on path A or B recorded | Kingdom Heirs decision |
