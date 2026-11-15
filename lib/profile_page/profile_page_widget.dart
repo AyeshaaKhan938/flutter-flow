@@ -14,6 +14,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'profile_page_model.dart';
 import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/custom_code/languages/language_registry.dart';
+import '/custom_code/languages/translation_service.dart';
 import '/custom_code/delete_account.dart';
 export 'profile_page_model.dart';
 
@@ -56,6 +57,13 @@ class _ProfilePageWidgetState extends State<ProfilePageWidget> {
       'lg': 'Gaba oba beera munnaffe buli mwezi',
     },
   };
+
+  String _tr(String english) {
+    final lang = LanguageRegistry.contentLanguage;
+    return lang == 'en'
+        ? english
+        : TranslationService.instance.translate(english, lang);
+  }
 
   String _supportText(String english) =>
       _kSupportLabels[english]?[_model.currentLanguage] ?? english;
@@ -477,6 +485,47 @@ class _ProfilePageWidgetState extends State<ProfilePageWidget> {
                           ),
                         ].divide(SizedBox(height: 10.0)),
                       ),
+                    ),
+                  ),
+                  // Always available here, whatever was skipped at sign-up.
+                  Container(
+                    key: const ValueKey('profileSettingsCard'),
+                    decoration: BoxDecoration(
+                      color: FlutterFlowTheme.of(context).secondaryBackground,
+                      borderRadius: BorderRadius.circular(16.0),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ListTile(
+                          key: const ValueKey('profileAssessmentLink'),
+                          leading: const Icon(Icons.assignment_outlined),
+                          title: Text(_tr('Help us get to know you')),
+                          subtitle: Text(_tr(
+                              'Answer a few questions so we can recommend content for you.')),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => context
+                              .pushNamed(AssessmentIntroPageWidget.routeName),
+                        ),
+                        ListTile(
+                          key: const ValueKey('profileRemindersLink'),
+                          leading:
+                              const Icon(Icons.notifications_none_outlined),
+                          title: Text(_tr('Daily reminders')),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => context.pushNamed(
+                              NotificationPermissionPrimerPageWidget
+                                  .routeName),
+                        ),
+                        ListTile(
+                          key: const ValueKey('profileTimezoneLink'),
+                          leading: const Icon(Icons.schedule_outlined),
+                          title: Text(_tr('Profile and time zone')),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => context
+                              .pushNamed(ProfileTimezonePageWidget.routeName),
+                        ),
+                      ],
                     ),
                   ),
                   // Support Kingdom Heirs: discreet and optional. Opens the

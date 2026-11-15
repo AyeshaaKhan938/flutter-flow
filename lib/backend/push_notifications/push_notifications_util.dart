@@ -45,10 +45,12 @@ Stream<UserTokenInfo> getFcmTokenStream(String userPath) => Stream.value(
             (defaultTargetPlatform == TargetPlatform.iOS ||
                 defaultTargetPlatform == TargetPlatform.android))
     .where((shouldGetToken) => shouldGetToken)
-    .asyncMap<String?>((shouldRequestPermission) async {
-      final settings = shouldRequestPermission
-          ? await FirebaseMessaging.instance.requestPermission()
-          : await FirebaseMessaging.instance.getNotificationSettings();
+    .asyncMap<String?>((_) async {
+      // Permission is not asked at sign-in. It is offered after the member
+      // finishes a lesson (onboarding_flow.dart) or from Profile; until then
+      // only an existing permission is used.
+      final settings =
+          await FirebaseMessaging.instance.getNotificationSettings();
       return notificationsAllowed(settings.authorizationStatus)
           ? FirebaseMessaging.instance.getToken()
           : null;

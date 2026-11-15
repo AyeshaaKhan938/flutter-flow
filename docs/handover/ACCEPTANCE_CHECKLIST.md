@@ -1,6 +1,7 @@
 # Phase 1 acceptance checklist
 
-Kingdom Heirs Discipleship app, release candidate 1.0.6 (11), Android and iPhone.
+Kingdom Heirs Discipleship app, final Phase 1 release candidate 1.0.7 (12), Android and
+iPhone. Build 1.0.6 (11) is the initial iPhone testing build only.
 
 **How to use it**
 - Run every item on **both** an Android phone and an iPhone (TestFlight), unless the
@@ -29,6 +30,17 @@ Kingdom Heirs Discipleship app, release candidate 1.0.6 (11), Android and iPhone
   in their own card, with numbered steps as a list (B5); Home explains the
   Commissioning Certificate (D8, for approval).
 
+**Changes in 1.0.7 (12) (approved by Kingdom Heirs)**
+- Simpler first experience: sign up, choose a language, then Home (E3).
+- The time zone comes from the phone; nobody types it (E4).
+- Notification permission is asked after the first finished lesson, not at sign-up
+  (E5, J4).
+- The assessment is offered by a card on Home after the first lesson or from the
+  second day; it can be dismissed and is always in Profile (E6, E7).
+- Certificate title: Kingdom Heirs School of Ministry Commissioning Certificate (D5,
+  D8).
+- Approved School Clubs and Sports Tournaments information pages (H4, H5).
+
 ---
 
 ## A. Automated evidence
@@ -39,7 +51,7 @@ Kingdom Heirs Discipleship app, release candidate 1.0.6 (11), Android and iPhone
 | A2 | Kingdom Heirs Foundations lesson count | Exactly 20 | Auto: A1 report |
 | A3 | No empty records | No published lesson without English title, body, Reflection or Application, and no quiz without questions. Prayer and Scripture reference gaps are listed in A1 for a content decision | Auto: A1 report |
 | A4 | Come & See quiz unlock points in the data | Quiz 1 after LESSON-COME-007, Quiz 2 after LESSON-COME-014 | Auto: A1 report |
-| A5 | Unit tests: passing standard, best score, completion, core order, grading, lesson formatting, quiz choice labels, quiz review answers, Application steps | All pass, including 79.9% fails / 80% passes | Auto: `flutter test` output in [evidence/](evidence/) |
+| A5 | Unit tests: passing standard, best score, completion, core order, grading, lesson formatting, quiz choice labels, quiz review answers, Application steps, time zone, assessment invitation, approved wording | All pass, including 79.9% fails / 80% passes | Auto: `flutter test` output in [evidence/](evidence/) |
 | A6 | Static analysis of the release code | No errors | Auto: `flutter analyze` output |
 
 ## B. Lessons and formatting
@@ -74,10 +86,10 @@ Kingdom Heirs Discipleship app, release candidate 1.0.6 (11), Android and iPhone
 | D2 | Additional pathways: The New Man, A Letter to My Catholic Family, Who Is Isa Al-Masih?, The Holy Spirit & Joseph the Dreamer, The Heart of a King, The Shepherd's Lantern | Open at any time; never needed for the Commissioning Certificate | S |
 | D3 | 12 Steps to Healing and Recovery | Shown as Coming Soon, cannot be opened | S |
 | D4 | Pathway Certificate for each completed pathway | Shows the member's name, pathway, completion date, certificate id and grade. No commissioning wording | S per pathway tested |
-| D5 | Commissioning Certificate after all seven core pathways | Issued only after the seventh; carries the approved commissioning wording and the member's name | S |
+| D5 | Kingdom Heirs School of Ministry Commissioning Certificate after all seven core pathways | Issued only after the seventh; carries the approved commissioning wording and the member's name | S |
 | D6 | Review mode: an account with role `content_reviewer` | Every core pathway, lesson and quiz opens without completing the earlier ones; no admin pages. A member account is still locked | S |
 | D7 | No blank space in lessons or lesson lists | The title follows the header image directly; the reflection box and Mark Complete follow the last section; lesson cards in a pathway list are evenly spaced | S per pathway |
-| D8 | New account, first visit to Home | The journey card says: "Complete all seven required discipleship pathways to earn a Kingdom Heirs School of Ministry Commissioning Certificate." No mention of a degree or licence | S, for Kingdom Heirs approval |
+| D8 | New account, first visit to Home | The journey card says: "Complete all seven required discipleship pathways to earn a Kingdom Heirs School of Ministry Commissioning Certificate." No mention of a degree or licence. Certificate titles in the app read "Kingdom Heirs School of Ministry Commissioning Certificate" | S |
 
 ## E. Onboarding recommendation
 
@@ -85,6 +97,11 @@ Kingdom Heirs Discipleship app, release candidate 1.0.6 (11), Android and iPhone
 |---|---|---|---|
 | E1 | Complete the onboarding assessment with answers that point to a later pathway | The result screen may *suggest* a pathway, but **Start** always opens Come & See | R |
 | E2 | After E1, open the suggested later core pathway | It is still locked. The recommendation never unlocks or skips a pathway | S |
+| E3 | New account: sign up | One language screen follows, with the phone's language selected. **Continue** opens Home. No survey, time zone or notification screen | R |
+| E4 | After E3, Profile → Profile and time zone | The time zone field already shows the phone's time zone (for example Africa/Kampala). It can be changed and saved | S |
+| E5 | After E3, finish the first lesson | "Would you like a daily reminder?" appears once. **Yes, remind me** shows the phone's permission question; **Not now** does not ask again | R |
+| E6 | Home on the first day before any lesson, then after the first lesson | No assessment card before; after the lesson, "Help us get to know you" appears. Tap ✕: it disappears and stays hidden | S |
+| E7 | Profile → Help us get to know you | The assessment opens, with the two optional questions (how you heard about Kingdom Heirs, what you hope to grow in) above **Start** | S |
 
 ## F. Today and Bible
 
@@ -115,6 +132,8 @@ Kingdom Heirs Discipleship app, release candidate 1.0.6 (11), Android and iPhone
 | H1 | YouTube card | Opens youtube.com/@kingdomheirsco | S |
 | H2 | Giving card: choose Monthly and $25, tap Give. Repeat with One-time and $10 | Givebutter opens with $25 monthly, then $10 one-time, already selected | S each |
 | H3 | If H2 does not pre-select | Report it. The amount and frequency must be enabled on the Givebutter campaign; Kingdom Heirs checks the campaign settings | Note |
+| H4 | Home → Kingdom Heirs School Clubs | Information page: "Kingdom Heirs School Clubs will meet at schools, churches and other approved locations. Each club will follow about 35 weekly lessons led by a trained club leader, and every club member will also be welcomed into the Kingdom Heirs discipleship pathways. Coming soon." Close returns to Home | S |
+| H5 | Home → Sports Tournaments | Information page: "Young people will be able to register for Kingdom Heirs sporting events here. After each tournament, players are invited into the Kingdom Heirs discipleship pathways so the relationship continues beyond the game. Coming soon." Close returns to Home | S |
 
 ## I. Languages and display
 
@@ -132,12 +151,16 @@ Kingdom Heirs Discipleship app, release candidate 1.0.6 (11), Android and iPhone
 
 Use the admin **Notifications** page (Manage Pathways, bell icon).
 
+On iPhone, notifications need the APNs authentication key uploaded in Firebase (Project
+settings → Cloud Messaging → Apple app configuration). Run J1 to J3 and J7 on iPhone only
+after it is uploaded.
+
 | Id | Check | Expected | Evidence |
 |---|---|---|---|
 | J1 | Send while the app is **open** | iPhone shows the banner; Android shows an in-app banner with Open | R |
 | J2 | Send while the app is in the **background** | System notification arrives; tapping opens Today | R |
 | J3 | Send while the app is **closed** (swiped away) | System notification arrives; tapping opens the app on Today | R |
-| J4 | New account: deny permission on the permission screen | "Notifications are off. You can turn them on later in your phone's Settings." Nothing is delivered to that phone | S |
+| J4 | New account: finish the first lesson, tap **Yes, remind me**, then deny the phone's permission | "Notifications are off. You can turn them on later in your phone's Settings." Nothing is delivered to that phone. Profile → Daily reminders opens the same screen | S |
 | J5 | Same account on two phones, sign out and in again | Each phone receives a notification once; no duplicates | S |
 | J6 | Targeting: iPhone only, Android only, one language, one pathway | Only matching phones receive it; Recent notifications shows the device count | S each |
 | J7 | Schedule a notification 15 minutes ahead | Arrives within about 5 minutes of the chosen time | S with clock |
@@ -164,7 +187,7 @@ Use the admin **Notifications** page (Manage Pathways, bell icon).
 
 | Id | Check | Expected |
 |---|---|---|
-| M1 | Android 1.0.6 (11) and TestFlight 1.0.6 (11) pass sections B to L | Kingdom Heirs sign-off |
+| M1 | Android 1.0.7 (12) and TestFlight 1.0.7 (12) pass sections B to L | Kingdom Heirs sign-off |
 | M2 | All source code in a Kingdom Heirs-owned repository | Kingdom Heirs confirms access |
 | M3 | Handover documents delivered: build and deploy, admin guide, services and costs, ownership checklist, this checklist with evidence | Kingdom Heirs confirms |
 | M4 | Legacy Node.js 20 functions: recovery investigation, dependency inventory and migration plan delivered ([NODE20_FUNCTIONS.md](NODE20_FUNCTIONS.md)); decision on path A or B recorded | Kingdom Heirs decision |

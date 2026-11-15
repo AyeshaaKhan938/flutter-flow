@@ -142,9 +142,13 @@ class _NotificationPermissionPrimerPageWidgetState
                       ),
                     );
 
-                    context.pushNamed(AssessmentIntroPageWidget.routeName);
-
-                    safeSetState(() {});
+                    // Opened from Profile: go back there.
+                    if (!context.mounted) return;
+                    if (Navigator.of(context).canPop()) {
+                      context.pop();
+                    } else {
+                      context.goNamed(HomePageWidget.routeName);
+                    }
                   },
                   text: FFLocalizations.of(context).getText(
                     'tizfjqgx' /* Enable notifications */,
@@ -163,7 +167,11 @@ class _NotificationPermissionPrimerPageWidgetState
                 ),
                 FFButtonWidget(
                   onPressed: () async {
-                    context.pushNamed(AssessmentIntroPageWidget.routeName);
+                    if (Navigator.of(context).canPop()) {
+                      context.pop();
+                    } else {
+                      context.goNamed(HomePageWidget.routeName);
+                    }
                   },
                   text: FFLocalizations.of(context).getText(
                     'i0ha3zd1' /* Not now */,

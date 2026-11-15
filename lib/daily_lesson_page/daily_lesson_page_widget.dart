@@ -17,6 +17,7 @@ import 'package:provider/provider.dart';
 import 'daily_lesson_page_model.dart';
 import '/custom_code/languages/language_registry.dart';
 import '/custom_code/languages/translation_service.dart';
+import '/custom_code/onboarding_flow.dart';
 import '/custom_code/widgets/index.dart' as custom_widgets;
 export 'daily_lesson_page_model.dart';
 
@@ -824,6 +825,16 @@ class _DailyLessonPageWidgetState extends State<DailyLessonPageWidget> {
                             duration: Duration(milliseconds: 4000),
                           ),
                         );
+                        // First finished lesson: offer a daily reminder
+                        // (asked once, never at sign-up).
+                        await maybeOfferDailyReminder(context, t: (en) {
+                          final lang = LanguageRegistry.contentLanguage;
+                          return lang == 'en'
+                              ? en
+                              : TranslationService.instance
+                                  .translate(en, lang);
+                        });
+                        if (!context.mounted) return;
                         final quizId = await _quizIdForLesson();
                         if (quizId != null) {
                           context.pushNamed(

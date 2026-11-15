@@ -26,7 +26,8 @@ const kCorePathwayIds = [
 /// Certificate id for completing all seven required core pathways (kept as
 /// 'core-discipleship' so certificates already issued stay valid).
 const kCoreCertificateId = 'core-discipleship';
-const kCoreCertificateTitle = 'Kingdom Heirs Commissioning Certificate';
+const kCoreCertificateTitle =
+    'Kingdom Heirs School of Ministry Commissioning Certificate';
 
 /// Shown on Home so new members know about the certificate from the start.
 /// Kingdom Heirs wording (12 Nov 2026). A ministry certificate, not an
@@ -949,9 +950,11 @@ const _kProgressionLabels = <String, Map<String, String>>{
     'lg': 'Satifikeeti zange',
   },
   kCoreCertificateTitle: {
-    'es': 'Certificado de Comisionamiento de Kingdom Heirs',
-    'ur': 'کنگڈم ہائرز کمیشننگ سرٹیفکیٹ',
-    'lg': "Satifikeeti y'Okutumibwa eya Kingdom Heirs",
+    // Proper name kept in English; translations to be reviewed.
+    'es':
+        'Certificado de Comisionamiento de Kingdom Heirs School of Ministry',
+    'ur': 'کنگڈم ہائرز اسکول آف منسٹری کمیشننگ سرٹیفکیٹ',
+    'lg': "Satifikeeti y'Okutumibwa eya Kingdom Heirs School of Ministry",
   },
   kPathwayCertificateTitle: {
     'es': 'Certificado de finalización del camino',

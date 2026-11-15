@@ -1,19 +1,19 @@
 import '/auth/firebase_auth/auth_util.dart';
-import '/backend/api_requests/api_calls.dart';
+import '/custom_code/onboarding_flow.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/custom_code/actions/index.dart' as actions;
 import '/index.dart';
-import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'onboarding_survey_page_model.dart';
 import '/custom_code/widgets/index.dart' as custom_widgets;
 export 'onboarding_survey_page_model.dart';
 
-/// Post-signup onboarding: preferred language selection + a short survey
-/// (feeds users.surveyResponses).
+/// After sign-up: the member chooses a language (the phone's language is
+/// pre-selected) and goes straight to Home. The phone's time zone is saved
+/// automatically. The survey questions are asked with the assessment.
 class OnboardingSurveyPageWidget extends StatefulWidget {
   const OnboardingSurveyPageWidget({super.key});
 
@@ -36,12 +36,13 @@ class _OnboardingSurveyPageWidgetState
     super.initState();
     _model = createModel(context, () => OnboardingSurveyPageModel());
 
-    _model.hearAboutFieldTextController ??= TextEditingController();
-    _model.hearAboutFieldFocusNode ??= FocusNode();
-
-    _model.growthGoalFieldTextController ??= TextEditingController();
-    _model.growthGoalFieldFocusNode ??= FocusNode();
+    _model.preferredLanguage = initialLanguage(
+      stored: FFLocalizations.getStoredLocale()?.languageCode,
+      device: WidgetsBinding.instance.platformDispatcher.locale.languageCode,
+    );
   }
+
+  bool _continuing = false;
 
   @override
   void dispose() {
@@ -153,167 +154,32 @@ class _OnboardingSurveyPageWidgetState
                       safeSetState(() {});
                     },
                   ),
-                  TextFormField(
-                    controller: _model.hearAboutFieldTextController,
-                    focusNode: _model.hearAboutFieldFocusNode,
-                    onChanged: (_) => EasyDebounce.debounce(
-                      '_model.hearAboutFieldTextController',
-                      Duration(milliseconds: 2000),
-                      () async {
-                        _model.hearAbout =
-                            _model.hearAboutFieldTextController.text;
-                        safeSetState(() {});
-                      },
-                    ),
-                    obscureText: false,
-                    decoration: InputDecoration(
-                      labelText: FFLocalizations.of(context).getText(
-                        '4j67k168' /* How did you hear about Kingdom... */,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x00000000),
-                          width: 1.0,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x00000000),
-                          width: 1.0,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x00000000),
-                          width: 1.0,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x00000000),
-                          width: 1.0,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                      filled: true,
-                    ),
-                    style: TextStyle(),
-                    maxLines: null,
-                    validator: _model.hearAboutFieldTextControllerValidator
-                        .asValidator(context),
-                  ),
-                  TextFormField(
-                    controller: _model.growthGoalFieldTextController,
-                    focusNode: _model.growthGoalFieldFocusNode,
-                    onChanged: (_) => EasyDebounce.debounce(
-                      '_model.growthGoalFieldTextController',
-                      Duration(milliseconds: 2000),
-                      () async {
-                        _model.growthGoal =
-                            _model.growthGoalFieldTextController.text;
-                        safeSetState(() {});
-                      },
-                    ),
-                    obscureText: false,
-                    decoration: InputDecoration(
-                      labelText: FFLocalizations.of(context).getText(
-                        'wb8r0eh4' /* What are you hoping to grow in... */,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x00000000),
-                          width: 1.0,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x00000000),
-                          width: 1.0,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x00000000),
-                          width: 1.0,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x00000000),
-                          width: 1.0,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0),
-                        ),
-                      ),
-                      filled: true,
-                    ),
-                    style: TextStyle(),
-                    maxLines: null,
-                    validator: _model.growthGoalFieldTextControllerValidator
-                        .asValidator(context),
-                  ),
                   FFButtonWidget(
-                    onPressed: () async {
-                      _model.onboardingSaveResult =
-                          await SaveOnboardingSurveyCall.call(
-                        authToken: currentJwtToken,
-                        preferredLanguage: _model.preferredLanguage,
-                        hearAbout: _model.hearAboutFieldTextController.text,
-                        growthGoal: _model.growthGoalFieldTextController.text,
-                      );
-
-                      if ((_model.onboardingSaveResult?.succeeded ?? true)) {
-                        context.pushNamed(ProfileTimezonePageWidget.routeName);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Could not save your answers. Continuing anyway.',
-                              style: TextStyle(),
-                            ),
-                            duration: Duration(milliseconds: 4000),
-                          ),
-                        );
-
-                        context.pushNamed(ProfileTimezonePageWidget.routeName);
-                      }
-
-                      safeSetState(() {});
-                    },
+                    key: const ValueKey('onboardingContinue'),
+                    onPressed: _continuing
+                        ? null
+                        : () async {
+                            safeSetState(() => _continuing = true);
+                            final code = _model.preferredLanguage ?? 'en';
+                            // Saves the language even if the pre-selected
+                            // one was kept, and the phone's time zone.
+                            await Future.wait([
+                              actions.setPreferredLanguage(
+                                context,
+                                currentJwtToken,
+                                code,
+                              ),
+                              saveDeviceTimezone(),
+                            ]);
+                            if (!context.mounted) return;
+                            context.goNamed(HomePageWidget.routeName);
+                          },
                     text: FFLocalizations.of(context).getText(
                       'h4l5v7tc' /* Continue */,
                     ),
                     options: FFButtonOptions(
                       width: double.infinity,
+                      height: 48.0,
                       padding:
                           EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 0.0),
                       iconPadding:

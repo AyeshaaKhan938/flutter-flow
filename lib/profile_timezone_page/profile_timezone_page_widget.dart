@@ -1,9 +1,8 @@
-import '/auth/firebase_auth/auth_util.dart';
-import '/backend/api_requests/api_calls.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/custom_code/onboarding_flow.dart';
 import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -47,6 +46,16 @@ class _ProfileTimezonePageWidgetState extends State<ProfileTimezonePageWidget> {
 
     _model.timezoneFieldTextController ??= TextEditingController();
     _model.timezoneFieldFocusNode ??= FocusNode();
+
+    // The phone's time zone is filled in; the member can change it.
+    deviceTimezone().then((tz) {
+      if (!mounted || tz.isEmpty) return;
+      if (_model.timezoneFieldTextController!.text.trim().isEmpty) {
+        _model.timezoneFieldTextController!.text = tz;
+        _model.timezone = tz;
+        safeSetState(() {});
+      }
+    });
   }
 
   @override
@@ -442,45 +451,45 @@ class _ProfileTimezonePageWidgetState extends State<ProfileTimezonePageWidget> {
                   ),
                   FFButtonWidget(
                     onPressed: () async {
-                      if (_model.country == '') {
+                      // Only filled-in fields are sent, so nothing already
+                      // saved is cleared.
+                      final tz = validTimezone(
+                          _model.timezoneFieldTextController!.text);
+                      if (_model.timezoneFieldTextController!.text
+                              .trim()
+                              .isNotEmpty &&
+                          tz.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
+                          const SnackBar(
                             content: Text(
-                              'Please enter your country to continue.',
-                              style: TextStyle(),
-                            ),
-                            duration: Duration(milliseconds: 4000),
+                                'Time zone not recognised. Use a name such as Africa/Kampala.'),
                           ),
                         );
-                      } else {
-                        _model.saveProfileDetailsResult =
-                            await SaveProfileDetailsV2Call.call(
-                          authToken: currentJwtToken,
-                          displayName: _model.displayName,
-                          phone: _model.phone,
-                          country: _model.country,
-                          regionCity: _model.regionCity,
-                          timezone: _model.timezone,
-                        );
-
-                        if ((_model.saveProfileDetailsResult?.succeeded ??
-                            true)) {
-                          context.pushNamed(
-                              NotificationPermissionPrimerPageWidget.routeName);
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Could not save your details. Check the phone number format and try again.',
-                                style: TextStyle(),
-                              ),
-                              duration: Duration(milliseconds: 4000),
-                            ),
-                          );
-                        }
+                        return;
                       }
-
-                      safeSetState(() {});
+                      final fields = <String, String>{
+                        'displayName':
+                            _model.displayNameFieldTextController!.text.trim(),
+                        'phone': _model.phoneFieldTextController!.text.trim(),
+                        'country':
+                            _model.countryFieldTextController!.text.trim(),
+                        'regionCity':
+                            _model.regionCityFieldTextController!.text.trim(),
+                        'timezone': tz,
+                      }..removeWhere((_, v) => v.isEmpty);
+                      final ok = await saveProfileFields(fields);
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(ok
+                              ? 'Saved.'
+                              : 'Could not save your details. Check the phone number format and try again.'),
+                          duration: const Duration(milliseconds: 4000),
+                        ),
+                      );
+                      if (ok && Navigator.of(context).canPop()) {
+                        context.pop();
+                      }
                     },
                     text: FFLocalizations.of(context).getText(
                       'rlcvmmgf' /* Save & Continue */,

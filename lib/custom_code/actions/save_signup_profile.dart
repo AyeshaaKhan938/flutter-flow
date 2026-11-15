@@ -13,6 +13,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
+import '/custom_code/onboarding_flow.dart' show deviceTimezone;
 
 Future<String> saveSignupProfile(String? displayName, String? phone,
     String? country, String? regionCity) async {
@@ -26,6 +27,9 @@ Future<String> saveSignupProfile(String? displayName, String? phone,
     final token = await user.getIdToken();
     final p = phone.trim();
     final validPhone = RegExp(r'^[+()\-\s\d]{6,20}$').hasMatch(p) ? p : '';
+    // The phone's time zone, so reminders arrive at local time without the
+    // member typing it.
+    final timezone = await deviceTimezone();
     // Fire-and-forget so sign-up navigates immediately; failures are harmless
     // (the profile can be completed later).
     unawaited(http
@@ -40,6 +44,7 @@ Future<String> saveSignupProfile(String? displayName, String? phone,
             'phone': validPhone,
             'country': country.trim(),
             'regionCity': regionCity.trim(),
+            if (timezone.isNotEmpty) 'timezone': timezone,
             if ((FFLocalizations.getStoredLocale()?.languageCode ?? '')
                 .isNotEmpty)
               'preferredLanguage':

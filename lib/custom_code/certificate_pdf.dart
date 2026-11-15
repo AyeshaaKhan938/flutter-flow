@@ -177,7 +177,7 @@ Future<Uint8List> buildCertificatePdf(CertificateData data) async {
 
   final doc = pw.Document(
     title: data.kind == CertificateKind.commissioning
-        ? 'Kingdom Heirs Commissioning Certificate'
+        ? 'Kingdom Heirs School of Ministry Commissioning Certificate'
         : 'Pathway Certificate of Completion',
     author: 'Kingdom Heirs Foundation',
     creator: 'Kingdom Heirs',

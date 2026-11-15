@@ -8,7 +8,7 @@ Phase 1 handover, Kingdom Heirs Discipleship app. Written 2 November 2026 from t
 | Android application id | `com.kingdomheirs.discipleship` |
 | iOS bundle id | `com.kingdomheirsfoundation.kingdomheirs` (existing App Store Connect record, Apple ID 6807216829) |
 | Firebase / Google Cloud project | `kingdom-heirs-discipleshipapp`, region `us-central1` |
-| Version | Release candidate **1.0.6 (11)**. `pubspec.yaml` still says `1.0.0+1`, so pass `--build-name 1.0.6 --build-number 11` (raise the number for every upload) |
+| Version | Final Phase 1 release candidate **1.0.7 (12)** (1.0.6 (11) is the initial iPhone testing build). `pubspec.yaml` still says `1.0.0+1`, so pass `--build-name 1.0.7 --build-number 12` (raise the number for every upload) |
 | Repository | `github.com/AyeshaaKhan938/flutter-flow` (public; must move to Kingdom Heirs, see [OWNERSHIP_CHECKLIST.md](OWNERSHIP_CHECKLIST.md)) |
 
 ## 1. Prerequisites
@@ -16,7 +16,7 @@ Phase 1 handover, Kingdom Heirs Discipleship app. Written 2 November 2026 from t
 | Tool | Version |
 |---|---|
 | Flutter | Stable channel, last built with **Flutter 3.44.3**. Dart SDK `>=3.0.0 <4.0.0` (`pubspec.yaml`). The repo has no `.metadata` file, so the version is not pinned. |
-| Xcode | **26.x**, on macOS, for iOS builds |
+| Xcode | **26.x**, on macOS, for iOS builds. Xcode 26.3 is the newest that runs on macOS Sequoia 15.6+; 26.4 and later need macOS Tahoe 26.2. Apple requires an iOS 26 SDK build for TestFlight |
 | CocoaPods | Any recent version (1.17.0 was used). iOS deployment target is **14.0** (`ios/Podfile`) |
 | Android | Android Studio + SDK, compileSdk/targetSdk **36**, JDK 17 |
 | Node.js | **22** (`firebase/functions/package.json` → `engines.node`). Only needed to deploy functions |
@@ -116,20 +116,28 @@ Play Console setup and Internal Testing steps:
 
 ## 5. iOS and TestFlight
 
-1. Signing is manual: Kingdom Heirs creates the Apple Distribution certificate and the
-   **Kingdom Heirs Discipleship App Store** provisioning profile and sends the `.cer` and
-   `.mobileprovision` files; the private key stays on the build Mac. The project has a
-   single target (**Runner**). There is no notification extension (see
+1. Signing: team **Kingdom Heirs Foundation (FP2846XA2L)**, set on the Runner target
+   with automatic signing. Sign in to Xcode (Settings → Accounts) with an Apple account
+   that has the App Manager role and access to Certificates, Identifiers & Profiles, and
+   create an **Apple Distribution** certificate (Manage Certificates → +). Xcode creates
+   the App Store provisioning profile for the existing App ID
+   `com.kingdomheirsfoundation.kingdomheirs`. Never create another App ID, app record
+   or team. The project has a single target (**Runner**). There is no notification
+   extension (see
    [../notifications-and-assistant.md](../notifications-and-assistant.md#future-enhancement-image-notifications)).
-2. Confirm the Push Notifications and Background Modes → Remote notifications capabilities,
-   and that the APNs key is uploaded in Firebase → Project settings → Cloud Messaging.
+2. Push: the App ID has **Push Notifications** enabled (November 2026). Create an APNs
+   authentication key (Certificates, Identifiers & Profiles → Keys → +, tick Apple Push
+   Notifications service), download the `.p8` once, and upload it in Firebase → Project
+   settings → Cloud Messaging → Apple app configuration, with the Key ID and Team ID
+   FP2846XA2L. Without it, iPhones receive no notifications.
 3. Build:
    ```sh
-   flutter build ipa --release --build-name 1.0.6 --build-number 10
+   flutter build ipa --release --build-name 1.0.7 --build-number 12
    ```
    Output: `build/ios/ipa/*.ipa`.
-4. Upload with Apple's **Transporter** app, or archive in Xcode (Product → Archive →
-   Distribute App → App Store Connect).
+4. Upload: open `build/ios/archive/Runner.xcarchive` in Xcode (Window → Organizer) →
+   **Distribute App** → **TestFlight Internal Only**. That option cannot be submitted for
+   App Store review. Transporter also works with the `.ipa`.
 5. In App Store Connect → TestFlight, add internal testers. `Info.plist` already declares
    standard encryption only, so there is no export compliance question. Builds stay in
    **internal** testing until Kingdom Heirs approves a release in writing.

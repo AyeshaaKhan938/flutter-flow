@@ -2,6 +2,7 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/custom_code/onboarding_flow.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'assessment_intro_page_model.dart';
@@ -30,8 +31,22 @@ class _AssessmentIntroPageWidgetState extends State<AssessmentIntroPageWidget> {
     _model = createModel(context, () => AssessmentIntroPageModel());
   }
 
+  final _hearAbout = TextEditingController();
+  final _growthGoal = TextEditingController();
+
+  /// Saves the two optional answers, if given (in the background).
+  void _saveSurvey() {
+    final fields = <String, String>{
+      'hearAbout': _hearAbout.text.trim(),
+      'growthGoal': _growthGoal.text.trim(),
+    }..removeWhere((_, v) => v.isEmpty);
+    if (fields.isNotEmpty) saveProfileFields(fields);
+  }
+
   @override
   void dispose() {
+    _hearAbout.dispose();
+    _growthGoal.dispose();
     _model.dispose();
 
     super.dispose();
@@ -125,8 +140,33 @@ class _AssessmentIntroPageWidgetState extends State<AssessmentIntroPageWidget> {
                               FlutterFlowTheme.of(context).bodyMedium.fontStyle,
                         ),
                   ),
+                  // Moved here from sign-up (simplified first experience).
+                  // Both are optional.
+                  TextField(
+                    key: const ValueKey('assessmentHearAbout'),
+                    controller: _hearAbout,
+                    maxLines: null,
+                    decoration: InputDecoration(
+                      labelText: FFLocalizations.of(context).getText(
+                        '4j67k168' /* How did you hear about Kingdom... */,
+                      ),
+                      filled: true,
+                    ),
+                  ),
+                  TextField(
+                    key: const ValueKey('assessmentGrowthGoal'),
+                    controller: _growthGoal,
+                    maxLines: null,
+                    decoration: InputDecoration(
+                      labelText: FFLocalizations.of(context).getText(
+                        'wb8r0eh4' /* What are you hoping to grow in... */,
+                      ),
+                      filled: true,
+                    ),
+                  ),
                   FFButtonWidget(
                     onPressed: () async {
+                      _saveSurvey();
                       context
                           .pushNamed(AssessmentQuestionsPageWidget.routeName);
                     },
@@ -148,7 +188,12 @@ class _AssessmentIntroPageWidgetState extends State<AssessmentIntroPageWidget> {
                   ),
                   FFButtonWidget(
                     onPressed: () async {
-                      context.pushNamed(TodayPageWidget.routeName);
+                      _saveSurvey();
+                      if (Navigator.of(context).canPop()) {
+                        context.pop();
+                      } else {
+                        context.goNamed(HomePageWidget.routeName);
+                      }
                     },
                     text: FFLocalizations.of(context).getText(
                       'mqh1tihu' /* Maybe Later */,

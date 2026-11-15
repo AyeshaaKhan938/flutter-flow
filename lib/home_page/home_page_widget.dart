@@ -6,6 +6,8 @@ import '/custom_code/actions/index.dart' as actions;
 import '/custom_code/languages/language_registry.dart';
 import '/custom_code/languages/translation_service.dart';
 import '/custom_code/pathway_progression.dart';
+import '/custom_code/onboarding_flow.dart';
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import '/index.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -98,6 +100,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
 
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       _loadProgression();
+      assessmentInviteDismissed().then((d) {
+        if (mounted) safeSetState(() => _inviteDismissed = d);
+      });
       _model.profileResult = await GetUserProfileV2Call.call(
         authToken: currentJwtToken,
       );
@@ -272,9 +277,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
                 children: [
                   _greetingBlock(),
-                  if (_model.isOnboardingComplete != true &&
-                      _model.profileResult != null)
-                    _setupCard(),
+                  if (_model.profileResult != null && _showAssessmentInvite)
+                    _assessmentInviteCard(),
                   _scriptureCard(),
                   const SizedBox(height: 14),
                   _journeyCard(),
@@ -289,12 +293,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     badge: _t('Coming soon'),
                     onTap: () => _showComingSoon(
                       _t('Sports Tournaments'),
-                      _t('Coaches will register their teams here and see the '
-                          'calendar of tournaments scheduled in different '
-                          'countries, with dates and times. You will also be '
-                          'able to request a tournament in your city. After '
-                          'each tournament, players are welcomed into the '
-                          'Kingdom Heirs discipleship pathways.'),
+                      // Text approved by Kingdom Heirs (November 2026).
+                      _t(kSportsTournamentsInfo),
                       Icons.emoji_events_outlined,
                     ),
                   ),
@@ -306,9 +306,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     badge: _t('Coming soon'),
                     onTap: () => _showComingSoon(
                       _t('Kingdom Heirs School Clubs'),
-                      _t('Students and leaders will start and join Kingdom '
-                          'Heirs clubs at their school, with lessons, '
-                          'missions and tools for club leaders.'),
+                      // Text approved by Kingdom Heirs (November 2026).
+                      _t(kSchoolClubsInfo),
                       Icons.groups_outlined,
                     ),
                   ),
@@ -451,31 +450,56 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     );
   }
 
-  Widget _setupCard() {
+  bool _inviteDismissed = true;
+
+  bool get _showAssessmentInvite => shouldShowAssessmentInvite(
+        onboardingCompleted: _model.isOnboardingComplete,
+        dismissed: _inviteDismissed,
+        lessonsCompleted: (_progression?.core ?? const <PathwayStatus>[])
+            .fold<int>(0, (n, s) => n + s.lessonsCompleted),
+        accountCreated: currentUser == null
+            ? null
+            : FirebaseAuth.instance.currentUser?.metadata.creationTime,
+        now: DateTime.now(),
+      );
+
+  /// Invitation to the assessment, after the first lesson or from the
+  /// second day. Optional: it can be dismissed and is always in Profile.
+  Widget _assessmentInviteCard() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: _tappableCard(
+        key: const ValueKey('homeAssessmentInvite'),
         color: _kGoldSoft,
         border: const Color(0xFFE3D5B2),
-        onTap: () => context.pushNamed(OnboardingSurveyPageWidget.routeName),
+        onTap: () => context.pushNamed(AssessmentIntroPageWidget.routeName),
         child: Row(children: [
-          const Icon(Icons.flag_outlined, color: _kGoldText, size: 28),
+          const Icon(Icons.assignment_outlined, color: _kGoldText, size: 28),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_t('Finish setting up'),
+                Text(_t('Help us get to know you'),
                     style: GoogleFonts.lora(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: _kNavy)),
-                Text(_t('Answer a few questions so we can suggest where to begin.'),
+                Text(
+                    _t('Answer a few questions so we can recommend content for you.'),
                     style: GoogleFonts.inter(fontSize: 13, color: _kMuted)),
               ],
             ),
           ),
-          const Icon(Icons.chevron_right, color: _kMuted),
+          IconButton(
+            key: const ValueKey('homeAssessmentInviteDismiss'),
+            tooltip: _t('Not now'),
+            icon: const Icon(Icons.close, color: _kMuted, size: 20),
+            onPressed: () async {
+              await dismissAssessmentInvite();
+              safeSetState(() => _inviteDismissed = true);
+            },
+          ),
         ]),
       ),
     );
@@ -843,6 +867,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   }
 
   Widget _tappableCard({
+    Key? key,
     required Widget child,
     required VoidCallback onTap,
     Color color = _kCard,
@@ -850,6 +875,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     bool shadow = false,
   }) {
     return Container(
+      key: key,
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(18),

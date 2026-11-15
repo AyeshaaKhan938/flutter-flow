@@ -192,7 +192,7 @@ day to day.
 - **Pathway Certificate of Completion:** when a member finishes every published lesson in
   a pathway and passes every required quiz (default pass mark 80%; a pathway can have its
   own `passingScore`, set in Firebase console).
-- **Kingdom Heirs Commissioning Certificate:** when a member completes all seven required
+- **Kingdom Heirs School of Ministry Commissioning Certificate:** when a member completes all seven required
   core pathways. The commissioning wording is the text Kingdom Heirs approved on
   14 October 2026, in English only.
 - Members see them under My Certificates and can download or share a PDF.
