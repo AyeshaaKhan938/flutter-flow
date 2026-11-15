@@ -194,9 +194,9 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
     },
     '6248jqp7': {
       'en': 'Pathways',
-      'es': '',
+      'es': 'Caminos',
       'lg': 'Amakubo',
-      'ur': '',
+      'ur': 'راستے',
     },
   },
   // TodayPage
@@ -1046,9 +1046,9 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
     },
     'zv6tqbs6': {
       'en': 'Profile',
-      'es': '',
+      'es': 'Perfil',
       'lg': 'Pulofayiro',
-      'ur': '',
+      'ur': 'پروفائل',
     },
   },
   // HomePage
@@ -1115,9 +1115,9 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
     },
     'amxdvirb': {
       'en': 'Home',
-      'es': '',
-      'lg': '',
-      'ur': '',
+      'es': 'Inicio',
+      'lg': 'Awaka',
+      'ur': 'ہوم',
     },
   },
   // RecommendationResultPage
