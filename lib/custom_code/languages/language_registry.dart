@@ -14,6 +14,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 ///   machine translation is never shown to members.
 /// - [bibleId]: API.Bible id for Scripture in this language. Empty means the
 ///   English Bible is shown with a note. Scripture is never machine-translated.
+/// - [testersOnly]: offered only to internal testers (roles in
+///   kInternalTesterRoles); hidden from general members, for a language
+///   whose content is not yet complete.
 class AppLanguage {
   const AppLanguage({
     required this.code,
@@ -26,6 +29,7 @@ class AppLanguage {
     this.bibleId = '',
     this.bibleName = '',
     this.googleCode = '',
+    this.testersOnly = false,
   });
 
   final String code;
@@ -41,6 +45,8 @@ class AppLanguage {
   /// Code Google Cloud Translation uses, when it differs from [code].
   final String googleCode;
 
+  final bool testersOnly;
+
   bool get isApproved => tier == 'approved';
 
   Map<String, dynamic> toMap() => {
@@ -54,6 +60,7 @@ class AppLanguage {
         'bibleId': bibleId,
         'bibleName': bibleName,
         'googleCode': googleCode,
+        'testersOnly': testersOnly,
       };
 
   static AppLanguage? fromMap(Map<String, dynamic> m, [String? id]) {
@@ -72,6 +79,7 @@ class AppLanguage {
       bibleId: '${m['bibleId'] ?? ''}'.trim(),
       bibleName: '${m['bibleName'] ?? ''}'.trim(),
       googleCode: '${m['googleCode'] ?? ''}'.trim(),
+      testersOnly: m['testersOnly'] == true,
     );
   }
 }
@@ -156,10 +164,26 @@ class LanguageRegistry extends ChangeNotifier {
   bool get loadedFromCms => _fromCms;
 
   List<AppLanguage> get active => _all.where((l) => l.active).toList();
+
+  /// True for internal testers (set by ReviewAccess): languages marked
+  /// [AppLanguage.testersOnly] are offered to them too.
+  bool get showTesterLanguages => _showTesterLanguages;
+  bool _showTesterLanguages = false;
+  set showTesterLanguages(bool value) {
+    if (value == _showTesterLanguages) return;
+    _showTesterLanguages = value;
+    notifyListeners();
+  }
+
+  /// Languages this account may choose: active ones, without those kept
+  /// for internal testers unless the account is one.
+  List<AppLanguage> get selectable => active
+      .where((l) => !l.testersOnly || _showTesterLanguages)
+      .toList();
   List<AppLanguage> get approved =>
-      active.where((l) => l.isApproved).toList();
+      selectable.where((l) => l.isApproved).toList();
   List<AppLanguage> get machine =>
-      active.where((l) => !l.isApproved).toList();
+      selectable.where((l) => !l.isApproved).toList();
 
   AppLanguage? byCode(String? code) {
     final c = (code ?? '').trim().toLowerCase();

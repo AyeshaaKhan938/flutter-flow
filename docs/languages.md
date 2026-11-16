@@ -160,3 +160,38 @@ directionality to the whole app from the `rtl` flag.
 - Machine translation of UI labels can be long; review short labels first.
 - The external `updateUserProfile` function must accept any language code
   for the profile to keep it; the device's choice is used regardless.
+
+## Internal testing and release rules (approved by Kingdom Heirs, November 2026)
+
+- **General members** see only approved translations. Anything not approved is shown in
+  English with the English-fallback notice. Unreviewed machine translation of teaching,
+  theological statements, quiz explanations or ministry guidance is never shown to them.
+- **Internal testers** see machine translations, always with the warning
+  "Machine-translated, not yet reviewed by Kingdom Heirs." in the language being tested
+  (fixed Spanish, Urdu and Luganda wording in `kMachineTranslationNoticeByLanguage`).
+  This covers lessons, quizzes (questions, choices, explanations), the assessment and
+  stored drafts (for example Today commentary drafts). An internal tester is an account
+  whose `users/{uid}.role` is `internal_tester` (normal locks), `content_reviewer`,
+  `ministry_reviewer` or `admin` (`kInternalTesterRoles` in
+  `lib/custom_code/review_access.dart`). Set the role in the Firebase console.
+  Showing machine translation to general members needs separate written approval from
+  Kingdom Heirs and is not built.
+- **Hidden languages:** Admin › Languages › edit a language › **Internal testers only**
+  (`languages/{code}.testersOnly`). The language disappears from the picker for general
+  members; internal testers still see it. To use this for Spanish, Urdu or Luganda, first
+  add their documents in Admin › Languages (the collection is empty and the built-in
+  defaults are used until then). A member who already chose a hidden language keeps it
+  until they change it.
+- **Long texts** (169 lesson sections are over the 5,000-character translation limit)
+  are translated and reviewed in parts of whole paragraphs, so headings, numbered lists
+  and paragraph breaks stay as they are. Each part is its own review entry.
+- **A change to the English source** produces a new entry (entries are keyed by the
+  exact English text). The old approval no longer applies, members see English for that
+  text, and a new draft waits for review. The importer creates these drafts when a
+  revised record is imported (`reason: english_source_revised`).
+- **Review record:** approving stores `approvedText`, `reviewedBy` (the reviewer's uid)
+  and `reviewedAt`.
+- **Inventory:** `python3 tools/translation_inventory.py` (read-only) writes
+  `docs/handover/evidence/translation_inventory_summary.csv` and
+  `translation_inventory_items.csv` (one row per text and language, with Reviewer, Due
+  and Notes columns).

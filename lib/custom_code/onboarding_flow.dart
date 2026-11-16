@@ -52,7 +52,7 @@ String initialLanguage({
   if (s.isNotEmpty) return s;
   final d = (device ?? '').trim().toLowerCase();
   final offered = isOffered ??
-      (c) => LanguageRegistry.instance.active.any((l) => l.code == c);
+      (c) => LanguageRegistry.instance.selectable.any((l) => l.code == c);
   return d.isNotEmpty && offered(d) ? d : 'en';
 }
 

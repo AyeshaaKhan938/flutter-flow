@@ -207,7 +207,9 @@ class _AdminLanguagesPageWidgetState extends State<AdminLanguagesPageWidget> {
                     ),
                     subtitle: Text([
                       l.isApproved ? 'Released' : 'In review',
-                      l.active ? 'active' : 'inactive',
+                      l.active
+                          ? (l.testersOnly ? 'testers only' : 'active')
+                          : 'inactive',
                       if (l.rtl) 'RTL',
                       'order ${l.order}',
                       l.bibleId.isEmpty
@@ -703,6 +705,7 @@ class _LanguageEditorDialogState extends State<_LanguageEditorDialog> {
   late final TextEditingController _googleCode;
   late bool _rtl;
   late bool _active;
+  late bool _testersOnly;
   late String _tier;
   bool _saving = false;
   String? _error;
@@ -722,6 +725,7 @@ class _LanguageEditorDialogState extends State<_LanguageEditorDialog> {
     _googleCode = TextEditingController(text: l?.googleCode ?? '');
     _rtl = l?.rtl ?? false;
     _active = l?.active ?? true;
+    _testersOnly = l?.testersOnly ?? false;
     _tier = l?.tier ?? 'machine';
   }
 
@@ -777,6 +781,7 @@ class _LanguageEditorDialogState extends State<_LanguageEditorDialog> {
         'rtl': _rtl,
         'tier': _tier,
         'active': _active,
+        'testersOnly': code != 'en' && _testersOnly,
         'order': int.tryParse(_order.text.trim()) ?? 100,
         'bibleId': _bibleId.text.trim(),
         'bibleName': _bibleName.text.trim(),
@@ -850,6 +855,16 @@ class _LanguageEditorDialogState extends State<_LanguageEditorDialog> {
                 title: const Text('Active (offered to members)'),
                 value: _active,
                 onChanged: (v) => setState(() => _active = v),
+              ),
+              SwitchListTile(
+                key: const ValueKey('languageTestersOnly'),
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Internal testers only'),
+                subtitle: const Text(
+                    'Hidden from general members until the content is '
+                    'reviewed. Internal testers still see it.'),
+                value: _testersOnly,
+                onChanged: (v) => setState(() => _testersOnly = v),
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,

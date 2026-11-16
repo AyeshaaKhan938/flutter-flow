@@ -31,7 +31,11 @@ class MachineTranslationNotice extends StatelessWidget {
     return ListenableBuilder(
       listenable: TranslationService.instance,
       builder: (context, _) {
-        final text = TranslationService.instance.translate(message, language);
+        final code = (language ?? '').trim().toLowerCase();
+        final text = message == kMachineTranslationNotice &&
+                kMachineTranslationNoticeByLanguage.containsKey(code)
+            ? kMachineTranslationNoticeByLanguage[code]!
+            : TranslationService.instance.translate(message, language);
         final style = theme.labelSmall.override(
           font: GoogleFonts.inter(),
           color: theme.secondaryText,

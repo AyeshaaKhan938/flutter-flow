@@ -40,6 +40,12 @@ iPhone. Build 1.0.6 (11) is the initial iPhone testing build only.
 - Certificate title: Kingdom Heirs School of Ministry Commissioning Certificate (D5,
   D8).
 - Approved School Clubs and Sports Tournaments information pages (H4, H5).
+- Bottom bar labels in Spanish, Urdu and Luganda (I1).
+- Internal testing only: machine-translated lessons, quizzes and assessment text, always
+  labelled "Machine-translated, not yet reviewed by Kingdom Heirs." in the tested
+  language (I8). General members never see unreviewed translations.
+- A language can be kept for internal testers only (I9).
+- Long lessons are translated in whole paragraphs, so every lesson can be translated.
 
 ---
 
@@ -139,13 +145,25 @@ iPhone. Build 1.0.6 (11) is the initial iPhone testing build only.
 
 | Id | Check | Expected | Evidence |
 |---|---|---|---|
-| I1 | Switch the app to Spanish, Urdu and Luganda | Menus, buttons, Today, lessons and quizzes change language; no English controls left except approved English-only items (certificates, admin pages) | S per language |
+| I1 | Switch the app to Spanish, Urdu and Luganda with a **general member** account | Menus, buttons and the bottom bar (Inicio, Caminos, Biblia, Perfil) are in that language. Lesson, quiz and Today text that has no approved translation is in English with the notice "Part of this lesson is shown in English because the translation is not yet available" | S |
 | I2 | Urdu | Whole layout is right to left: back arrows, lists, cards and text alignment | S |
 | I3 | Long words and long translations | No clipped or overlapping text on any screen | S |
 | I4 | Ask Kingdom Heirs in each language (tester account) | The language notice shows when the answer is not in the member's language | S |
 | I5 | Targeted notification language | The language a member picks in the app is the one used for "Language" targeting (J6) | S |
 | I6 | Small phone (about 5 inch, for example iPhone SE) and large phone (Pro Max class) | No overlapping, clipping or unreadable text | S per device |
 | I7 | Largest system text size on both platforms | Screens stay readable and scroll; buttons are not cut off | S |
+| I8 | Internal tester account (role `internal_tester`, `content_reviewer`, `ministry_reviewer` or `admin`) in Spanish, Urdu and Luganda: open a Come & See lesson and a quiz | Machine-translated text shows with the warning in that language ("Traducción automática, aún no revisada por Kingdom Heirs." in Spanish). Approved text shows without it. A general member account on the same lesson sees English (I1) | S per language |
+| I9 | Admin › Languages: mark a language **Internal testers only** | General members no longer see it in the language picker; internal testers still do | S |
+
+**Two separate results for languages** (agreed with Kingdom Heirs, November 2026):
+- **Language framework and English fallback** (I1 to I9): passes when the tests above pass.
+- **Translated teaching content**: pending until the content for that language is
+  translated and approved by a Kingdom Heirs reviewer. Progress is tracked in
+  [evidence/translation_inventory_summary.csv](evidence/translation_inventory_summary.csv)
+  (by area) and [evidence/translation_inventory_items.csv](evidence/translation_inventory_items.csv)
+  (one row per text, with Reviewer and Due columns). A language is not advertised as
+  fully supported until its member-facing content is approved; until then it can be
+  kept for internal testers only (I9).
 
 ## J. Notifications
 

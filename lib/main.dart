@@ -22,6 +22,7 @@ import 'index.dart';
 import '/custom_code/languages/language_app_support.dart';
 import '/custom_code/languages/language_registry.dart';
 import '/custom_code/languages/translation_service.dart';
+import '/custom_code/review_access.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -107,6 +108,11 @@ class _MyAppState extends State<MyApp> {
         // Download content in the background so the app works offline.
         if (user.loggedIn) {
           actions.prefetchOfflineContent();
+          // Internal testers: hidden languages and labelled machine
+          // translations (see ReviewAccess).
+          ReviewAccess.load();
+        } else {
+          ReviewAccess.clear();
         }
       });
     jwtTokenStream.listen((_) {});

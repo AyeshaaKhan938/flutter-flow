@@ -19,6 +19,7 @@ import 'package:percent_indicator/percent_indicator.dart';
 import 'quiz_page_model.dart';
 import '/custom_code/languages/language_registry.dart';
 import '/custom_code/languages/translation_service.dart';
+import '/custom_code/widgets/index.dart' as custom_widgets;
 export 'quiz_page_model.dart';
 
 /// Renders a 10-question multiple-choice quiz and submits it for server-side
@@ -677,6 +678,15 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
   /// The member's submitted answers, shown only after the quiz is
   /// submitted: each question, the chosen answer, whether it was correct,
   /// the correct answer and the explanation when the quiz record has one.
+  bool _quizUsesMachineTranslation() {
+    final body = _model.quizResult?.jsonBody;
+    if (body is Map && body[kMachineTranslatedKey] == true) {
+      return true;
+    }
+    return _explanations
+        .any((e) => e.isMachineTranslated(_model.memberLanguage));
+  }
+
   Widget _buildAnswerReview(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
     final answers = _answers();
@@ -851,6 +861,13 @@ class _QuizPageWidgetState extends State<QuizPageWidget> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // Internal testers only: unreviewed machine translation
+                  // of questions, choices or explanations is labelled.
+                  if (_quizUsesMachineTranslation())
+                    custom_widgets.MachineTranslationNotice(
+                      key: const ValueKey('quizMachineNotice'),
+                      language: _model.memberLanguage,
+                    ),
                   if (!_model.submitted!)
                     Container(
                       child: Column(

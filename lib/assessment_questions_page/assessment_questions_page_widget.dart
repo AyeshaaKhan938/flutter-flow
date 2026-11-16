@@ -14,6 +14,7 @@ import 'package:percent_indicator/percent_indicator.dart';
 import 'assessment_questions_page_model.dart';
 import '/custom_code/languages/language_registry.dart';
 import '/custom_code/languages/translation_service.dart';
+import '/custom_code/widgets/index.dart' as custom_widgets;
 export 'assessment_questions_page_model.dart';
 
 /// Spec M10 scaffold: capture bible confidence/needs/habits/goals.
@@ -784,6 +785,14 @@ class _AssessmentQuestionsPageWidgetState
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // Internal testers only: labelled machine translation.
+                  if ((_model.loadedAssessmentCopy?.jsonBody is Map) &&
+                      (_model.loadedAssessmentCopy!.jsonBody
+                              as Map)[kMachineTranslatedKey] ==
+                          true)
+                    custom_widgets.MachineTranslationNotice(
+                      language: _model.memberLanguage,
+                    ),
                   Text(
                     FFLocalizations.of(context).getText(
                       '7vtg9s4j' /* Choose the answer that most ho... */,

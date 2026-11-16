@@ -101,14 +101,38 @@ class LocaleTextStruct extends FFFirebaseStruct {
 
   /// The text for [languageCode]: stored translation of a released
   /// language, else a translation an administrator approved, else English,
-  /// so the member never sees a blank or unreviewed machine text. Kingdom
+  /// so a member never sees a blank or unreviewed machine text. Kingdom
   /// Heirs-authored text only; use [scriptureForLanguage] for Scripture.
+  ///
+  /// Internal testers (TranslationService.previewMachine) also see
+  /// unreviewed machine text, or a stored draft of a language not yet
+  /// approved, always with the machine-translation notice
+  /// ([isMachineTranslated]).
   String forLanguage(String? languageCode) {
     final text = _releasedText(languageCode);
     if (text.isNotEmpty) {
       return text;
     }
-    return TranslationService.instance.translate(en, languageCode);
+    final translated = TranslationService.instance.translate(en, languageCode);
+    if (translated == en) {
+      final draft = _previewDraft(languageCode);
+      if (draft.isNotEmpty) {
+        return draft;
+      }
+    }
+    return translated;
+  }
+
+  /// Stored text of a language that is not yet approved, for internal
+  /// testers only.
+  String _previewDraft(String? languageCode) {
+    final code = (languageCode ?? '').trim().toLowerCase();
+    if (!TranslationService.instance.previewMachine ||
+        code.isEmpty ||
+        code == 'en') {
+      return '';
+    }
+    return storedText(code);
   }
 
   /// Scripture text: stored translation of a released language or English,
@@ -118,11 +142,18 @@ class LocaleTextStruct extends FFFirebaseStruct {
     return text.isNotEmpty ? text : en;
   }
 
-  /// True when [forLanguage] shows unreviewed machine translation.
-  bool isMachineTranslated(String? languageCode) =>
-      _releasedText(languageCode).isEmpty &&
-      en.isNotEmpty &&
-      TranslationService.instance.isMachine(en, languageCode);
+  /// True when [forLanguage] shows unreviewed text (internal testers only).
+  bool isMachineTranslated(String? languageCode) {
+    if (_releasedText(languageCode).isNotEmpty || en.isEmpty) {
+      return false;
+    }
+    final service = TranslationService.instance;
+    if (service.isMachine(en, languageCode)) {
+      return true;
+    }
+    return service.translate(en, languageCode) == en &&
+        _previewDraft(languageCode).isNotEmpty;
+  }
 
   /// True when [forLanguage] shows the English text for another language.
   bool isEnglishFallback(String? languageCode) =>
