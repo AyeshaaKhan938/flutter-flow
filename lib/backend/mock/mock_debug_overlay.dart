@@ -5,6 +5,8 @@
 // This file is part of the backend-agnostic mock core and reasons only in
 // terms of FFDataSourceMode and the mock data store re-seed operation.
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import 'ff_data_source.dart';
@@ -14,6 +16,10 @@ import 'ff_data_source.dart';
 /// Mounted from the generated app's `MaterialApp.builder` only when the mock
 /// backend is generated into the build, so release builds without the feature
 /// are unaffected.
+///
+/// Collapsed, the control is a small tab on the screen's edge, away from the
+/// bottom corners where send buttons, FABs and nav bars sit. Drag it to move
+/// it; it snaps to the nearer side and stays there until the app restarts.
 class MockDebugOverlay extends StatelessWidget {
   const MockDebugOverlay({super.key, required this.child});
 
@@ -21,16 +27,16 @@ class MockDebugOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!FFDataSource.mockControlsEnabled) {
+      return child;
+    }
     return Directionality(
       textDirection: Directionality.maybeOf(context) ?? TextDirection.ltr,
       child: Stack(
         children: [
           child,
-          const Positioned(
-            right: 12,
-            bottom: 12,
-            child: SafeArea(child: _MockDebugPanel()),
-          ),
+          // Lets touches through everywhere except the control itself.
+          const Positioned.fill(child: _MockDebugPanel()),
         ],
       ),
     );
@@ -45,44 +51,153 @@ class _MockDebugPanel extends StatefulWidget {
 }
 
 class _MockDebugPanelState extends State<_MockDebugPanel> {
+  static const double _tabWidth = 28;
+  static const double _tabHeight = 44;
+  // The tab's touch area: the minimum touch target, reaching past the narrow
+  // visible tab toward the middle of the screen.
+  static const double _hitSize = 48;
+  static const double _panelWidth = 260;
+  static const double _margin = 8;
+
+  // Where the tab rests, kept for the session so it stays where the developer
+  // put it across rebuilds and route changes. Starts on the right edge, a
+  // third of the way down.
+  static bool _onLeft = false;
+  static double _verticalFraction = 0.33;
+
   bool _expanded = false;
+  bool _confirmingReset = false;
+  // The touch area's top-left corner while it is being dragged; null at rest.
+  Offset? _dragPosition;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: _expanded ? _buildExpanded(context) : _buildCollapsed(),
+    final padding = MediaQuery.maybePaddingOf(context) ?? EdgeInsets.zero;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = constraints.biggest;
+        final minTop = padding.top + _margin;
+        final maxTop = math.max(
+          minTop,
+          size.height - padding.bottom - _margin - _hitSize,
+        );
+        final restTop = minTop + (maxTop - minTop) * _verticalFraction;
+        // Flush with the edge, inside any side inset (e.g. a landscape notch).
+        final minLeft = padding.left;
+        final maxLeft =
+            math.max(minLeft, size.width - padding.right - _hitSize);
+        final restLeft = _onLeft ? minLeft : maxLeft;
+        final drag = _dragPosition;
+        // While dragging, face the edge the tab would snap to.
+        final onLeft =
+            drag == null ? _onLeft : drag.dx + _hitSize / 2 < size.width / 2;
+        return Stack(
+          children: [
+            if (_expanded)
+              _positionPanel(padding)
+            else
+              AnimatedPositioned(
+                duration: drag == null
+                    ? const Duration(milliseconds: 200)
+                    : Duration.zero,
+                curve: Curves.easeOut,
+                left: drag?.dx ?? restLeft,
+                top: drag?.dy ?? restTop,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => setState(() => _expanded = true),
+                  onPanStart: (_) => setState(
+                    () => _dragPosition = Offset(restLeft, restTop),
+                  ),
+                  onPanUpdate: (details) => setState(() {
+                    final current = _dragPosition! + details.delta;
+                    _dragPosition = Offset(
+                      current.dx.clamp(minLeft, maxLeft),
+                      current.dy.clamp(minTop, maxTop),
+                    );
+                  }),
+                  onPanEnd: (_) => _snap(size, minTop, maxTop),
+                  onPanCancel: () => _snap(size, minTop, maxTop),
+                  child: _buildCollapsed(onLeft),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildCollapsed() {
+  void _snap(Size size, double minTop, double maxTop) {
+    final position = _dragPosition;
+    if (position == null) {
+      return;
+    }
+    setState(() {
+      _onLeft = position.dx + _hitSize / 2 < size.width / 2;
+      _verticalFraction = maxTop > minTop
+          ? ((position.dy - minTop) / (maxTop - minTop)).clamp(0.0, 1.0)
+          : 0;
+      _dragPosition = null;
+    });
+  }
+
+  /// Opens the panel on the tab's side at about the tab's height, kept inside
+  /// the safe area: it slides to fit, and scrolls when the screen is shorter
+  /// than the panel.
+  Widget _positionPanel(EdgeInsets padding) {
+    return Positioned(
+      left: padding.left + _margin,
+      right: padding.right + _margin,
+      top: padding.top + _margin,
+      bottom: padding.bottom + _margin,
+      child: Align(
+        alignment: Alignment(_onLeft ? -1 : 1, _verticalFraction * 2 - 1),
+        child: Material(
+          color: Colors.transparent,
+          child: SingleChildScrollView(child: _buildExpanded(context)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCollapsed(bool onLeft) {
     return ValueListenableBuilder<FFDataSourceMode>(
       valueListenable: FFDataSource.modeNotifier,
       builder: (context, mode, _) {
         final isMock = mode == FFDataSourceMode.mock;
+        const radius = Radius.circular(_tabHeight / 2);
+        final borderRadius = onLeft
+            ? const BorderRadius.only(topRight: radius, bottomRight: radius)
+            : const BorderRadius.only(topLeft: radius, bottomLeft: radius);
         // No Tooltip here: this widget sits above the Navigator (router
         // builder), where no Overlay ancestor exists for tooltips.
-        return InkWell(
-          borderRadius: BorderRadius.circular(24),
-          onTap: () => setState(() => _expanded = true),
-          child: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: isMock ? const Color(0xFF6C5CE7) : const Color(0xFF2D3436),
-              shape: BoxShape.circle,
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x40000000),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
+        return Semantics(
+          button: true,
+          label: 'API mocks',
+          child: SizedBox(
+            width: _hitSize,
+            height: _hitSize,
+            child: Align(
+              alignment: onLeft ? Alignment.centerLeft : Alignment.centerRight,
+              child: Material(
+                color:
+                    isMock ? const Color(0xFF6C5CE7) : const Color(0xFF2D3436),
+                elevation: 4,
+                borderRadius: borderRadius,
+                child: InkWell(
+                  borderRadius: borderRadius,
+                  onTap: () => setState(() => _expanded = true),
+                  child: const SizedBox(
+                    width: _tabWidth,
+                    height: _tabHeight,
+                    child: Icon(
+                      Icons.science_outlined,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
                 ),
-              ],
-            ),
-            child: const Icon(
-              Icons.science_outlined,
-              color: Colors.white,
-              size: 22,
+              ),
             ),
           ),
         );
@@ -92,7 +207,7 @@ class _MockDebugPanelState extends State<_MockDebugPanel> {
 
   Widget _buildExpanded(BuildContext context) {
     return Container(
-      width: 260,
+      width: _panelWidth,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFF1E1E1E),
@@ -129,7 +244,10 @@ class _MockDebugPanelState extends State<_MockDebugPanel> {
               ),
               InkWell(
                 borderRadius: BorderRadius.circular(16),
-                onTap: () => setState(() => _expanded = false),
+                onTap: () => setState(() {
+                  _expanded = false;
+                  _confirmingReset = false;
+                }),
                 child: const Padding(
                   padding: EdgeInsets.all(4),
                   child: Icon(Icons.close, color: Colors.white70, size: 18),
@@ -187,55 +305,72 @@ class _MockDebugPanelState extends State<_MockDebugPanel> {
             style: TextStyle(color: Colors.white38, fontSize: 11),
           ),
           const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () => _confirmReset(context),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFFFF7675),
-                side: const BorderSide(color: Color(0xFFFF7675)),
-                padding: const EdgeInsets.symmetric(vertical: 10),
+          if (_confirmingReset)
+            _buildResetConfirmation()
+          else
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => setState(() => _confirmingReset = true),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFFFF7675),
+                  side: const BorderSide(color: Color(0xFFFF7675)),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                ),
+                icon: const Icon(Icons.restart_alt, size: 18),
+                label: const Text('Reset mock API data'),
               ),
-              icon: const Icon(Icons.restart_alt, size: 18),
-              label: const Text('Reset mock API data'),
             ),
-          ),
         ],
       ),
     );
   }
 
-  Future<void> _confirmReset(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Reset mock API data?'),
-        content: const Text(
+  /// Asks for confirmation inside the panel. A dialog can't be used: this
+  /// widget sits above the Navigator, so there is no route to push one on.
+  Widget _buildResetConfirmation() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Reset mock API data?',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 4),
+        const Text(
           'This discards all runtime changes and restores the mock API data '
           'to its seed state. This cannot be undone.',
+          style: TextStyle(color: Colors.white70, fontSize: 12),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFFD63031),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton(
+              onPressed: () => setState(() => _confirmingReset = false),
+              style: TextButton.styleFrom(foregroundColor: Colors.white70),
+              child: const Text('Cancel'),
             ),
-            child: const Text('Reset'),
-          ),
-        ],
-      ),
+            TextButton(
+              onPressed: _reset,
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFFFF7675),
+              ),
+              child: const Text('Reset'),
+            ),
+          ],
+        ),
+      ],
     );
-    if (confirmed != true) {
-      return;
-    }
+  }
+
+  void _reset() {
     FFDataSource.resetMockData();
-    if (!context.mounted) {
-      return;
-    }
+    setState(() => _confirmingReset = false);
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
       const SnackBar(content: Text('Mock API data reset to seed state.')),
     );

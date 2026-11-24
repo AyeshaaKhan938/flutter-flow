@@ -21,8 +21,9 @@ Future<void> rememberPendingEmailChange(String uid, String email) async {
   try {
     final preferences = await SharedPreferences.getInstance();
     await preferences.setString(_pendingEmailKey(uid), request);
-  } catch (e) {
-    print('Could not remember the requested email change: $e');
+  } catch (_) {
+    // Storage errors may include the request, so keep log output fixed.
+    print('Could not remember the requested email change.');
   }
 }
 
@@ -63,9 +64,10 @@ Future<void> syncPendingEmailChange(User? user) async {
     if (preferences.getString(key) == request) {
       await preferences.remove(key);
     }
-  } catch (e) {
+  } catch (_) {
     // Keep the request for the next sign-in/refresh after a transient failure.
-    print('Could not sync the requested email change: $e');
+    // Parser errors may include the saved request, so keep log output fixed.
+    print('Could not sync the requested email change.');
   } finally {
     _emailChangesInFlight.remove(uid);
     // A replacement request may have arrived while a previous write waited

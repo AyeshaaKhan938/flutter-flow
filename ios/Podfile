@@ -33,7 +33,7 @@ target 'Runner' do
   use_modular_headers!
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
-  pod 'FirebaseFirestore', :git => 'https://github.com/invertase/firestore-ios-sdk-frameworks.git', :tag => '12.19.0'
+  pod 'FirebaseFirestore', :git => 'https://github.com/invertase/firestore-ios-sdk-frameworks.git', :tag => '12.19.3'
 end
 
 post_install do |installer|
@@ -49,7 +49,7 @@ end
 
 target 'ImageNotification' do
   use_frameworks! :linkage => :static
-  pod 'Firebase/Messaging', '12.19.0'
+  pod 'Firebase/Messaging', '12.19.3'
   pod 'GoogleUtilities'
 end
 

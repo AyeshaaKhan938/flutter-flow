@@ -18,6 +18,11 @@ class FFDataSource {
   static final ValueNotifier<FFDataSourceMode> modeNotifier =
       ValueNotifier(_initialMode);
 
+  /// Whether mock data and the debug control are on in this build. Off in
+  /// release builds of exported code unless the project keeps mocks in
+  /// release builds; `FF_DATA_SOURCE` can still pick a mode explicitly.
+  static const bool mockControlsEnabled = !kReleaseMode;
+
   static FFDataSourceMode get _initialMode {
     switch (_dartDefineOverride) {
       case 'mock':
@@ -25,7 +30,9 @@ class FFDataSource {
       case 'live':
         return FFDataSourceMode.live;
       default:
-        return FFDataSourceMode.live;
+        return mockControlsEnabled
+            ? FFDataSourceMode.live
+            : FFDataSourceMode.live;
     }
   }
 

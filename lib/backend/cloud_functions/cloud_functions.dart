@@ -6,10 +6,14 @@ import 'package:cloud_functions/cloud_functions.dart';
 /// from the agent's `deploymentSettings.timeoutSeconds`; see
 /// `effectiveAgentTimeoutSeconds` for the per-kind fallbacks (60s for
 /// chat/image/STT/TTS, 540s for video gen).
+///
+/// A failed call returns an empty map, unless [throwErrors] is set: then
+/// its error is thrown to the caller after it is printed.
 Future<Map<String, dynamic>> makeCloudCall(
   String callName,
   Map<String, dynamic> input, {
   Duration? timeout,
+  bool throwErrors = false,
 }) async {
   try {
     final response = await FirebaseFunctions.instance
@@ -30,8 +34,14 @@ Future<Map<String, dynamic>> makeCloudCall(
       'Details: ${e.details}\n'
       'Message: ${e.message}',
     );
+    if (throwErrors) {
+      rethrow;
+    }
   } catch (e) {
     print('Cloud call error:${callName} $e');
+    if (throwErrors) {
+      rethrow;
+    }
   }
   return {};
 }
