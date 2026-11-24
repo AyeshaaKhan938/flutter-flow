@@ -27,7 +27,7 @@
     "lint": "./node_modules/.bin/eslint --max-warnings=0 .",
     "serve": "firebase -P kingdom-heirs-discipleshipapp emulators:start --only functions",
     "shell": "firebase -P kingdom-heirs-discipleshipapp functions:shell",
-    "start": "npm run shell",
+    "start": "node init && npm run shell",
     "logs": "firebase -P kingdom-heirs-discipleshipapp functions:log",
     "compile": "cp ../../tsconfig.template.json ./tsconfig-compile.json && tsc --project tsconfig-compile.json"
   },

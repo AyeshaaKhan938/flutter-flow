@@ -19,3 +19,5 @@ content_private/
 assets/*.xlsx
 assets/*Handoff*.zip
 assets/00_Kingdom_Heirs_Content_Upload_Manifest.csv
+config.bat
+node_modules

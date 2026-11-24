@@ -10,7 +10,6 @@ import 'package:flutter/material.dart';
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 
 Future ensureFirestoreOfflinePersistence() async {
   try {
@@ -20,14 +19,5 @@ Future ensureFirestoreOfflinePersistence() async {
     );
   } catch (_) {
     // Settings may already be locked after first use — safe to ignore.
-  }
-  if (kIsWeb) {
-    try {
-      await FirebaseFirestore.instance.enablePersistence(
-        const PersistenceSettings(synchronizeTabs: true),
-      );
-    } catch (_) {
-      // Already enabled or unsupported in this browser context.
-    }
   }
 }
